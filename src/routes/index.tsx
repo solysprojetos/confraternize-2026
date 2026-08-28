@@ -144,9 +144,9 @@ function Inscricao() {
                   setForm({ ...form, nome_completo: e.target.value })
                 }
               />
-              {errors.nome_completo && (
+              {errors["nome_completo"] && (
                 <p className="mt-1 text-sm text-destructive">
-                  {errors.nome_completo}
+                  {errors["nome_completo"]}
                 </p>
               )}
             </div>
@@ -167,9 +167,9 @@ function Inscricao() {
                 placeholder="(11) 99999-9999"
                 onChange={(e) => setForm({ ...form, telefone: e.target.value })}
               />
-              {errors.telefone && (
+              {errors["telefone"] && (
                 <p className="mt-1 text-sm text-destructive">
-                  {errors.telefone}
+                  {errors["telefone"]}
                 </p>
               )}
             </div>
@@ -190,8 +190,8 @@ function Inscricao() {
                 placeholder="voce@empresa.com.br"
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-destructive">{errors.email}</p>
+              {errors["email"] && (
+                <p className="mt-1 text-sm text-destructive">{errors["email"]}</p>
               )}
             </div>
 
@@ -226,13 +226,13 @@ function Inscricao() {
                   );
                 })}
               </div>
-              {errors.grupo && (
-                <p className="mt-1 text-sm text-destructive">{errors.grupo}</p>
+              {errors["grupo"] && (
+                <p className="mt-1 text-sm text-destructive">{errors["grupo"]}</p>
               )}
             </fieldset>
 
-            {errors.form && (
-              <p className="text-sm text-destructive">{errors.form}</p>
+            {errors["form"] && (
+              <p className="text-sm text-destructive">{errors["form"]}</p>
             )}
 
             <button
