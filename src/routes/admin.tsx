@@ -3,7 +3,7 @@ import { AdminPage } from "@/components/AdminPage";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Área restrita — Celebra 2026" }],
+    meta: [{ title: "Área restrita — Confraternização 2026" }],
   }),
   component: AdminPage,
 });

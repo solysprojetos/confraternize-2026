@@ -125,7 +125,7 @@ export function InscricaoPage() {
             Inscrição oficial
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Celebra 2026
+            Confraternização 2026
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
             Preencha seus dados para confirmar sua presença.
@@ -136,7 +136,7 @@ export function InscricaoPage() {
           <div className="mt-10 rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
             <h2 className="text-2xl font-semibold text-foreground">Inscrição confirmada!</h2>
             <p className="mt-2 text-muted-foreground">
-              Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Celebra 2026.
+              Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Confraternização 2026.
             </p>
             <button
               type="button"

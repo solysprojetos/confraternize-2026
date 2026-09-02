@@ -107,7 +107,7 @@ export function AdminPage() {
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "inscricoes-celebra-2026.csv";
+    a.download = "inscricoes-confraternizacao-2026.csv";
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -128,7 +128,7 @@ export function AdminPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
               Área restrita
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">Celebra 2026</h1>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">Confraternização 2026</h1>
             <p className="mt-3 text-base text-muted-foreground">Entre para ver as inscrições.</p>
           </header>
           <form
@@ -190,7 +190,7 @@ export function AdminPage() {
               Área restrita
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-              Inscrições — Celebra 2026
+              Inscrições — Confraternização 2026
             </h1>
           </div>
           <button
