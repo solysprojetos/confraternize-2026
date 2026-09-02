@@ -31,6 +31,8 @@ jobs:
 
       - name: Build estático (formulário de inscrição)
         run: bun run build:pages
+        env:
+          PAGES_BASE: /confraternize-2026/
 
       # Mantém o branch gh-pages atualizado como espelho do build, para o
       # caso de o Pages estar configurado com "Deploy from a branch"

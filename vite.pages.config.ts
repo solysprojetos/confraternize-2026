@@ -9,8 +9,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   root: "pages-static",
-  // Servido no subcaminho do projeto no GitHub Pages
-  base: "/confraternize-2026/",
+  // Raiz por padrão (Vercel etc.); o GitHub Pages define PAGES_BASE com o
+  // subcaminho /confraternize-2026/ no workflow
+  base: process.env.PAGES_BASE || "/",
   publicDir: path.resolve(__dirname, "public"),
   envDir: __dirname,
   plugins: [react(), tailwindcss()],
