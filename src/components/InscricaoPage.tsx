@@ -35,8 +35,8 @@ const schema = z.object({
   }),
 });
 
-// Sigla para grupos sem logo (Parceiros/Convidados) e como reserva caso a
-// imagem não carregue
+// Grupos sem logo (Parceiros/Convidados) mostram apenas o nome; a sigla é a
+// reserva caso a imagem não carregue
 function GroupLogo({
   src,
   alt,
@@ -49,18 +49,18 @@ function GroupLogo({
   bg: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (!src || failed) {
+  if (!src) return null;
+  if (failed) {
     return (
-      <span className="flex h-16 w-28 shrink-0 items-center justify-center rounded-lg bg-accent text-lg font-bold tracking-wide text-primary">
+      <span className="flex h-14 w-24 shrink-0 items-center justify-center rounded-lg bg-accent text-lg font-bold tracking-wide text-primary">
         {sigla}
       </span>
     );
   }
-  // Logos maiores e sem caixa de fundo; só o Grupo Support (logo branco)
-  // mantém o cartão dourado
+  // Sem caixa de fundo; só o Grupo Support (logo branco) mantém o cartão dourado
   return (
     <span
-      className={`flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden ${
+      className={`flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden ${
         bg ? `rounded-lg p-2 ${bg}` : ""
       }`}
     >
