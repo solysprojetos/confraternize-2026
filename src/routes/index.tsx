@@ -213,12 +213,14 @@ function Inscricao() {
                           : "border-border bg-background hover:bg-accent"
                       }`}
                     >
-                      <img
-                        src={g.logo}
-                        alt={g.label}
-                        className="h-10 w-16 shrink-0 object-contain"
-                        loading="lazy"
-                      />
+                      <span className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background p-2">
+                        <img
+                          src={g.logo}
+                          alt={g.label}
+                          className="max-h-full max-w-full object-contain"
+                          loading="lazy"
+                        />
+                      </span>
                       <span className="text-sm font-medium text-foreground">
                         {g.label}
                       </span>
