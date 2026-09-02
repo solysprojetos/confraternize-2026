@@ -53,9 +53,13 @@ function GroupLogo({
       </span>
     );
   }
+  // Logos maiores e sem caixa de fundo; só o Grupo Support (logo branco)
+  // mantém o cartão dourado
   return (
     <span
-      className={`flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg p-2 ${bg || "bg-background"}`}
+      className={`flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden ${
+        bg ? `rounded-lg p-2 ${bg}` : ""
+      }`}
     >
       <img
         src={src}

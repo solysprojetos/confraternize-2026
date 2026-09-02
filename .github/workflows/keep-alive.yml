@@ -1,0 +1,22 @@
+name: Robô diário (mantém o banco ativo)
+
+# Projetos gratuitos do Supabase hibernam após ~7 dias sem uso.
+# Este robô consulta o banco todos os dias para ele nunca parar.
+on:
+  schedule:
+    - cron: "23 9 * * *" # todos os dias às 06:23 de Brasília
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulta de atividade no Supabase
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+            "https://qozuvdhqhpzpreusvkkr.supabase.co/rest/v1/inscricoes?select=id&limit=1" \
+            -H "apikey: sb_publishable_BG6LttsyALYbyKjxASE9ag_xxAJMAge")
+          echo "Resposta do banco: HTTP $code"
+          test "$code" = "200"
