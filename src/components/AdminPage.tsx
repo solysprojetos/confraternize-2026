@@ -6,14 +6,16 @@ type Inscricao = {
   nome_completo: string;
   telefone: string;
   email: string;
-  grupo: "sgroup" | "solys" | "grupo_support";
+  grupo: "sgroup" | "solys" | "grupo_support" | "parceiros" | "convidados";
   created_at: string;
 };
 
 const NOME_GRUPO: Record<Inscricao["grupo"], string> = {
+  grupo_support: "Grupo Support",
   sgroup: "SGroup Nacional",
   solys: "Solys Gestão Administrativa",
-  grupo_support: "Grupo Support",
+  parceiros: "Parceiros",
+  convidados: "Convidados",
 };
 
 const field =
@@ -72,7 +74,13 @@ export function AdminPage() {
   }
 
   const totais = useMemo(() => {
-    const t: Record<string, number> = { sgroup: 0, solys: 0, grupo_support: 0 };
+    const t: Record<string, number> = {
+      grupo_support: 0,
+      sgroup: 0,
+      solys: 0,
+      parceiros: 0,
+      convidados: 0,
+    };
     for (const i of inscricoes) t[i.grupo] = (t[i.grupo] ?? 0) + 1;
     return t;
   }, [inscricoes]);
@@ -120,9 +128,7 @@ export function AdminPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
               Área restrita
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
-              Celebra 2026
-            </h1>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">Celebra 2026</h1>
             <p className="mt-3 text-base text-muted-foreground">Entre para ver as inscrições.</p>
           </header>
           <form
@@ -196,7 +202,7 @@ export function AdminPage() {
           </button>
         </header>
 
-        <section className="mt-8 grid gap-3 sm:grid-cols-4">
+        <section className="mt-8 grid gap-3 sm:grid-cols-3">
           <button
             type="button"
             onClick={() => setFiltro("todos")}

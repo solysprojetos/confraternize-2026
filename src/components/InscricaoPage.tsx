@@ -6,14 +6,6 @@ import solysLogo from "@/assets/logos/solys.png";
 import supportLogo from "@/assets/logos/support.png";
 
 const grupos = [
-  { value: "sgroup", label: "SGroup Nacional", sigla: "SG", logo: sgroupLogo, bg: "" },
-  {
-    value: "solys",
-    label: "Solys Gestão Administrativa",
-    sigla: "SO",
-    logo: solysLogo,
-    bg: "",
-  },
   {
     value: "grupo_support",
     label: "Grupo Support",
@@ -22,33 +14,44 @@ const grupos = [
     // Logo todo branco: fundo dourado para aparecer
     bg: "bg-gradient-to-br from-[#d4af37] to-[#a5761c]",
   },
+  { value: "sgroup", label: "SGroup Nacional", sigla: "SG", logo: sgroupLogo, bg: "" },
+  {
+    value: "solys",
+    label: "Solys Gestão Administrativa",
+    sigla: "SO",
+    logo: solysLogo,
+    bg: "",
+  },
+  { value: "parceiros", label: "Parceiros", sigla: "PA", logo: null, bg: "" },
+  { value: "convidados", label: "Convidados", sigla: "CO", logo: null, bg: "" },
 ];
 
 const schema = z.object({
   nome_completo: z.string().trim().min(3, "Informe seu nome completo").max(120),
   telefone: z.string().trim().min(10, "Informe um telefone válido com DDD").max(20),
   email: z.string().trim().email("E-mail inválido").max(255),
-  grupo: z.enum(["sgroup", "solys", "grupo_support"], {
+  grupo: z.enum(["sgroup", "solys", "grupo_support", "parceiros", "convidados"], {
     message: "Selecione seu grupo",
   }),
 });
 
-// Sigla como reserva caso a imagem não carregue
+// Sigla para grupos sem logo (Parceiros/Convidados) e como reserva caso a
+// imagem não carregue
 function GroupLogo({
   src,
   alt,
   sigla,
   bg,
 }: {
-  src: string;
+  src: string | null;
   alt: string;
   sigla: string;
   bg: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (failed) {
+  if (!src || failed) {
     return (
-      <span className="flex h-14 w-24 shrink-0 items-center justify-center rounded-lg bg-accent text-lg font-bold tracking-wide text-primary">
+      <span className="flex h-16 w-28 shrink-0 items-center justify-center rounded-lg bg-accent text-lg font-bold tracking-wide text-primary">
         {sigla}
       </span>
     );
