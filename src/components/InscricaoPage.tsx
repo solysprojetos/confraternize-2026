@@ -57,7 +57,7 @@ function GroupLogo({
   // mantém o cartão dourado
   return (
     <span
-      className={`flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden ${
+      className={`flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden ${
         bg ? `rounded-lg p-2 ${bg}` : ""
       }`}
     >
