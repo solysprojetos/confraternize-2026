@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "bun install",
   "buildCommand": "bun run build:pages",
-  "outputDirectory": "dist-pages"
+  "outputDirectory": "dist-pages",
+  "git": {
+    "deploymentEnabled": {
+      "gh-pages": false,
+      "claude/analise-processo-completo-23nzht": false
+    }
+  }
 }

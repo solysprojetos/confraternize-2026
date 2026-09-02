@@ -40,6 +40,8 @@ jobs:
         run: |
           cd dist-pages
           touch .nojekyll
+          # Impede a Vercel de tentar (e falhar) um deploy de preview deste branch
+          echo '{ "git": { "deploymentEnabled": false } }' > vercel.json
           git init -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
