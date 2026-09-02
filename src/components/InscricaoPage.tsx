@@ -95,7 +95,12 @@ export function InscricaoPage() {
     const { error } = await supabase.from("inscricoes").insert(parsed.data);
     setLoading(false);
     if (error) {
-      setErrors({ form: "Não foi possível enviar. Tente novamente." });
+      setErrors({
+        form:
+          error.code === "23505"
+            ? "Este e-mail já está inscrito."
+            : "Não foi possível enviar. Tente novamente.",
+      });
       return;
     }
     setDone(true);
