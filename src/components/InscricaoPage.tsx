@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Clock, MapPin } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import sgroupLogo from "@/assets/logos/sgroup.png";
@@ -127,6 +128,16 @@ export function InscricaoPage() {
           <h1 className="mt-3 text-4xl font-bold uppercase tracking-tight text-foreground sm:text-5xl">
             Confraternização 2026
           </h1>
+          <div className="mt-4 space-y-1 text-sm text-foreground">
+            <p className="flex items-center justify-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+              Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175
+            </p>
+            <p className="flex items-center justify-center gap-2 font-medium">
+              <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+              Início às 16:30
+            </p>
+          </div>
           <p className="mt-3 text-base text-muted-foreground">
             Preencha seus dados para confirmar sua presença.
           </p>
