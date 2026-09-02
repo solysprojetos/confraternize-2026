@@ -133,7 +133,7 @@ export function InscricaoPage() {
           <div className="mt-10 rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
             <h2 className="text-2xl font-semibold text-foreground">Inscrição confirmada!</h2>
             <p className="mt-2 text-muted-foreground">
-              Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Confraternização 2026.
+              Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Celebra 2026.
             </p>
             <button
               type="button"
