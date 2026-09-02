@@ -9,13 +9,15 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build-e-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,9 +32,9 @@ jobs:
       - name: Build estático (formulário de inscrição)
         run: bun run build:pages
 
-      # Publica o conteúdo de dist-pages no branch gh-pages; o GitHub Pages
-      # serve esse branch em https://<owner>.github.io/confraternize-2026/
-      - name: Publicar no branch gh-pages
+      # Mantém o branch gh-pages atualizado como espelho do build, para o
+      # caso de o Pages estar configurado com "Deploy from a branch"
+      - name: Atualizar branch gh-pages
         run: |
           cd dist-pages
           touch .nojekyll
@@ -44,3 +46,26 @@ jobs:
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar GitHub Pages
+        id: pages
+        continue-on-error: true
+        uses: actions/configure-pages@v5
+
+      - name: Publicar artefato
+        if: steps.pages.outcome == 'success'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    continue-on-error: true
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
