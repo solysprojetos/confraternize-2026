@@ -1,6 +1,6 @@
-# Confraternização 2026 — Inscrições
+# Celebra 2026 — Inscrições
 
-Site de inscrição da Confraternização 2026 da Solys / SGroup / Grupo Support.
+Site de inscrição da Celebra 2026 da Solys / SGroup / Grupo Support.
 
 **Este projeto é gerenciado 100% pelo GitHub + Claude.** O código mora neste
 repositório; cada push no branch `main` publica o site automaticamente, sem

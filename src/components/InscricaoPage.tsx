@@ -122,7 +122,7 @@ export function InscricaoPage() {
             Inscrição oficial
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Confraternização 2026
+            Celebra 2026
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
             Preencha seus dados para confirmar sua presença.
