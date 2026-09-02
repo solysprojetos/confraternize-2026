@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import sgroupLogo from "@/assets/sgroup.png.asset.json";
-import solysLogo from "@/assets/solys.png.asset.json";
-import supportLogo from "@/assets/support.png.asset.json";
+import sgroupLogo from "@/assets/logos/sgroup.png";
+import solysLogo from "@/assets/logos/solys.png";
+import supportLogo from "@/assets/logos/support.png";
 
 const grupos = [
-  { value: "sgroup", label: "SGroup Nacional", sigla: "SG", logo: sgroupLogo.url },
+  { value: "sgroup", label: "SGroup Nacional", sigla: "SG", logo: sgroupLogo, bg: "" },
   {
     value: "solys",
     label: "Solys Gestão Administrativa",
     sigla: "SO",
-    logo: solysLogo.url,
+    logo: solysLogo,
+    bg: "",
   },
-  { value: "grupo_support", label: "Grupo Support", sigla: "GS", logo: supportLogo.url },
+  {
+    value: "grupo_support",
+    label: "Grupo Support",
+    sigla: "GS",
+    logo: supportLogo,
+    // Logo todo branco: fundo dourado para aparecer
+    bg: "bg-gradient-to-br from-[#d4af37] to-[#a5761c]",
+  },
 ];
 
 const schema = z.object({
@@ -25,9 +33,18 @@ const schema = z.object({
   }),
 });
 
-// Os logos vêm do CDN do Lovable e não existem em outros hosts (ex.: GitHub
-// Pages); quando a imagem falha, mostramos a sigla do grupo no lugar.
-function GroupLogo({ src, alt, sigla }: { src: string; alt: string; sigla: string }) {
+// Sigla como reserva caso a imagem não carregue
+function GroupLogo({
+  src,
+  alt,
+  sigla,
+  bg,
+}: {
+  src: string;
+  alt: string;
+  sigla: string;
+  bg: string;
+}) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
@@ -37,7 +54,9 @@ function GroupLogo({ src, alt, sigla }: { src: string; alt: string; sigla: strin
     );
   }
   return (
-    <span className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background p-2">
+    <span
+      className={`flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg p-2 ${bg || "bg-background"}`}
+    >
       <img
         src={src}
         alt={alt}
@@ -199,7 +218,7 @@ export function InscricaoPage() {
                           : "border-border bg-background hover:bg-accent"
                       }`}
                     >
-                      <GroupLogo src={g.logo} alt={g.label} sigla={g.sigla} />
+                      <GroupLogo src={g.logo} alt={g.label} sigla={g.sigla} bg={g.bg} />
                       <span className="text-sm font-medium text-foreground">{g.label}</span>
                     </button>
                   );
