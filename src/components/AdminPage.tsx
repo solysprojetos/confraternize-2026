@@ -128,7 +128,9 @@ export function AdminPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
               Área restrita
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">Confraternização 2026</h1>
+            <h1 className="mt-3 text-3xl font-bold uppercase tracking-tight text-foreground">
+              Confraternização 2026
+            </h1>
             <p className="mt-3 text-base text-muted-foreground">Entre para ver as inscrições.</p>
           </header>
           <form
@@ -189,7 +191,7 @@ export function AdminPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
               Área restrita
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="mt-2 text-3xl font-bold uppercase tracking-tight text-foreground">
               Inscrições — Confraternização 2026
             </h1>
           </div>

@@ -124,7 +124,7 @@ export function InscricaoPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
             Inscrição oficial
           </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-bold uppercase tracking-tight text-foreground sm:text-5xl">
             Confraternização 2026
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
