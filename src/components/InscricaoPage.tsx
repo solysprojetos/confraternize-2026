@@ -1,4 +1,5 @@
 import { useState } from "react";
+import QRCode from "qrcode";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import sgroupLogo from "@/assets/logos/sgroup.png";
@@ -85,6 +86,8 @@ export function InscricaoPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
+  const [inscricaoId, setInscricaoId] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,7 +102,10 @@ export function InscricaoPage() {
     }
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.from("inscricoes").insert(parsed.data);
+    // O id é gerado aqui para servir de código do convite (QR) sem precisar
+    // ler o registro de volta do banco
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from("inscricoes").insert({ ...parsed.data, id });
     setLoading(false);
     if (error) {
       setErrors({
@@ -110,7 +116,42 @@ export function InscricaoPage() {
       });
       return;
     }
+    setInscricaoId(id);
+    const qr = await QRCode.toDataURL(`CONFRA2026:${id}`, { width: 480, margin: 2 });
+    setQrUrl(qr);
     setDone(true);
+  }
+
+  function textoConvite() {
+    const grupoNome = grupos.find((g) => g.value === form.grupo)?.label ?? "";
+    return [
+      "CONFRATERNIZAÇÃO 2026 - Convite confirmado",
+      "",
+      `Nome: ${form.nome_completo}`,
+      `Grupo: ${grupoNome}`,
+      "",
+      "Local: Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175",
+      "Início às 16:30",
+      "",
+      `Código do convite: ${inscricaoId}`,
+      "Apresente o QR code na entrada.",
+    ].join("\n");
+  }
+
+  function enviarEmail() {
+    const assunto = "Convite - Confraternização 2026";
+    window.location.href = `mailto:${encodeURIComponent(form.email)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(textoConvite())}`;
+  }
+
+  function enviarWhatsApp() {
+    window.open(`https://wa.me/?text=${encodeURIComponent(textoConvite())}`, "_blank");
+  }
+
+  function baixarQr() {
+    const a = document.createElement("a");
+    a.href = qrUrl;
+    a.download = `convite-confraternizacao-2026-${(form.nome_completo.split(" ")[0] ?? "convidado").toLowerCase()}.png`;
+    a.click();
   }
 
   const field =
@@ -142,6 +183,44 @@ export function InscricaoPage() {
             <p className="mt-2 text-muted-foreground">
               Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Confraternização 2026.
             </p>
+
+            {qrUrl && (
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <img
+                  src={qrUrl}
+                  alt="QR code do convite"
+                  className="h-44 w-44 rounded-xl border border-border bg-white p-2"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este é o seu convite. Salve e apresente o QR code na entrada.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={baixarQr}
+                className="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Baixar QR code
+              </button>
+              <button
+                type="button"
+                onClick={enviarEmail}
+                className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+              >
+                Enviar por e-mail
+              </button>
+              <button
+                type="button"
+                onClick={enviarWhatsApp}
+                className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+              >
+                Enviar no WhatsApp
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => {
@@ -151,9 +230,11 @@ export function InscricaoPage() {
                   email: "",
                   grupo: "",
                 });
+                setQrUrl("");
+                setInscricaoId("");
                 setDone(false);
               }}
-              className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              className="mt-6 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
             >
               Inscrever outra pessoa
             </button>
