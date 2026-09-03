@@ -20,3 +20,13 @@ jobs:
             -H "apikey: sb_publishable_BG6LttsyALYbyKjxASE9ag_xxAJMAge")
           echo "Resposta do banco: HTTP $code"
           test "$code" = "200"
+
+      # Reenvia convites que ficaram na fila (ex.: dia com mais de 300
+      # inscrições, acima da cota diária gratuita do Brevo)
+      - name: Reenviar convites pendentes
+        run: |
+          resp=$(curl -s --max-time 120 -X POST \
+            "https://qozuvdhqhpzpreusvkkr.supabase.co/functions/v1/enviar-convite" \
+            -H "content-type: application/json" \
+            -d '{"pendentes": true}')
+          echo "Resultado: $resp"
