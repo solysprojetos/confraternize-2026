@@ -88,6 +88,7 @@ export function InscricaoPage() {
   const [done, setDone] = useState(false);
   const [qrUrl, setQrUrl] = useState("");
   const [inscricaoId, setInscricaoId] = useState("");
+  const [emailStatus, setEmailStatus] = useState<"" | "enviando" | "ok" | "erro">("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -120,6 +121,15 @@ export function InscricaoPage() {
     const qr = await QRCode.toDataURL(`CONFRA2026:${id}`, { width: 480, margin: 2 });
     setQrUrl(qr);
     setDone(true);
+    // Dispara o e-mail de convite com o QR code em segundo plano
+    setEmailStatus("enviando");
+    supabase.functions
+      .invoke("enviar-convite", { body: { id } })
+      .then(({ data, error: fnError }) => {
+        const ok = !fnError && (data as { ok?: boolean } | null)?.ok === true;
+        setEmailStatus(ok ? "ok" : "erro");
+      })
+      .catch(() => setEmailStatus("erro"));
   }
 
   function textoConvite() {
@@ -194,6 +204,14 @@ export function InscricaoPage() {
                 <p className="text-xs text-muted-foreground">
                   Este é o seu convite. Salve e apresente o QR code na entrada.
                 </p>
+                {emailStatus === "enviando" && (
+                  <p className="text-xs text-muted-foreground">Enviando o convite por e-mail...</p>
+                )}
+                {emailStatus === "ok" && (
+                  <p className="text-xs font-medium text-foreground">
+                    Convite enviado para {form.email}.
+                  </p>
+                )}
               </div>
             )}
 
@@ -232,6 +250,7 @@ export function InscricaoPage() {
                 });
                 setQrUrl("");
                 setInscricaoId("");
+                setEmailStatus("");
                 setDone(false);
               }}
               className="mt-6 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
