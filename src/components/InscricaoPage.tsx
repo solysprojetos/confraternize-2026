@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { ConvitePlayer } from "@/components/ConvitePlayer";
+import { ConvitePlayer, ConviteEmPreparacao } from "@/components/ConvitePlayer";
 import { evento, temVideoConvite } from "@/config/evento";
+import { digitosDoTelefone, formatarTelefone } from "@/lib/telefone";
 import {
   enviarProgresso,
   iniciarSessao,
@@ -12,117 +12,260 @@ import {
   salvarEstado,
   type EstadoConvite,
 } from "@/lib/conviteSessao";
-import sgroupLogo from "@/assets/logos/sgroup.png";
-import solysLogo from "@/assets/logos/solys.png";
-import supportLogo from "@/assets/logos/support.png";
+import sgroupPng from "@/assets/logos/sgroup.png";
+import sgroupWebp from "@/assets/logos/sgroup.webp";
+import solysPng from "@/assets/logos/solys.png";
+import solysWebp from "@/assets/logos/solys.webp";
+import supportPng from "@/assets/logos/support.png";
+import supportWebp from "@/assets/logos/support.webp";
 
-const grupos = [
+type Grupo = {
+  value: string;
+  label: string;
+  sigla: string;
+  png: string | null;
+  webp: string | null;
+  /** A logo do Grupo Support é branca: precisa de fundo escuro para aparecer. */
+  fundoEscuro: boolean;
+};
+
+const grupos: Grupo[] = [
   {
     value: "grupo_support",
     label: "Grupo Support",
     sigla: "GS",
-    logo: supportLogo,
-    // Logo todo branco: fundo azul-marinho para aparecer
-    bg: "bg-primary",
+    png: supportPng,
+    webp: supportWebp,
+    fundoEscuro: true,
   },
-  { value: "sgroup", label: "SGroup Nacional", sigla: "SG", logo: sgroupLogo, bg: "" },
+  {
+    value: "sgroup",
+    label: "SGroup Nacional",
+    sigla: "SG",
+    png: sgroupPng,
+    webp: sgroupWebp,
+    fundoEscuro: false,
+  },
   {
     value: "solys",
     label: "Solys Gestão Administrativa",
     sigla: "SO",
-    logo: solysLogo,
-    bg: "",
+    png: solysPng,
+    webp: solysWebp,
+    fundoEscuro: false,
   },
-  { value: "parceiros", label: "Parceiros", sigla: "PA", logo: null, bg: "" },
-  { value: "convidados", label: "Convidados", sigla: "CO", logo: null, bg: "" },
+  {
+    value: "parceiros",
+    label: "Parceiros",
+    sigla: "PA",
+    png: null,
+    webp: null,
+    fundoEscuro: false,
+  },
+  {
+    value: "convidados",
+    label: "Convidados",
+    sigla: "CO",
+    png: null,
+    webp: null,
+    fundoEscuro: false,
+  },
 ];
 
 const schema = z.object({
   nome_completo: z.string().trim().min(3, "Informe seu nome completo").max(120),
-  telefone: z.string().trim().min(10, "Informe um telefone válido com DDD").max(20),
-  email: z.string().trim().email("E-mail inválido").max(255),
+  telefone: z
+    .string()
+    .trim()
+    .refine((v) => digitosDoTelefone(v).length >= 10, "Informe um telefone com DDD")
+    .refine((v) => digitosDoTelefone(v).length <= 11, "Telefone muito longo"),
+  email: z.string().trim().email("Informe um e-mail válido").max(255),
   grupo: z.enum(["sgroup", "solys", "grupo_support", "parceiros", "convidados"], {
-    message: "Selecione seu grupo",
+    message: "Selecione o seu grupo",
   }),
 });
 
-// Grupos sem logo (Parceiros/Convidados) mostram apenas o nome; a sigla é a
-// reserva caso a imagem não carregue
-function GroupLogo({
-  src,
+const IconeCalendario = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full">
+    <path
+      d="M7 3v3m10-3v3M3.5 9.5h17M5 5.5h14a1.5 1.5 0 011.5 1.5v12A1.5 1.5 0 0119 20.5H5A1.5 1.5 0 013.5 19V7A1.5 1.5 0 015 5.5z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const IconeRelogio = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full">
+    <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    <path
+      d="M12 7.5V12l3 1.8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const IconeLocal = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full">
+    <path
+      d="M12 21s6.5-5.6 6.5-10.2A6.5 6.5 0 0012 4.3a6.5 6.5 0 00-6.5 6.5C5.5 15.4 12 21 12 21z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+    />
+    <circle cx="12" cy="10.6" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+  </svg>
+);
+
+/** Logo oficial: WebP para quem suporta, PNG como reserva. */
+function Logo({
+  webp,
+  png,
   alt,
   sigla,
-  bg,
+  className,
 }: {
-  src: string | null;
+  webp: string | null;
+  png: string | null;
   alt: string;
   sigla: string;
-  bg: string;
+  className: string;
 }) {
-  const [failed, setFailed] = useState(false);
-  if (!src) return null;
-  if (failed) {
+  const [falhou, setFalhou] = useState(false);
+  if (!png) return null;
+  if (falhou) {
     return (
-      <span className="flex h-10 w-20 shrink-0 items-center justify-center rounded-md bg-secondary text-sm font-semibold tracking-wide text-primary">
+      <span className="text-sm font-semibold tracking-wide text-primary" aria-hidden="true">
         {sigla}
       </span>
     );
   }
   return (
-    <span
-      className={`flex h-10 w-20 shrink-0 items-center justify-center overflow-hidden ${
-        bg ? `rounded-md p-1.5 ${bg}` : ""
-      }`}
-    >
+    <picture>
+      {webp && <source srcSet={webp} type="image/webp" />}
       <img
-        src={src}
+        src={png}
         alt={alt}
-        className="max-h-full max-w-full object-contain"
+        className={className}
         loading="lazy"
-        onError={() => setFailed(true)}
+        decoding="async"
+        onError={() => setFalhou(true)}
       />
-    </span>
+    </picture>
   );
 }
 
 function Etapas({ etapa }: { etapa: 1 | 2 }) {
   const itens = [
-    { numero: 1, titulo: "Assistir ao convite" },
-    { numero: 2, titulo: "Confirmar presença" },
+    { numero: 1 as const, titulo: "Assistir ao convite" },
+    { numero: 2 as const, titulo: "Confirmar presença" },
   ];
   return (
-    <ol className="flex items-center justify-center gap-3 text-xs sm:gap-4 sm:text-sm">
+    <ol className="flex items-center gap-3 text-xs sm:text-[13px]">
       {itens.map((item, i) => {
         const concluida = etapa > item.numero;
         const atual = etapa === item.numero;
         return (
-          <li key={item.numero} className="flex items-center gap-3 sm:gap-4">
+          <li key={item.numero} className="flex items-center gap-3">
             <span className="flex items-center gap-2">
               <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ${
                   concluida
-                    ? "border-gold bg-gold text-white"
+                    ? "bg-gold text-navy-deep"
                     : atual
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground"
+                      ? "bg-white text-navy"
+                      : "border border-white/30 text-white/60"
                 }`}
                 aria-hidden="true"
               >
                 {concluida ? "✓" : item.numero}
               </span>
-              <span
-                className={
-                  atual || concluida ? "font-medium text-foreground" : "text-muted-foreground"
-                }
-              >
+              <span className={atual || concluida ? "text-white" : "text-white/55"}>
                 {item.titulo}
               </span>
             </span>
-            {i === 0 && <span className="h-px w-6 bg-border sm:w-10" aria-hidden="true" />}
+            {i === 0 && <span className="h-px w-6 bg-white/25 sm:w-10" aria-hidden="true" />}
           </li>
         );
       })}
     </ol>
+  );
+}
+
+function FaixaLogos() {
+  return (
+    <section className="border-b border-border bg-card">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-5 py-8 sm:px-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          Uma realização
+        </p>
+        <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+          {grupos
+            .filter((g) => g.png)
+            .map((g) => (
+              <li
+                key={g.value}
+                className={`flex h-[4.5rem] w-40 items-center justify-center rounded-xl px-4 sm:h-24 sm:w-52 ${
+                  g.fundoEscuro ? "bg-navy" : "bg-background ring-1 ring-border"
+                }`}
+              >
+                <Logo
+                  webp={g.webp}
+                  png={g.png}
+                  alt={g.label}
+                  sigla={g.sigla}
+                  className="max-h-12 w-auto max-w-full object-contain sm:max-h-16"
+                />
+              </li>
+            ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function InformacoesEvento({ compacto = false }: { compacto?: boolean }) {
+  if (compacto) {
+    return (
+      <p className="text-sm text-white/75">
+        {evento.dataExtenso} · Início às {evento.horario} · {evento.bairro}
+      </p>
+    );
+  }
+  const itens = [
+    { Icone: IconeCalendario, rotulo: "Data", valor: evento.dataExtenso, destaque: true },
+    { Icone: IconeRelogio, rotulo: "Início", valor: `${evento.horario}` },
+    { Icone: IconeLocal, rotulo: "Local", valor: evento.endereco },
+  ];
+  return (
+    <dl className="mt-8 space-y-4 border-t border-white/12 pt-6">
+      {itens.map(({ Icone, rotulo, valor, destaque }) => (
+        <div key={rotulo} className="flex gap-4">
+          <span className="mt-0.5 h-5 w-5 shrink-0 text-gold" aria-hidden="true">
+            <Icone />
+          </span>
+          <div>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">
+              {rotulo}
+            </dt>
+            <dd
+              className={
+                destaque
+                  ? "mt-1 font-display text-lg leading-snug text-white sm:text-xl"
+                  : "mt-1 max-w-xs text-pretty text-[15px] leading-relaxed text-white/85"
+              }
+            >
+              {valor}
+            </dd>
+          </div>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -140,14 +283,13 @@ export function InscricaoPage() {
   const [inscricaoId, setInscricaoId] = useState("");
   const [emailStatus, setEmailStatus] = useState<"" | "enviando" | "ok" | "erro">("");
 
-  // Etapa 1 (convite) / etapa 2 (formulário)
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [liberado, setLiberado] = useState(false);
-  const [acabouDeLiberar, setAcabouDeLiberar] = useState(false);
   const convite = useRef<EstadoConvite | null>(null);
   const filaTrechos = useRef<number[]>([]);
   const duracaoRef = useRef(0);
   const enviandoRef = useRef(false);
+  const tituloFormulario = useRef<HTMLHeadingElement>(null);
   const temVideo = temVideoConvite();
 
   function guardar(estado: EstadoConvite) {
@@ -158,30 +300,11 @@ export function InscricaoPage() {
   // Retoma a liberação já obtida nesta mesma sessão do navegador
   useEffect(() => {
     const salvo = lerEstadoSalvo();
-    if (salvo) {
-      convite.current = salvo;
-      duracaoRef.current = salvo.duracao;
-      if (salvo.concluido) {
-        setLiberado(true);
-        setEtapa(2);
-      }
-      return;
-    }
-    // Sem vídeo publicado ainda: abre a sessão mesmo assim — quem decide se
-    // isso libera a inscrição é o servidor.
-    if (!temVideo) {
-      iniciarSessao(0)
-        .then((estado) => {
-          if (!estado) {
-            setLiberado(true);
-            return;
-          }
-          guardar(estado);
-          if (estado.concluido) setLiberado(true);
-        })
-        .catch(() => setLiberado(true));
-    }
-  }, [temVideo]);
+    if (!salvo) return;
+    convite.current = salvo;
+    duracaoRef.current = salvo.duracao;
+    if (salvo.concluido) setLiberado(true);
+  }, []);
 
   const abrirSessao = useCallback(async (duracao: number) => {
     duracaoRef.current = duracao;
@@ -210,7 +333,6 @@ export function InscricaoPage() {
         guardar({ ...convite.current, concluido: true });
       }
     } catch {
-      // Recoloca o lote na fila para a próxima tentativa
       filaTrechos.current = [...lote, ...filaTrechos.current];
     } finally {
       enviandoRef.current = false;
@@ -221,16 +343,35 @@ export function InscricaoPage() {
     async (duracao: number) => {
       duracaoRef.current = duracao || duracaoRef.current;
       setLiberado(true);
-      setAcabouDeLiberar(true);
-      const sessao = convite.current?.sessao;
-      if (!sessao) return;
-      // Fecha a contagem no servidor com os últimos trechos reproduzidos
+      if (!convite.current?.sessao) return;
       await mandarProgresso([], duracaoRef.current);
-      if (convite.current)
+      if (convite.current) {
         guardar({ ...convite.current, concluido: true, duracao: duracaoRef.current });
+      }
     },
     [mandarProgresso],
   );
+
+  function irParaFormulario() {
+    setEtapa(2);
+    window.requestAnimationFrame(() => {
+      tituloFormulario.current?.focus();
+      tituloFormulario.current?.scrollIntoView({ block: "center" });
+    });
+  }
+
+  function validarCampo(campo: keyof typeof form) {
+    const parsed = schema.safeParse(form);
+    const problema = parsed.success
+      ? undefined
+      : parsed.error.issues.find((i) => i.path[0] === campo);
+    setErrors((atuais) => {
+      const proximos = { ...atuais };
+      if (problema) proximos[campo] = problema.message;
+      else delete proximos[campo];
+      return proximos;
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -238,9 +379,7 @@ export function InscricaoPage() {
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) {
-        next[String(issue.path[0])] = issue.message;
-      }
+      for (const issue of parsed.error.issues) next[String(issue.path[0])] = issue.message;
       setErrors(next);
       return;
     }
@@ -259,7 +398,6 @@ export function InscricaoPage() {
     });
     setLoading(false);
     if (error) {
-      // 42501: o servidor não reconheceu o convite como assistido
       if (error.code === "42501") {
         setLiberado(false);
         setEtapa(1);
@@ -272,11 +410,13 @@ export function InscricaoPage() {
         form:
           error.code === "23505"
             ? "Este e-mail já está inscrito."
-            : "Não foi possível enviar. Tente novamente.",
+            : "Não foi possível confirmar sua presença agora. Tente novamente.",
       });
       return;
     }
     setInscricaoId(id);
+    // A biblioteca do QR code só é baixada quando a presença é confirmada
+    const { default: QRCode } = await import("qrcode");
     const qr = await QRCode.toDataURL(`CONFRA2026:${id}`, { width: 480, margin: 2 });
     setQrUrl(qr);
     setDone(true);
@@ -291,17 +431,18 @@ export function InscricaoPage() {
       .catch(() => setEmailStatus("erro"));
   }
 
+  const nomeDoGrupo = grupos.find((g) => g.value === form.grupo)?.label ?? "";
+
   function textoConvite() {
-    const grupoNome = grupos.find((g) => g.value === form.grupo)?.label ?? "";
     return [
-      "CONFRATERNIZAÇÃO 2026 - Convite confirmado",
+      "CONFRATERNIZAÇÃO 2026 - Presença confirmada",
       "",
       `Nome: ${form.nome_completo}`,
-      `Grupo: ${grupoNome}`,
+      `Grupo: ${nomeDoGrupo}`,
       "",
-      ...(evento.dataExtenso ? [`Data: ${evento.dataExtenso}`] : []),
-      `Local: ${evento.endereco}`,
+      `Data: ${evento.dataExtenso}`,
       `Início às ${evento.horario}`,
+      `Local: ${evento.endereco}`,
       "",
       `Código do convite: ${inscricaoId}`,
       "Apresente o QR code na entrada.",
@@ -324,143 +465,58 @@ export function InscricaoPage() {
     a.click();
   }
 
-  const field =
-    "w-full rounded-lg border border-border bg-card px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-ring/25";
+  const campo =
+    "w-full rounded-lg border bg-card px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/20";
+  const campoErro = "border-destructive/70";
+  const campoOk = "border-border";
 
-  const detalhes = (
-    <dl className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-      {evento.dataExtenso && (
-        <div className="px-5 py-4">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Data
-          </dt>
-          <dd className="mt-1 font-display text-xl leading-snug text-foreground">
-            {evento.dataExtenso}
-          </dd>
-        </div>
-      )}
-      <div className="px-5 py-4">
-        <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Local
-        </dt>
-        <dd className="mt-1 text-[15px] leading-relaxed text-foreground">{evento.endereco}</dd>
-      </div>
-      <div className="px-5 py-4">
-        <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Início
-        </dt>
-        <dd className="mt-1 text-[15px] text-foreground">{evento.horario}</dd>
-      </div>
-    </dl>
-  );
+  const mostrarConvite = !done && etapa === 1;
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-6 sm:py-16">
-        <header className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
-            Convite oficial
-          </p>
-          <h1 className="mx-auto mt-4 max-w-2xl font-display text-[1.75rem] leading-tight tracking-tight text-foreground sm:text-4xl">
-            Confraternização 2026
-          </h1>
-          <span className="mx-auto mt-5 block h-px w-16 bg-gold-soft" aria-hidden="true" />
-        </header>
+      {/* Abertura em azul-marinho */}
+      <section className="sobre-escuro relative overflow-hidden bg-navy text-white">
+        <span
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(85% 65% at 78% 8%, color-mix(in oklab, var(--navy-soft) 92%, transparent) 0%, transparent 58%)",
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/45 to-transparent"
+          aria-hidden="true"
+        />
 
-        {!done && (
-          <div className="mt-8">
-            <Etapas etapa={etapa} />
-          </div>
-        )}
+        <div
+          className={`relative mx-auto w-full max-w-6xl px-5 sm:px-8 ${
+            mostrarConvite ? "py-12 sm:py-16" : "py-10 sm:py-12"
+          }`}
+        >
+          {!done && <Etapas etapa={etapa} />}
 
-        {done ? (
-          <section className="mx-auto mt-10 max-w-xl rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
-            <h2 className="font-display text-2xl text-foreground">Inscrição confirmada</h2>
-            <p className="mt-2 text-[15px] text-muted-foreground">
-              Obrigado, {form.nome_completo.split(" ")[0]}. Nos vemos na Confraternização 2026.
-            </p>
-
-            {qrUrl && (
-              <div className="mt-6 flex flex-col items-center gap-2">
-                <img
-                  src={qrUrl}
-                  alt="QR code do convite"
-                  className="h-44 w-44 rounded-xl border border-border bg-white p-2"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Este é o seu convite. Salve e apresente o QR code na entrada.
+          {mostrarConvite ? (
+            <div className="mt-10 grid items-center gap-10 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-gold">
+                  Convite oficial
                 </p>
-                {emailStatus === "enviando" && (
-                  <p className="text-xs text-muted-foreground">Enviando o convite por e-mail...</p>
-                )}
-                {emailStatus === "ok" && (
-                  <p className="text-xs font-medium text-foreground">
-                    Convite enviado para {form.email}.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <button
-                type="button"
-                onClick={baixarQr}
-                className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                Baixar QR code
-              </button>
-              <button
-                type="button"
-                onClick={enviarEmail}
-                className="rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-              >
-                Enviar por e-mail
-              </button>
-              <button
-                type="button"
-                onClick={enviarWhatsApp}
-                className="rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-              >
-                Enviar no WhatsApp
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setForm({
-                  nome_completo: "",
-                  telefone: "",
-                  email: "",
-                  grupo: "",
-                });
-                setQrUrl("");
-                setInscricaoId("");
-                setEmailStatus("");
-                setDone(false);
-                setEtapa(1);
-              }}
-              className="mt-6 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
-            >
-              Inscrever outra pessoa
-            </button>
-          </section>
-        ) : etapa === 1 ? (
-          <section className="mt-10">
-            <h2 className="mx-auto max-w-2xl text-center font-display text-xl leading-snug text-foreground sm:text-2xl">
-              Um momento especial merece a sua presença.
-            </h2>
-
-            <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-12">
-              <div className="order-2 lg:order-1">
-                <p className="text-[15px] leading-relaxed text-muted-foreground">
-                  Reserve alguns minutos para o nosso convite. Ele conta o que preparamos para
-                  celebrar mais um ano de trabalho ao lado de quem faz parte da nossa história.
+                <h1 className="mt-4 font-display text-[2.15rem] leading-[1.08] tracking-tight text-white sm:text-5xl">
+                  {evento.nome}
+                </h1>
+                <p className="mt-5 font-display text-xl leading-snug text-white/90 sm:text-[1.6rem]">
+                  {evento.chamada}
                 </p>
-                <div className="mt-6">{detalhes}</div>
+                <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/70">
+                  Chegamos ao fim de mais um ano de trabalho lado a lado. Preparamos um encontro
+                  para celebrar o caminho que percorremos juntos e agradecer a cada pessoa que faz
+                  parte dele. Sua presença é o que dá sentido a esta noite.
+                </p>
+                <InformacoesEvento />
               </div>
 
-              <div className="order-1 lg:order-2">
+              <div className="lg:pl-2">
                 {temVideo ? (
                   <ConvitePlayer
                     onTrechosAssistidos={mandarProgresso}
@@ -469,76 +525,93 @@ export function InscricaoPage() {
                     concluido={liberado}
                   />
                 ) : (
-                  <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gold-soft bg-card px-6 text-center">
-                    <p className="font-display text-lg text-foreground">
-                      O convite em vídeo será publicado em breve.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Enquanto isso, você já pode confirmar a sua presença.
-                    </p>
-                  </div>
+                  <ConviteEmPreparacao />
                 )}
 
-                {liberado && temVideo ? (
-                  <p className="mt-5 rounded-lg border border-gold-soft bg-gold-soft/20 px-4 py-3 text-center text-[15px] font-medium text-foreground">
-                    Convite assistido! Agora confirme sua presença.
-                  </p>
-                ) : (
-                  <p className="mt-5 text-center text-[15px] text-muted-foreground">
-                    {temVideo
-                      ? "Assista ao nosso convite até o final para liberar sua inscrição."
-                      : "Confirme sua presença agora; o convite em vídeo chega em breve."}
-                  </p>
-                )}
+                <p
+                  className={`mt-6 text-center text-[15px] ${
+                    liberado ? "text-gold" : "text-white/70"
+                  }`}
+                  aria-live="polite"
+                >
+                  {!temVideo
+                    ? "O convite em vídeo será publicado em breve."
+                    : liberado
+                      ? "Convite assistido. Agora confirme a sua presença."
+                      : "Assista ao convite para liberar sua inscrição."}
+                </p>
 
                 <button
                   type="button"
                   disabled={!liberado}
-                  onClick={() => {
-                    setEtapa(2);
-                    setAcabouDeLiberar(false);
-                  }}
-                  className="mt-5 w-full rounded-lg bg-primary px-5 py-3.5 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-muted-foreground"
+                  onClick={irParaFormulario}
+                  className={`mt-4 w-full rounded-full px-6 py-3.5 text-base font-semibold transition-all duration-300 ${
+                    liberado
+                      ? "surgir bg-gold text-navy-deep shadow-[0_14px_30px_-16px_rgba(201,162,39,0.9)] hover:brightness-105"
+                      : "cursor-not-allowed bg-white/10 text-white/45"
+                  }`}
                 >
-                  {liberado ? "Continuar para inscrição" : "Assista ao vídeo para continuar"}
+                  Confirmar minha presença
                 </button>
 
                 {errors["form"] && (
-                  <p className="mt-3 text-center text-sm text-destructive">{errors["form"]}</p>
+                  <p className="mt-3 text-center text-sm text-gold" role="alert">
+                    {errors["form"]}
+                  </p>
                 )}
               </div>
             </div>
-          </section>
-        ) : (
-          <section className="mx-auto mt-10 max-w-xl">
-            <div className="text-center">
-              <h2 className="font-display text-2xl text-foreground">
-                Vamos confirmar sua presença?
-              </h2>
-              <p className="mt-2 text-[15px] text-muted-foreground">
-                Preencha seus dados e selecione o grupo do qual você faz parte.
-              </p>
+          ) : (
+            <div className="mt-8">
+              <h1 className="font-display text-2xl leading-tight text-white sm:text-3xl">
+                {evento.nome}
+              </h1>
+              <div className="mt-2">
+                <InformacoesEvento compacto />
+              </div>
             </div>
+          )}
+        </div>
+      </section>
 
-            <form
-              onSubmit={handleSubmit}
-              className="mt-7 space-y-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
-            >
-              <div>
+      {mostrarConvite && <FaixaLogos />}
+
+      {/* Formulário */}
+      {!done && etapa === 2 && (
+        <section className="surgir mx-auto w-full max-w-2xl px-5 py-12 sm:px-8 sm:py-16">
+          <h2
+            ref={tituloFormulario}
+            tabIndex={-1}
+            className="font-display text-[1.75rem] leading-tight text-foreground sm:text-4xl"
+          >
+            Vamos confirmar sua presença?
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            Preencha seus dados e selecione o grupo do qual você faz parte.
+          </p>
+
+          <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
                 <label htmlFor="nome" className="mb-2 block text-sm font-medium text-foreground">
                   Nome completo
                 </label>
                 <input
                   id="nome"
-                  className={field}
+                  className={`${campo} ${errors["nome_completo"] ? campoErro : campoOk}`}
                   value={form.nome_completo}
                   maxLength={120}
                   autoComplete="name"
-                  placeholder="Seu nome completo"
+                  placeholder="Como você quer ser chamado no convite"
+                  aria-invalid={Boolean(errors["nome_completo"])}
+                  aria-describedby={errors["nome_completo"] ? "erro-nome" : undefined}
                   onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
+                  onBlur={() => validarCampo("nome_completo")}
                 />
                 {errors["nome_completo"] && (
-                  <p className="mt-1 text-sm text-destructive">{errors["nome_completo"]}</p>
+                  <p id="erro-nome" className="mt-1.5 text-sm text-destructive">
+                    {errors["nome_completo"]}
+                  </p>
                 )}
               </div>
 
@@ -552,15 +625,21 @@ export function InscricaoPage() {
                 <input
                   id="telefone"
                   type="tel"
-                  className={field}
+                  inputMode="tel"
+                  className={`${campo} ${errors["telefone"] ? campoErro : campoOk}`}
                   value={form.telefone}
-                  maxLength={20}
+                  maxLength={16}
                   autoComplete="tel"
-                  placeholder="(85) 99999-9999"
-                  onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                  placeholder="(85) 99999-8888"
+                  aria-invalid={Boolean(errors["telefone"])}
+                  aria-describedby={errors["telefone"] ? "erro-telefone" : undefined}
+                  onChange={(e) => setForm({ ...form, telefone: formatarTelefone(e.target.value) })}
+                  onBlur={() => validarCampo("telefone")}
                 />
                 {errors["telefone"] && (
-                  <p className="mt-1 text-sm text-destructive">{errors["telefone"]}</p>
+                  <p id="erro-telefone" className="mt-1.5 text-sm text-destructive">
+                    {errors["telefone"]}
+                  </p>
                 )}
               </div>
 
@@ -571,96 +650,245 @@ export function InscricaoPage() {
                 <input
                   id="email"
                   type="email"
-                  className={field}
+                  className={`${campo} ${errors["email"] ? campoErro : campoOk}`}
                   value={form.email}
                   maxLength={255}
                   autoComplete="email"
                   placeholder="voce@empresa.com.br"
+                  aria-invalid={Boolean(errors["email"])}
+                  aria-describedby={errors["email"] ? "erro-email" : undefined}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onBlur={() => validarCampo("email")}
                 />
                 {errors["email"] && (
-                  <p className="mt-1 text-sm text-destructive">{errors["email"]}</p>
+                  <p id="erro-email" className="mt-1.5 text-sm text-destructive">
+                    {errors["email"]}
+                  </p>
                 )}
               </div>
+            </div>
 
-              <fieldset>
-                <legend className="mb-3 text-sm font-medium text-foreground">
-                  Você faz parte de qual grupo?
-                </legend>
-                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Grupo">
-                  {grupos.map((g, indice) => {
-                    const active = form.grupo === g.value;
-                    const ultimoSozinho = indice === grupos.length - 1 && grupos.length % 2 === 1;
-                    return (
-                      <button
-                        key={g.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={active}
-                        onClick={() => setForm({ ...form, grupo: g.value })}
-                        className={`relative flex min-h-[104px] flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center transition-colors ${
-                          ultimoSozinho ? "col-span-2" : ""
-                        } ${
-                          active
-                            ? "border-primary bg-accent ring-2 ring-ring/30"
-                            : "border-border bg-background hover:border-gold-soft hover:bg-accent/60"
-                        }`}
-                      >
-                        {active && (
-                          <span
-                            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[11px] font-bold text-white"
-                            aria-hidden="true"
-                          >
-                            ✓
-                          </span>
-                        )}
-                        <GroupLogo src={g.logo} alt={g.label} sigla={g.sigla} bg={g.bg} />
-                        <span className="text-[13px] font-medium leading-snug text-foreground">
-                          {g.label}
+            <fieldset>
+              <legend className="mb-3 text-sm font-medium text-foreground">
+                Você faz parte de qual grupo?
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Grupo">
+                {grupos.map((g, indice) => {
+                  const ativo = form.grupo === g.value;
+                  const ultimoSozinho = indice === grupos.length - 1 && grupos.length % 2 === 1;
+                  return (
+                    <button
+                      key={g.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={ativo}
+                      onClick={() => {
+                        setForm({ ...form, grupo: g.value });
+                        setErrors((atuais) => {
+                          const proximos = { ...atuais };
+                          delete proximos["grupo"];
+                          return proximos;
+                        });
+                      }}
+                      className={`relative flex min-h-[72px] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors ${
+                        ultimoSozinho ? "sm:col-span-2" : ""
+                      } ${
+                        ativo
+                          ? "border-primary bg-accent shadow-[inset_0_0_0_1px_var(--primary)]"
+                          : "border-border bg-card hover:border-gold-soft hover:bg-accent/50"
+                      }`}
+                    >
+                      {g.png ? (
+                        <span
+                          className={`flex h-12 w-20 shrink-0 items-center justify-center rounded-lg px-2 ${
+                            g.fundoEscuro ? "bg-navy" : "bg-background ring-1 ring-border/70"
+                          }`}
+                        >
+                          <Logo
+                            webp={g.webp}
+                            png={g.png}
+                            alt={g.label}
+                            sigla={g.sigla}
+                            className="max-h-9 w-auto max-w-full object-contain"
+                          />
                         </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {errors["grupo"] && (
-                  <p className="mt-2 text-sm text-destructive">{errors["grupo"]}</p>
-                )}
-              </fieldset>
-
-              {errors["form"] && <p className="text-sm text-destructive">{errors["form"]}</p>}
-
-              <button
-                type="submit"
-                disabled={loading}
-                aria-busy={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loading && (
-                  <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
-                    aria-hidden="true"
-                  />
-                )}
-                {loading ? "Enviando sua inscrição..." : "Confirmar minha inscrição"}
-              </button>
-
-              {temVideo && (
-                <button
-                  type="button"
-                  onClick={() => setEtapa(1)}
-                  className="mx-auto block text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
-                >
-                  Rever o convite
-                </button>
+                      ) : (
+                        <span
+                          className="flex h-12 w-20 shrink-0 items-center justify-center rounded-lg bg-secondary font-display text-lg text-primary"
+                          aria-hidden="true"
+                        >
+                          {g.sigla}
+                        </span>
+                      )}
+                      <span className="text-[15px] font-medium leading-snug text-foreground">
+                        {g.label}
+                      </span>
+                      <span
+                        className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
+                          ativo
+                            ? "border-gold-deep bg-gold-deep text-white"
+                            : "border-border bg-transparent text-transparent"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        ✓
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors["grupo"] && (
+                <p className="mt-2 text-sm text-destructive">{errors["grupo"]}</p>
               )}
-            </form>
-          </section>
-        )}
+            </fieldset>
 
-        <p className="sr-only" aria-live="polite">
-          {acabouDeLiberar ? "Convite assistido! Agora confirme sua presença." : ""}
-        </p>
-      </div>
+            {errors["form"] && (
+              <p
+                className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                role="alert"
+              >
+                {errors["form"]}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              aria-busy={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading && (
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
+                  aria-hidden="true"
+                />
+              )}
+              {loading ? "Confirmando presença..." : "Confirmar minha presença"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setEtapa(1)}
+              className="mx-auto block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Voltar ao convite
+            </button>
+          </form>
+        </section>
+      )}
+
+      {/* Confirmação */}
+      {done && (
+        <section className="surgir mx-auto w-full max-w-2xl px-5 py-12 sm:px-8 sm:py-16">
+          <div className="text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-gold-deep">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-7 w-7">
+                <path
+                  d="M5 12.5l4.5 4.5L19 7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <h2 className="mt-5 font-display text-[1.75rem] leading-tight text-foreground sm:text-4xl">
+              Presença confirmada!
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              Obrigado, {form.nome_completo.split(" ")[0]}. Guardamos o seu lugar na {evento.nome}.
+            </p>
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+            <dl className="divide-y divide-border">
+              {[
+                { rotulo: "Nome", valor: form.nome_completo },
+                { rotulo: "Grupo", valor: nomeDoGrupo },
+                { rotulo: "Data", valor: evento.dataExtenso },
+                { rotulo: "Início", valor: evento.horario },
+                { rotulo: "Local", valor: evento.endereco },
+              ].map((linha) => (
+                <div key={linha.rotulo} className="flex flex-wrap gap-x-6 gap-y-1 px-5 py-3.5">
+                  <dt className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {linha.rotulo}
+                  </dt>
+                  <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
+                    {linha.valor}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {qrUrl && (
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <img
+                src={qrUrl}
+                alt="QR code do convite"
+                className="h-40 w-40 rounded-xl border border-border bg-white p-2"
+              />
+              <p className="text-center text-xs text-muted-foreground">
+                Este é o seu convite. Salve e apresente o QR code na entrada.
+              </p>
+              {emailStatus === "enviando" && (
+                <p className="text-xs text-muted-foreground">Enviando o convite por e-mail...</p>
+              )}
+              {emailStatus === "ok" && (
+                <p className="text-xs font-medium text-foreground">
+                  Convite enviado para {form.email}.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={baixarQr}
+              className="rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Baixar QR code
+            </button>
+            <button
+              type="button"
+              onClick={enviarEmail}
+              className="rounded-full border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+            >
+              Enviar por e-mail
+            </button>
+            <button
+              type="button"
+              onClick={enviarWhatsApp}
+              className="rounded-full border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+            >
+              Enviar no WhatsApp
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setForm({ nome_completo: "", telefone: "", email: "", grupo: "" });
+              setQrUrl("");
+              setInscricaoId("");
+              setEmailStatus("");
+              setDone(false);
+              setEtapa(1);
+            }}
+            className="mx-auto mt-8 block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Inscrever outra pessoa
+          </button>
+        </section>
+      )}
+
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-6xl px-5 py-8 text-center text-xs text-muted-foreground sm:px-8">
+          {evento.nome} · {evento.dataExtenso} · Início às {evento.horario}
+        </div>
+      </footer>
     </main>
   );
 }

@@ -2,6 +2,28 @@
 @source "../src";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./assets/fonts/inter.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("./assets/fonts/playfair-display.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -59,39 +81,51 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-soft: var(--navy-soft);
   --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
   --color-gold-soft: var(--gold-soft);
   --color-surface: var(--surface);
   --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
 }
 
 :root {
   --radius: 0.625rem;
 
   /* Paleta institucional: off-white, azul-marinho e dourado discreto */
-  --background: oklch(0.977 0.003 250);
-  --surface: oklch(0.962 0.005 250);
+  --background: oklch(0.976 0.004 84);
+  --surface: oklch(0.958 0.006 84);
   --foreground: oklch(0.248 0.045 252);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.248 0.045 252);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.248 0.045 252);
-  --primary: oklch(0.34 0.075 253);
+  --primary: oklch(0.253 0.062 256);
   --primary-foreground: oklch(0.99 0.002 250);
   --secondary: oklch(0.955 0.008 250);
-  --secondary-foreground: oklch(0.34 0.075 253);
+  --secondary-foreground: oklch(0.253 0.062 256);
   --muted: oklch(0.955 0.008 250);
   --muted-foreground: oklch(0.515 0.032 253);
   --accent: oklch(0.951 0.014 250);
-  --accent-foreground: oklch(0.34 0.075 253);
-  --gold: oklch(0.672 0.088 85);
+  --accent-foreground: oklch(0.253 0.062 256);
+  --navy: oklch(0.253 0.062 256);
+  --navy-deep: oklch(0.192 0.052 257);
+  --navy-soft: oklch(0.318 0.062 255);
+  --gold: oklch(0.79 0.112 86);
+  --gold-deep: oklch(0.605 0.098 78);
   --gold-soft: oklch(0.885 0.048 88);
   --destructive: oklch(0.55 0.2 27.5);
   --destructive-foreground: oklch(0.99 0.002 250);
   --border: oklch(0.903 0.012 250);
   --input: oklch(0.903 0.012 250);
-  --ring: oklch(0.55 0.06 253);
-  --font-display: ui-serif, Georgia, "Times New Roman", Times, serif;
+  --ring: oklch(0.46 0.075 255);
+  --font-display: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -158,7 +192,50 @@
 
 @layer base {
   body {
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Foco sempre visível para quem navega pelo teclado */
+  :focus-visible {
+    outline: 2px solid var(--gold-deep);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .sobre-escuro :focus-visible {
+    outline-color: var(--gold);
+  }
+}
+
+/* Entrada discreta usada nas trocas de etapa */
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.surgir {
+  animation: surgir 0.32s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surgir {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

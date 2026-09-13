@@ -35,20 +35,25 @@ vídeo foram realmente reproduzidos**; o banco acumula essa cobertura numa
 sessão de convite e só grava a inscrição quando ela chega a 95% do vídeo.
 
 - A barra permite rever trechos, mas não adiantar o que ainda não passou.
-- Não adianta deixar o vídeo mudo em outra aba e voltar: a cobertura precisa
+- Não adianta deixar o vídeo em outra aba e voltar: a cobertura precisa
   acompanhar o relógio, então um vídeo de 3 minutos leva 3 minutos.
 - Abrir o formulário direto, recarregar a página ou chamar a API na mão não
   grava nada: a inserção direta na tabela foi revogada e o único caminho é a
   função `convite_inscrever`, que confere a sessão.
 - A liberação vale para a mesma sessão do navegador: quem já assistiu não
-  precisa ver de novo se recarregar a página.
+  precisa ver de novo, e volta do formulário para o convite sem perder o que
+  digitou.
+
+> **Enquanto não houver vídeo cadastrado, a inscrição fica indisponível.**
+> A página mostra a capa "Estamos preparando um convite especial para você" e
+> o botão de confirmar presença permanece bloqueado.
 
 ## Publicar o vídeo do convite
 
 1. Coloque os arquivos em `public/convite/` (vídeo MP4, capa e, se houver,
    legendas em `.vtt`).
 2. Aponte os caminhos em `src/config/evento.ts` (`videoConvite.src`,
-   `poster` e `legendas.src`).
+   `poster` e `legendas.src`). Se o vídeo não for 16:9, ajuste `proporcao`.
 3. Cadastre a duração do vídeo no banco, em segundos — é ela que o servidor
    usa para validar a liberação:
 
@@ -56,20 +61,18 @@ sessão de convite e só grava a inscrição quando ela chega a 95% do vídeo.
    update public.convite_config set duracao_minima_segundos = 180;
    ```
 
-Enquanto `videoConvite.src` estiver vazio e a duração no banco for `0`, a
-página avisa que o convite chega em breve e mantém as inscrições abertas.
+Os dados do evento (nome, chamada, data, horário e endereço) ficam no mesmo
+`src/config/evento.ts`.
 
-A data completa do evento aparece em destaque assim que for preenchida em
-`evento.data` / `evento.dataExtenso` no mesmo arquivo.
+## Identidade visual
 
-### Proteções do banco (para ele não crescer sem controle)
-
-- **E-mail único**: a mesma pessoa não consegue se inscrever duas vezes.
-- **Teto de 1500 inscrições**: acima disso o banco recusa novos registros
-  (ajustável quando necessário).
-- **Leitura restrita**: apenas o e-mail administrador enxerga os dados.
-- O banco é **separado** de qualquer outro projeto (ex.: Mulheres Curadas) —
-  cada projeto Supabase tem sua própria cota, um não interfere no outro.
+- Azul-marinho profundo na abertura, off-white nas áreas de leitura e dourado
+  discreto nos detalhes.
+- Títulos em Playfair Display e textos em Inter, servidos pelo próprio site
+  (`src/assets/fonts/`), sem depender de servidor externo.
+- Logos oficiais em WebP com PNG de reserva. A do Grupo Support é branca e por
+  isso aparece sempre sobre fundo azul-marinho.
+- Animações curtas, desligadas para quem prefere movimento reduzido.
 
 ## Publicação
 

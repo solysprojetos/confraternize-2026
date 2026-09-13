@@ -4,29 +4,34 @@
 
 export const evento = {
   nome: "Confraternização 2026",
+  chamada: "Um ano de conquistas. Um encontro para celebrar.",
   endereco: "Av. Godofredo Maciel, 1179 – Maraponga, Fortaleza – CE, 60714-175",
+  bairro: "Maraponga, Fortaleza – CE",
   horario: "16h30",
 
-  // Data completa do evento. Ainda não há data cadastrada no projeto: assim
-  // que ela for definida, preencha os dois campos abaixo e ela passa a
-  // aparecer em destaque na página.
-  // Ex.: data: "2026-12-12", dataExtenso: "Sábado, 12 de dezembro de 2026"
-  data: "" as string,
-  dataExtenso: "" as string,
+  // Data do evento
+  data: "2026-12-19",
+  dataExtenso: "Sábado, 19 de dezembro de 2026",
+  diaCurto: "19",
+  mesCurto: "dez",
 };
 
 export const videoConvite = {
-  // Arquivo do vídeo (MP4 H.264 recomendado). Deixe vazio enquanto o convite
-  // ainda não estiver pronto: a página avisa que ele será publicado em breve
-  // e mantém as inscrições abertas.
+  // Arquivo do vídeo (MP4 H.264 recomendado). Enquanto estiver vazio, a
+  // página mostra a capa de convite em preparação e a inscrição permanece
+  // indisponível.
   // Ex.: src: "convite/convite-confraternizacao-2026.mp4"
   src: "" as string,
 
-  // Capa personalizada exibida antes de o visitante iniciar a reprodução.
+  // Capa personalizada. Sem ela, a própria página desenha uma capa com a
+  // identidade do evento.
   // Ex.: poster: "convite/capa-convite.jpg"
   poster: "" as string,
 
-  // Legendas (WebVTT). Deixe src vazio para esconder o botão CC.
+  // Proporção do vídeo cadastrado (largura / altura). 16/9 é o padrão.
+  proporcao: 16 / 9,
+
+  // Legendas (WebVTT). Deixe src vazio para esconder o botão de legendas.
   // Ex.: legendas: { src: "convite/convite-pt-br.vtt", idioma: "pt-BR", rotulo: "Português" }
   legendas: {
     src: "" as string,
