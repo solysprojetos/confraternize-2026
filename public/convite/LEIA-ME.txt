@@ -1,0 +1,8 @@
+Coloque aqui os arquivos do convite em vídeo:
+
+  convite-confraternizacao-2026.mp4   o vídeo (MP4 H.264)
+  capa-convite.jpg                    a capa exibida antes de tocar
+  convite-pt-br.vtt                   as legendas (opcional)
+
+Depois aponte os caminhos em src/config/evento.ts e atualize a duração do
+vídeo no banco (veja o README, seção "Publicar o vídeo do convite").
