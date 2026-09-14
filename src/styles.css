@@ -211,6 +211,28 @@
   }
 }
 
+/* Em tela cheia o quadro passa a caber na tela: numa tela deitada, a caixa
+   9/16 do convite calcularia uma altura maior que o monitor e cortaria o
+   vídeo e os controles. */
+.moldura-convite:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: var(--navy-deep);
+}
+.moldura-convite:fullscreen > * {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+.moldura-convite:fullscreen > * > * {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
 /* --------------------------------------------------------------------------
    Acabamento editorial: papel, filetes e revelação discreta ao rolar.
    -------------------------------------------------------------------------- */

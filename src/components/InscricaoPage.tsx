@@ -383,26 +383,65 @@ export function InscricaoPage() {
           </header>
 
           {/* Abertura */}
-          <div className="mx-auto max-w-3xl pb-9 pt-10 text-center sm:pb-14 sm:pt-16">
+          <div className="pb-8 pt-9 text-center sm:pb-10 sm:pt-12">
             <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
               Convite oficial
             </p>
-            <h1
-              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
-              style={{ "--atraso": "60ms" } as React.CSSProperties}
-            >
-              Confraternização{" "}
-              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
-            </h1>
+          </div>
 
+          {/* Painel do convite em vídeo: cartão claro, borda fina, cantos
+              suaves e sombra discreta. O vídeo é o destaque da abertura. */}
+          <div
+            className="revelar mx-auto w-full max-w-[30rem]"
+            style={{ "--atraso": "60ms" } as React.CSSProperties}
+          >
+            <div className="rounded-2xl border border-border bg-card px-5 py-6 shadow-[0_18px_44px_-30px_rgba(16,36,64,0.45)] sm:px-7 sm:py-8">
+              <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
+                Confraternização 2026
+              </p>
+              <h1 className="mt-4 text-center font-display text-[clamp(1.5rem,5.6vw,2rem)] font-normal leading-[1.15] text-foreground">
+                Uma mensagem especial para você
+              </h1>
+              <p className="mx-auto mt-3 max-w-[22rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
+                Dê o play e descubra o que preparamos para esse momento.
+              </p>
+
+              <span
+                className="filete mx-auto mt-6 block h-px w-10 bg-gold-deep/40"
+                aria-hidden="true"
+              />
+
+              {/* O convite foi gravado na vertical: a largura é limitada pela
+                  altura da tela para o quadro inteiro caber sem rolar. */}
+              <div
+                className="mx-auto mt-6 w-full max-w-[26rem]"
+                style={{ maxWidth: "min(100%, 26rem, max(15rem, calc(66svh * 9 / 16)))" }}
+              >
+                {temVideo ? (
+                  <ConvitePlayer
+                    key={tentativa}
+                    onTrechosAssistidos={mandarProgresso}
+                    onConcluir={concluirConvite}
+                    onDuracao={abrirSessao}
+                    concluido={liberado}
+                  />
+                ) : (
+                  <ConviteEmPreparacao />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* A voz do convite, logo abaixo do painel */}
+          <div className="mx-auto max-w-2xl pt-9 text-center sm:pt-11">
             <p
-              className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
+              className="revelar font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
               Um ano de conquistas. Um encontro para celebrar.
             </p>
             <p
-              className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
+              className="revelar mt-6 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:text-[13px] sm:tracking-[0.16em]"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
               <span className="whitespace-nowrap">19 de dezembro de 2026</span>
@@ -418,33 +457,6 @@ export function InscricaoPage() {
                 <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
               </span>
             </p>
-          </div>
-
-          {/* O vídeo, no centro da página — emoldurado como peça de convite.
-              Como o convite é vertical, a largura é limitada pela altura da
-              tela: assim o quadro inteiro cabe sem precisar rolar. O piso de
-              15rem evita que ele vire um selo no celular deitado. */}
-          <div
-            className="relative mx-auto w-full max-w-[26rem]"
-            style={{ maxWidth: "min(100%, 26rem, max(15rem, calc(72svh * 9 / 16)))" }}
-          >
-            <div
-              className="pointer-events-none absolute -inset-[5px] bg-gradient-to-tr from-gold via-gold-soft to-gold opacity-35 blur-[2px]"
-              aria-hidden="true"
-            />
-            <div className="relative border border-gold/25 bg-navy-deep shadow-[0_30px_60px_-30px_color-mix(in_oklab,var(--navy-deep)_60%,transparent)]">
-              {temVideo ? (
-                <ConvitePlayer
-                  key={tentativa}
-                  onTrechosAssistidos={mandarProgresso}
-                  onConcluir={concluirConvite}
-                  onDuracao={abrirSessao}
-                  concluido={liberado}
-                />
-              ) : (
-                <ConviteEmPreparacao />
-              )}
-            </div>
           </div>
 
           {/* Etapas e chamada para a confirmação */}
