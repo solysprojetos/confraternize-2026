@@ -79,44 +79,6 @@ function Logo({
   );
 }
 
-/** 01 — Assistir ao convite · 02 — Confirmar presença */
-function Etapas({ etapa }: { etapa: 1 | 2 }) {
-  const itens = [
-    { numero: "01", titulo: "Assistir ao convite" },
-    { numero: "02", titulo: "Confirmar presença" },
-  ];
-  return (
-    <ol className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:gap-x-14">
-      {itens.map((item, i) => {
-        const indice = (i + 1) as 1 | 2;
-        const ativa = etapa >= indice;
-        return (
-          <li key={item.numero} className="flex items-baseline gap-3">
-            <span
-              className={`font-display text-[13px] tabular-nums ${ativa ? "text-gold" : "text-white/55"}`}
-            >
-              {item.numero}
-            </span>
-            <span
-              className={`text-[11px] uppercase tracking-[0.24em] ${
-                ativa ? "text-white/85" : "text-white/55"
-              }`}
-            >
-              {item.titulo}
-            </span>
-            {i === 0 && (
-              <span
-                className={`h-px w-6 sm:w-10 ${etapa > 1 ? "bg-gold/60" : "bg-white/20"}`}
-                aria-hidden="true"
-              />
-            )}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
 export function InscricaoPage() {
   const [form, setForm] = useState({
     nome_completo: "",
@@ -148,8 +110,7 @@ export function InscricaoPage() {
   const secaoConvite = useRef<HTMLElement>(null);
   const temVideo = temVideoConvite();
 
-  const etapa: 1 | 2 = abriuFormulario || done ? 2 : 1;
-  useRevelar(`${etapa}-${done}-${liberado}`);
+  useRevelar(`${abriuFormulario}-${done}-${liberado}`);
 
   function guardar(estado: EstadoConvite) {
     convite.current = estado;
@@ -419,26 +380,26 @@ export function InscricaoPage() {
               Um ano de conquistas. Um encontro para celebrar.
             </p>
             <p
-              className="revelar mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[0.26em] text-white/65 sm:mt-9 sm:gap-x-5"
+              className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-white/70 sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
-              <span>19 de dezembro de 2026</span>
-              <span className="text-white/25" aria-hidden="true">
-                /
+              <span className="whitespace-nowrap">19 de dezembro de 2026</span>
+              {/* No celular a linha quebra aqui, mantendo duas linhas equilibradas */}
+              <span className="mx-3 text-white/30 max-sm:hidden" aria-hidden="true">
+                ·
               </span>
-              <span>16h30</span>
-              <span className="text-white/25" aria-hidden="true">
-                /
+              <span className="block sm:inline">
+                <span className="whitespace-nowrap">16h30</span>
+                <span className="mx-3 text-white/30" aria-hidden="true">
+                  ·
+                </span>
+                <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
               </span>
-              <span>Maraponga, Fortaleza</span>
             </p>
           </div>
 
           {/* O vídeo, no centro da página */}
-          <div
-            className="revelar mx-auto w-full max-w-[940px]"
-            style={{ "--atraso": "120ms" } as React.CSSProperties}
-          >
+          <div className="mx-auto w-full max-w-[940px]">
             {temVideo ? (
               <ConvitePlayer
                 key={tentativa}
@@ -453,28 +414,29 @@ export function InscricaoPage() {
           </div>
 
           {/* Etapas e chamada para a confirmação */}
-          <div className="mx-auto w-full max-w-[940px] pb-16 pt-10 sm:pb-24 sm:pt-12">
-            <Etapas etapa={etapa} />
+          <div className="mx-auto w-full max-w-[940px] pb-16 pt-9 sm:pb-24 sm:pt-11">
+            {(liberado || done) && (
+              <p
+                className="text-center text-[15px] leading-relaxed text-white/85"
+                aria-live="polite"
+              >
+                {done
+                  ? confirmou
+                    ? "Sua presença está confirmada. O convite fica logo abaixo."
+                    : "Sua resposta foi registrada. Obrigado por avisar."
+                  : "Agora queremos saber se podemos contar com a sua presença."}
+              </p>
+            )}
 
-            <p
-              id="aviso-liberacao"
-              className={`mt-8 text-center text-[15px] leading-relaxed ${
-                liberado ? "text-white/85" : "text-white/70"
-              }`}
-              aria-live="polite"
-            >
-              {done
-                ? confirmou
-                  ? "Sua presença está confirmada. O convite fica logo abaixo."
-                  : "Sua resposta foi registrada. Obrigado por avisar."
-                : !temVideo
-                  ? "A confirmação de presença será aberta quando o convite em vídeo for publicado."
-                  : liberado
-                    ? "Agora queremos saber se podemos contar com a sua presença."
-                    : "Assista ao convite até o fim para abrir a confirmação de presença."}
+            <p id="aviso-liberacao" className="sr-only" aria-live="polite">
+              {!temVideo
+                ? "A confirmação de presença será aberta quando o convite em vídeo for publicado."
+                : liberado
+                  ? "Confirmação de presença liberada."
+                  : "Assista ao convite até o fim para liberar a confirmação de presença."}
             </p>
 
-            <div className="mt-7 flex justify-center">
+            <div className="flex justify-center">
               <button
                 type="button"
                 aria-disabled={!liberado}
