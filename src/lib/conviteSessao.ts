@@ -11,6 +11,8 @@ export type EstadoConvite = {
   concluido: boolean;
   blocos: number[];
   duracao: number;
+  /** O banco sabe registrar quem avisa que não poderá comparecer. */
+  aceitaResposta: boolean;
 };
 
 type RespostaConvite = {
@@ -18,6 +20,7 @@ type RespostaConvite = {
   concluido?: boolean;
   segundos?: number;
   duracao?: number;
+  aceita_resposta?: boolean;
 };
 
 type ErroSupabase = { code?: string; message?: string } | null;
@@ -54,6 +57,7 @@ export function lerEstadoSalvo(): EstadoConvite | null {
       concluido: Boolean(dados.concluido),
       blocos: Array.isArray(dados.blocos) ? dados.blocos : [],
       duracao: Number(dados.duracao) || 0,
+      aceitaResposta: Boolean(dados.aceitaResposta),
     };
   } catch {
     return null;
@@ -93,6 +97,7 @@ export async function iniciarSessao(duracao: number): Promise<EstadoConvite | nu
     concluido: Boolean(resposta.concluido),
     blocos: [],
     duracao: Number(resposta.duracao) || duracao,
+    aceitaResposta: resposta.aceita_resposta === true,
   };
 }
 

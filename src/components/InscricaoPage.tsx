@@ -8,6 +8,7 @@ import { digitosDoTelefone, formatarTelefone } from "@/lib/telefone";
 import {
   enviarProgresso,
   iniciarSessao,
+  limparEstado,
   lerEstadoSalvo,
   registrarInscricao,
   salvarEstado,
@@ -118,6 +119,8 @@ export function InscricaoPage() {
   const [emailStatus, setEmailStatus] = useState<"" | "enviando" | "ok" | "erro">("");
 
   const [liberado, setLiberado] = useState(false);
+  // Só perguntamos "sim ou não" quando o banco sabe registrar a recusa
+  const [aceitaResposta, setAceitaResposta] = useState(false);
   const [abriuFormulario, setAbriuFormulario] = useState(false);
   const convite = useRef<EstadoConvite | null>(null);
   const filaTrechos = useRef<number[]>([]);
@@ -132,6 +135,7 @@ export function InscricaoPage() {
 
   function guardar(estado: EstadoConvite) {
     convite.current = estado;
+    setAceitaResposta(estado.aceitaResposta);
     salvarEstado(estado);
   }
 
@@ -141,6 +145,7 @@ export function InscricaoPage() {
     if (!salvo) return;
     convite.current = salvo;
     duracaoRef.current = salvo.duracao;
+    setAceitaResposta(salvo.aceitaResposta);
     if (salvo.concluido) setLiberado(true);
   }, []);
 
@@ -227,7 +232,7 @@ export function InscricaoPage() {
     }
     setErrors({});
     setLoading(true);
-    const comparecera = resposta === "sim";
+    const comparecera = !aceitaResposta || resposta === "sim";
     // O id é gerado aqui para virar o código do convite (QR) sem precisar ler
     // o registro de volta do banco
     const id = crypto.randomUUID();
@@ -523,13 +528,25 @@ export function InscricaoPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    // A sessão do convite é de uso único: outra pessoa precisa
+                    // assistir ao convite para que a resposta seja aceita.
+                    limparEstado();
+                    convite.current = null;
+                    filaTrechos.current = [];
+                    duracaoRef.current = 0;
                     setForm({ nome_completo: "", grupo: "", telefone: "", email: "" });
                     setResposta("sim");
                     setQrUrl("");
                     setInscricaoId("");
                     setEmailStatus("");
+                    setErrors({});
+                    setLiberado(false);
+                    setAceitaResposta(false);
                     setDone(false);
                     setAbriuFormulario(false);
+                    window.requestAnimationFrame(() =>
+                      secaoConvite.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                    );
                   }}
                   className="mt-12 text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                 >
@@ -680,37 +697,39 @@ export function InscricaoPage() {
                       )}
                     </fieldset>
 
-                    <fieldset className="mt-10">
-                      <legend className={rotulo}>Confirmarei presença</legend>
-                      <div
-                        className="mt-3 flex gap-3"
-                        role="radiogroup"
-                        aria-label="Confirmarei presença"
-                      >
-                        {[
-                          { valor: "sim" as const, texto: "Sim, estarei lá" },
-                          { valor: "nao" as const, texto: "Não poderei ir" },
-                        ].map((opcao) => {
-                          const ativa = resposta === opcao.valor;
-                          return (
-                            <button
-                              key={opcao.valor}
-                              type="button"
-                              role="radio"
-                              aria-checked={ativa}
-                              onClick={() => setResposta(opcao.valor)}
-                              className={`min-h-[56px] flex-1 border px-4 text-[13px] transition-colors ${
-                                ativa
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
-                              }`}
-                            >
-                              {opcao.texto}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
+                    {aceitaResposta && (
+                      <fieldset className="mt-10">
+                        <legend className={rotulo}>Confirmarei presença</legend>
+                        <div
+                          className="mt-3 flex gap-3"
+                          role="radiogroup"
+                          aria-label="Confirmarei presença"
+                        >
+                          {[
+                            { valor: "sim" as const, texto: "Sim, estarei lá" },
+                            { valor: "nao" as const, texto: "Não poderei ir" },
+                          ].map((opcao) => {
+                            const ativa = resposta === opcao.valor;
+                            return (
+                              <button
+                                key={opcao.valor}
+                                type="button"
+                                role="radio"
+                                aria-checked={ativa}
+                                onClick={() => setResposta(opcao.valor)}
+                                className={`min-h-[56px] flex-1 border px-4 text-[13px] transition-colors ${
+                                  ativa
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                                }`}
+                              >
+                                {opcao.texto}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    )}
 
                     {errors["form"] && (
                       <p
@@ -736,7 +755,7 @@ export function InscricaoPage() {
                         )}
                         {loading
                           ? "Registrando..."
-                          : resposta === "sim"
+                          : !aceitaResposta || resposta === "sim"
                             ? "Enviar confirmação"
                             : "Enviar resposta"}
                       </button>

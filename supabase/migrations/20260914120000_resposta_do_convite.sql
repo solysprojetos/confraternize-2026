@@ -70,3 +70,54 @@ DROP TRIGGER IF EXISTS trg_limita_inscricoes ON public.inscricoes;
 CREATE TRIGGER trg_limita_inscricoes
   BEFORE INSERT ON public.inscricoes
   FOR EACH ROW EXECUTE FUNCTION public.limita_inscricoes();
+
+-- A abertura da sessão passa a anunciar que este banco sabe registrar uma
+-- resposta negativa. O site usa isso para só perguntar "sim ou não" quando a
+-- resposta puder mesmo ser gravada.
+CREATE OR REPLACE FUNCTION public.convite_iniciar(p_duracao int DEFAULT 0)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_minima int;
+  v_duracao int;
+  v_id uuid;
+  v_concluido boolean;
+BEGIN
+  SELECT duracao_minima_segundos INTO v_minima FROM public.convite_config WHERE id;
+
+  -- O visitante nunca consegue encurtar o vídeo: vale a maior duração entre a
+  -- informada pelo navegador e a cadastrada no banco.
+  v_duracao := greatest(coalesce(p_duracao, 0), coalesce(v_minima, 0));
+  IF v_duracao > 7200 THEN
+    RAISE EXCEPTION 'Duração de convite inválida' USING ERRCODE = '22023';
+  END IF;
+
+  DELETE FROM public.convite_sessoes WHERE criado_em < now() - interval '2 days';
+
+  v_concluido := v_duracao = 0;
+
+  INSERT INTO public.convite_sessoes (
+    duracao_segundos, trechos, concluido, concluido_em
+  ) VALUES (
+    v_duracao,
+    CASE WHEN v_duracao > 0 THEN array_fill(false, ARRAY[v_duracao]) ELSE '{}'::boolean[] END,
+    v_concluido,
+    CASE WHEN v_concluido THEN now() END
+  )
+  RETURNING id INTO v_id;
+
+  RETURN jsonb_build_object(
+    'sessao', v_id,
+    'duracao', v_duracao,
+    'concluido', v_concluido,
+    'segundos', 0,
+    'aceita_resposta', true
+  );
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.convite_iniciar(int) FROM public;
+GRANT EXECUTE ON FUNCTION public.convite_iniciar(int) TO anon, authenticated;
