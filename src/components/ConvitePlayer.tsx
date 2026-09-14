@@ -65,14 +65,7 @@ function Moldura({ children }: { children: React.ReactNode }) {
 function FundoDaCapa() {
   return (
     <>
-      <span
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(105% 80% at 50% 12%, var(--navy-soft) 0%, var(--navy-deep) 74%)",
-        }}
-        aria-hidden="true"
-      />
+      <span className="pointer-events-none absolute inset-0 bg-navy" aria-hidden="true" />
       <span className="textura-papel pointer-events-none absolute inset-0" aria-hidden="true" />
     </>
   );
@@ -301,7 +294,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
   const percentualLiberado = duracao > 0 ? Math.min(100, (maxAssistido / duracao) * 100) : 0;
   const percentualCobertura = concluido ? 100 : Math.round(Math.min(1, cobertura) * 100);
   const botao =
-    "flex h-9 w-9 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
 
   return (
     <div className="sobre-escuro w-full">
@@ -421,7 +414,10 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             )}
 
             {avisoAvanco && (
-              <p className="pointer-events-none absolute inset-x-4 bottom-24 mx-auto max-w-xs border border-white/20 bg-navy-deep/95 px-4 py-2 text-center text-xs text-white">
+              <p
+                role="status"
+                className="pointer-events-none absolute inset-x-4 bottom-24 mx-auto max-w-xs border border-white/20 bg-navy-deep/95 px-4 py-2 text-center text-xs text-white"
+              >
                 Você pode rever trechos, mas não adiantar o convite.
               </p>
             )}
@@ -429,7 +425,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             {/* Controles sobre o vídeo */}
             {iniciado && !erro && (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/95 via-navy-deep/70 to-transparent px-3 pb-2.5 pt-8 sm:px-4">
-                <div className="relative h-5">
+                <div className="relative h-8">
                   <span className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20">
                     <span
                       className="absolute inset-y-0 left-0 bg-white/35"
@@ -451,12 +447,12 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                     step={0.1}
                     value={posicao}
                     onChange={(e) => irPara(Number(e.target.value))}
-                    className="absolute inset-0 h-5 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                    className="absolute inset-0 h-8 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                     aria-valuetext={`${tempo(posicao)} de ${tempo(duracao)}`}
                   />
                 </div>
 
-                <div className="mt-1 flex items-center gap-1">
+                <div className="mt-1 flex items-center gap-1 overflow-hidden">
                   <button
                     type="button"
                     onClick={alternarReproducao}
@@ -466,11 +462,11 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                     <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
                   </button>
 
-                  <span className="px-1 text-xs tabular-nums text-white/80">
+                  <span className="shrink-0 px-1 text-xs tabular-nums text-white/80">
                     {tempo(posicao)} / {tempo(duracao)}
                   </span>
 
-                  <span className="ml-auto flex items-center gap-1">
+                  <span className="ml-auto flex shrink-0 items-center gap-1">
                     <button
                       type="button"
                       onClick={alternarMudo}
@@ -526,8 +522,10 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
         </div>
       </div>
 
-      {/* Progresso do convite */}
-      <div className="mt-5">
+      {/* Progresso do convite: só depois que a reprodução começa */}
+      <div
+        className={`mt-5 transition-opacity duration-500 ${iniciado || concluido ? "opacity-100" : "pointer-events-none opacity-0"}`}
+      >
         <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/45">
           <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
           <span className="tabular-nums">{percentualCobertura}%</span>
@@ -546,7 +544,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
           />
         </div>
         {fimSemCobertura && !concluido && (
-          <p className="mt-4 text-sm leading-relaxed text-white/70">
+          <p role="status" className="mt-4 text-sm leading-relaxed text-white/70">
             Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem reprodução.
           </p>
         )}

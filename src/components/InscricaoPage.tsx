@@ -21,6 +21,16 @@ import solysWebp from "@/assets/logos/solys.webp";
 import supportPng from "@/assets/logos/support.png";
 import supportWebp from "@/assets/logos/support.webp";
 
+/** Rola até o elemento e leva o foco junto, respeitando movimento reduzido. */
+function irAte(elemento: HTMLElement | null | undefined) {
+  if (!elemento) return;
+  const semMovimento =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  elemento.scrollIntoView({ behavior: semMovimento ? "auto" : "smooth", block: "start" });
+  elemento.focus({ preventScroll: true });
+}
+
 /** As empresas continuam gravadas na coluna "grupo" do banco. */
 const empresas = [
   { value: "grupo_support", label: "Grupo Support" },
@@ -83,18 +93,23 @@ function Etapas({ etapa }: { etapa: 1 | 2 }) {
         return (
           <li key={item.numero} className="flex items-baseline gap-3">
             <span
-              className={`font-display text-[13px] tabular-nums ${ativa ? "text-gold" : "text-white/30"}`}
+              className={`font-display text-[13px] tabular-nums ${ativa ? "text-gold" : "text-white/55"}`}
             >
               {item.numero}
             </span>
             <span
               className={`text-[11px] uppercase tracking-[0.24em] ${
-                ativa ? "text-white/85" : "text-white/35"
+                ativa ? "text-white/85" : "text-white/55"
               }`}
             >
               {item.titulo}
             </span>
-            {ativa && <span className="h-px w-6 bg-gold/70 sm:w-10" aria-hidden="true" />}
+            {i === 0 && (
+              <span
+                className={`h-px w-6 sm:w-10 ${etapa > 1 ? "bg-gold/60" : "bg-white/20"}`}
+                aria-hidden="true"
+              />
+            )}
           </li>
         );
       })}
@@ -122,11 +137,14 @@ export function InscricaoPage() {
   // Só perguntamos "sim ou não" quando o banco sabe registrar a recusa
   const [aceitaResposta, setAceitaResposta] = useState(false);
   const [abriuFormulario, setAbriuFormulario] = useState(false);
+  // Muda a cada convite novo: força o player a recomeçar do zero
+  const [tentativa, setTentativa] = useState(0);
   const convite = useRef<EstadoConvite | null>(null);
   const filaTrechos = useRef<number[]>([]);
   const duracaoRef = useRef(0);
   const enviandoRef = useRef(false);
   const secaoConfirmacao = useRef<HTMLDivElement>(null);
+  const destinoConfirmacao = useRef<HTMLDivElement>(null);
   const secaoConvite = useRef<HTMLElement>(null);
   const temVideo = temVideoConvite();
 
@@ -138,6 +156,17 @@ export function InscricaoPage() {
     setAceitaResposta(estado.aceitaResposta);
     salvarEstado(estado);
   }
+
+  // Leva o foco para a seção certa quando a página troca de momento. Precisa
+  // ser um efeito: no clique, o destino ainda não foi montado pelo React.
+  const momentoAnterior = useRef({ done: false, abriu: false });
+  useEffect(() => {
+    const antes = momentoAnterior.current;
+    if (done && !antes.done) irAte(destinoConfirmacao.current);
+    else if (!done && antes.done) irAte(secaoConvite.current);
+    else if (!abriuFormulario && antes.abriu) irAte(secaoConvite.current);
+    momentoAnterior.current = { done, abriu: abriuFormulario };
+  }, [done, abriuFormulario]);
 
   // Retoma a liberação já obtida nesta mesma sessão do navegador
   useEffect(() => {
@@ -193,10 +222,29 @@ export function InscricaoPage() {
     [mandarProgresso],
   );
 
+  /** Recomeça o convite do zero: sessão nova no servidor e player remontado. */
+  function reiniciarConvite() {
+    limparEstado();
+    convite.current = null;
+    filaTrechos.current = [];
+    duracaoRef.current = 0;
+    setLiberado(false);
+    setAceitaResposta(false);
+    setAbriuFormulario(false);
+    setTentativa((n) => n + 1);
+  }
+
   function abrirConfirmacao() {
     setAbriuFormulario(true);
     window.requestAnimationFrame(() => {
-      secaoConfirmacao.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      secaoConfirmacao.current?.scrollIntoView({
+        behavior:
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+        block: "start",
+      });
       secaoConfirmacao.current?.querySelector<HTMLInputElement>("#nome")?.focus({
         preventScroll: true,
       });
@@ -224,6 +272,18 @@ export function InscricaoPage() {
       const proximos: Record<string, string> = {};
       for (const issue of analise.error.issues) proximos[String(issue.path[0])] = issue.message;
       setErrors(proximos);
+      // Leva o foco ao primeiro campo com problema
+      const ordem = ["nome_completo", "telefone", "email", "grupo"] as const;
+      const primeiro = ordem.find((campo) => proximos[campo]);
+      const seletor =
+        primeiro === "grupo"
+          ? 'input[name="empresa"]'
+          : primeiro === "nome_completo"
+            ? "#nome"
+            : `#${primeiro}`;
+      window.requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>(seletor)?.focus({ preventScroll: false }),
+      );
       return;
     }
     if (!liberado) {
@@ -244,10 +304,12 @@ export function InscricaoPage() {
     setLoading(false);
     if (error) {
       if (error.code === "42501") {
-        setLiberado(false);
-        setAbriuFormulario(false);
+        const jaUsada = /já registrou/i.test(error.message ?? "");
+        reiniciarConvite();
         setErrors({
-          form: "Precisamos confirmar que o convite foi assistido até o fim. Reproduza o vídeo novamente.",
+          form: jaUsada
+            ? "Este convite já registrou uma resposta. Para responder por outra pessoa, assista ao convite novamente."
+            : "Precisamos confirmar que o convite foi assistido até o fim. Reproduza o vídeo novamente.",
         });
         return;
       }
@@ -263,6 +325,8 @@ export function InscricaoPage() {
     }
     setInscricaoId(id);
     setConfirmou(comparecera);
+    // A sessão do convite é de uso único: depois de aceita, não serve de novo
+    limparEstado();
     if (comparecera) {
       // A biblioteca do QR code só é baixada quando há presença confirmada
       const { default: QRCode } = await import("qrcode");
@@ -277,9 +341,6 @@ export function InscricaoPage() {
         .catch(() => setEmailStatus("erro"));
     }
     setDone(true);
-    window.requestAnimationFrame(() =>
-      secaoConfirmacao.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-    );
   }
 
   const nomeDaEmpresa = empresas.find((e) => e.value === form.grupo)?.label ?? "";
@@ -318,7 +379,7 @@ export function InscricaoPage() {
 
   const rotulo = "block text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground";
   const campo =
-    "mt-2.5 w-full border-0 border-b bg-transparent px-0 py-2.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/45 focus:border-gold-deep";
+    "mt-2.5 w-full border-0 border-b bg-transparent px-0 py-2.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/75 focus:border-gold-deep";
   const campoOk = "border-b-border";
   const campoErro = "border-b-destructive/70";
 
@@ -327,24 +388,23 @@ export function InscricaoPage() {
       {/* ================= O CONVITE ================= */}
       <section
         ref={secaoConvite}
-        className="sobre-escuro textura-papel relative bg-navy text-white"
+        tabIndex={-1}
+        className="sobre-escuro textura-papel relative bg-navy text-white outline-none"
       >
         <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10 lg:px-14">
           <header className="flex items-center justify-between border-b border-white/10 py-5">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/45">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">
               Confraternização 2026
             </span>
-            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-white/45 sm:block">
+            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-white/60 sm:block">
               Fortaleza · Ceará
             </span>
           </header>
 
           {/* Abertura */}
-          <div className="mx-auto max-w-3xl pb-12 pt-14 text-center sm:pb-16 sm:pt-20">
-            <p className="revelar flex items-center justify-center gap-4 text-[10px] font-medium uppercase tracking-[0.42em] text-gold">
-              <span className="h-px w-8 bg-gold/50 sm:w-12" aria-hidden="true" />
+          <div className="mx-auto max-w-3xl pb-9 pt-10 text-center sm:pb-14 sm:pt-16">
+            <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold">
               Convite oficial
-              <span className="h-px w-8 bg-gold/50 sm:w-12" aria-hidden="true" />
             </p>
             <h1
               className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal leading-[1.05] tracking-[-0.015em]"
@@ -353,19 +413,23 @@ export function InscricaoPage() {
               Confraternização 2026
             </h1>
             <p
-              className="revelar mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-white/65 sm:text-base"
+              className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-white/75 sm:mt-6"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
               Um ano de conquistas. Um encontro para celebrar.
             </p>
             <p
-              className="revelar mt-9 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.26em] text-white/70 sm:gap-x-6"
+              className="revelar mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[0.26em] text-white/65 sm:mt-9 sm:gap-x-5"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
               <span>19 de dezembro de 2026</span>
-              <span className="h-1 w-1 rounded-full bg-gold" aria-hidden="true" />
+              <span className="text-white/25" aria-hidden="true">
+                /
+              </span>
               <span>16h30</span>
-              <span className="h-1 w-1 rounded-full bg-gold" aria-hidden="true" />
+              <span className="text-white/25" aria-hidden="true">
+                /
+              </span>
               <span>Maraponga, Fortaleza</span>
             </p>
           </div>
@@ -377,6 +441,7 @@ export function InscricaoPage() {
           >
             {temVideo ? (
               <ConvitePlayer
+                key={tentativa}
                 onTrechosAssistidos={mandarProgresso}
                 onConcluir={concluirConvite}
                 onDuracao={abrirSessao}
@@ -392,30 +457,42 @@ export function InscricaoPage() {
             <Etapas etapa={etapa} />
 
             <p
+              id="aviso-liberacao"
               className={`mt-8 text-center text-[15px] leading-relaxed ${
-                liberado ? "text-white/85" : "text-white/55"
+                liberado ? "text-white/85" : "text-white/70"
               }`}
               aria-live="polite"
             >
-              {!temVideo
-                ? "A confirmação de presença será aberta quando o convite em vídeo for publicado."
-                : liberado
-                  ? "Agora queremos saber se podemos contar com a sua presença."
-                  : "Assista ao convite até o fim para abrir a confirmação de presença."}
+              {done
+                ? confirmou
+                  ? "Sua presença está confirmada. O convite fica logo abaixo."
+                  : "Sua resposta foi registrada. Obrigado por avisar."
+                : !temVideo
+                  ? "A confirmação de presença será aberta quando o convite em vídeo for publicado."
+                  : liberado
+                    ? "Agora queremos saber se podemos contar com a sua presença."
+                    : "Assista ao convite até o fim para abrir a confirmação de presença."}
             </p>
 
             <div className="mt-7 flex justify-center">
               <button
                 type="button"
-                disabled={!liberado}
-                onClick={abrirConfirmacao}
+                aria-disabled={!liberado}
+                aria-describedby="aviso-liberacao"
+                onClick={() => {
+                  if (!liberado) return;
+                  if (done) irAte(destinoConfirmacao.current);
+                  else abrirConfirmacao();
+                }}
                 className={`w-full max-w-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.26em] transition-colors duration-300 ${
-                  liberado
-                    ? "border border-gold bg-gold text-navy-deep hover:bg-transparent hover:text-gold"
-                    : "cursor-not-allowed border border-white/25 text-white/50"
+                  done
+                    ? "border border-white/30 text-white/80 hover:border-gold hover:text-gold"
+                    : liberado
+                      ? "border border-gold bg-gold text-navy-deep hover:bg-transparent hover:text-gold"
+                      : "cursor-not-allowed border border-white/25 text-white/50"
                 }`}
               >
-                Confirmar minha presença
+                {done ? "Ver minha resposta" : "Confirmar minha presença"}
               </button>
             </div>
 
@@ -432,11 +509,19 @@ export function InscricaoPage() {
       <div ref={secaoConfirmacao}>
         {done ? (
           <section className="abrir textura-papel textura-papel--clara relative border-b border-border">
-            <div className="mx-auto w-full max-w-[1240px] px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
+            <div
+              ref={destinoConfirmacao}
+              tabIndex={-1}
+              className="mx-auto w-full max-w-[1240px] px-6 py-16 outline-none sm:px-10 sm:py-24 lg:px-14"
+            >
               <div className="mx-auto max-w-2xl">
                 <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
                   {confirmou ? "Presença confirmada" : "Resposta registrada"}
                 </p>
+                <span
+                  className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
+                  aria-hidden="true"
+                />
                 <h2 className="mt-6 font-display text-[clamp(1.9rem,5vw,2.9rem)] font-normal leading-[1.1] text-foreground">
                   {confirmou ? "Presença confirmada." : "Obrigado por avisar."}
                 </h2>
@@ -528,25 +613,16 @@ export function InscricaoPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    // A sessão do convite é de uso único: outra pessoa precisa
-                    // assistir ao convite para que a resposta seja aceita.
-                    limparEstado();
-                    convite.current = null;
-                    filaTrechos.current = [];
-                    duracaoRef.current = 0;
+                    // A sessão do convite é de uso único: quem responde agora
+                    // precisa assistir ao convite outra vez.
+                    reiniciarConvite();
                     setForm({ nome_completo: "", grupo: "", telefone: "", email: "" });
                     setResposta("sim");
                     setQrUrl("");
                     setInscricaoId("");
                     setEmailStatus("");
                     setErrors({});
-                    setLiberado(false);
-                    setAceitaResposta(false);
                     setDone(false);
-                    setAbriuFormulario(false);
-                    window.requestAnimationFrame(() =>
-                      secaoConvite.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-                    );
                   }}
                   className="mt-12 text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                 >
@@ -564,13 +640,13 @@ export function InscricaoPage() {
                     <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
                       Etapa 02
                     </p>
+                    <span
+                      className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
+                      aria-hidden="true"
+                    />
                     <h2 className="mt-6 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground">
                       Podemos contar com você?
                     </h2>
-                    <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
-                      São quatro informações e uma resposta. Elas garantem o seu lugar e ajudam a
-                      organização a preparar a noite.
-                    </p>
                   </div>
 
                   <form onSubmit={handleSubmit} noValidate className="lg:col-span-8">
@@ -587,15 +663,17 @@ export function InscricaoPage() {
                           autoComplete="name"
                           placeholder="Como você quer ser chamado no convite"
                           aria-invalid={Boolean(errors["nome_completo"])}
-                          aria-describedby={errors["nome_completo"] ? "erro-nome" : undefined}
+                          aria-describedby="erro-nome"
                           onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
                           onBlur={() => validarCampo("nome_completo")}
                         />
-                        {errors["nome_completo"] && (
-                          <p id="erro-nome" className="mt-2 text-sm text-destructive">
-                            {errors["nome_completo"]}
-                          </p>
-                        )}
+                        <p
+                          id="erro-nome"
+                          role="alert"
+                          className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                        >
+                          {errors["nome_completo"] ?? ""}
+                        </p>
                       </div>
 
                       <div>
@@ -612,14 +690,18 @@ export function InscricaoPage() {
                           autoComplete="tel"
                           placeholder="(85) 99999-8888"
                           aria-invalid={Boolean(errors["telefone"])}
-                          aria-describedby={errors["telefone"] ? "erro-telefone" : undefined}
+                          aria-describedby="erro-telefone"
                           onChange={(e) =>
                             setForm({ ...form, telefone: formatarTelefone(e.target.value) })
                           }
                           onBlur={() => validarCampo("telefone")}
                         />
                         {errors["telefone"] && (
-                          <p id="erro-telefone" className="mt-2 text-sm text-destructive">
+                          <p
+                            id="erro-telefone"
+                            role="alert"
+                            className="mt-2 text-sm text-destructive"
+                          >
                             {errors["telefone"]}
                           </p>
                         )}
@@ -638,43 +720,45 @@ export function InscricaoPage() {
                           autoComplete="email"
                           placeholder="voce@empresa.com.br"
                           aria-invalid={Boolean(errors["email"])}
-                          aria-describedby={errors["email"] ? "erro-email" : undefined}
+                          aria-describedby="erro-email"
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
                           onBlur={() => validarCampo("email")}
                         />
-                        {errors["email"] && (
-                          <p id="erro-email" className="mt-2 text-sm text-destructive">
-                            {errors["email"]}
-                          </p>
-                        )}
+                        <p
+                          id="erro-email"
+                          role="alert"
+                          className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                        >
+                          {errors["email"] ?? ""}
+                        </p>
                       </div>
                     </div>
 
                     <fieldset className="mt-10">
                       <legend className={rotulo}>Empresa</legend>
-                      <div
-                        className="mt-3 border-t border-border"
-                        role="radiogroup"
-                        aria-label="Empresa"
-                      >
+                      <div className="mt-3 border-t border-border">
                         {empresas.map((empresa) => {
                           const ativa = form.grupo === empresa.value;
                           return (
-                            <button
+                            <label
                               key={empresa.value}
-                              type="button"
-                              role="radio"
-                              aria-checked={ativa}
-                              onClick={() => {
-                                setForm({ ...form, grupo: empresa.value });
-                                setErrors((atuais) => {
-                                  const proximos = { ...atuais };
-                                  delete proximos["grupo"];
-                                  return proximos;
-                                });
-                              }}
-                              className="flex w-full min-h-[56px] items-center gap-4 border-b border-border text-left transition-colors hover:bg-surface"
+                              className="flex min-h-[56px] cursor-pointer items-center gap-4 border-b border-border transition-colors hover:bg-surface has-[:focus-visible]:bg-surface has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-gold-deep"
                             >
+                              <input
+                                type="radio"
+                                name="empresa"
+                                value={empresa.value}
+                                checked={ativa}
+                                onChange={() => {
+                                  setForm({ ...form, grupo: empresa.value });
+                                  setErrors((atuais) => {
+                                    const proximos = { ...atuais };
+                                    delete proximos["grupo"];
+                                    return proximos;
+                                  });
+                                }}
+                                className="sr-only"
+                              />
                               <span
                                 className={`h-px transition-all duration-300 ${
                                   ativa ? "w-8 bg-gold-deep" : "w-3 bg-border"
@@ -688,43 +772,43 @@ export function InscricaoPage() {
                               >
                                 {empresa.label}
                               </span>
-                            </button>
+                            </label>
                           );
                         })}
                       </div>
-                      {errors["grupo"] && (
-                        <p className="mt-2 text-sm text-destructive">{errors["grupo"]}</p>
-                      )}
+                      <p role="alert" className="mt-2 min-h-[1.25rem] text-sm text-destructive">
+                        {errors["grupo"] ?? ""}
+                      </p>
                     </fieldset>
 
                     {aceitaResposta && (
                       <fieldset className="mt-10">
                         <legend className={rotulo}>Confirmarei presença</legend>
-                        <div
-                          className="mt-3 flex gap-3"
-                          role="radiogroup"
-                          aria-label="Confirmarei presença"
-                        >
+                        <div className="mt-3 flex gap-3">
                           {[
                             { valor: "sim" as const, texto: "Sim, estarei lá" },
                             { valor: "nao" as const, texto: "Não poderei ir" },
                           ].map((opcao) => {
                             const ativa = resposta === opcao.valor;
                             return (
-                              <button
+                              <label
                                 key={opcao.valor}
-                                type="button"
-                                role="radio"
-                                aria-checked={ativa}
-                                onClick={() => setResposta(opcao.valor)}
-                                className={`min-h-[56px] flex-1 border px-4 text-[13px] transition-colors ${
+                                className={`flex min-h-[56px] flex-1 cursor-pointer items-center justify-center border px-4 text-center text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-deep ${
                                   ativa
                                     ? "border-primary bg-primary text-primary-foreground"
                                     : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
                                 }`}
                               >
+                                <input
+                                  type="radio"
+                                  name="presenca"
+                                  value={opcao.valor}
+                                  checked={ativa}
+                                  onChange={() => setResposta(opcao.valor)}
+                                  className="sr-only"
+                                />
                                 {opcao.texto}
-                              </button>
+                              </label>
                             );
                           })}
                         </div>
@@ -763,10 +847,6 @@ export function InscricaoPage() {
                         type="button"
                         onClick={() => {
                           setAbriuFormulario(false);
-                          secaoConvite.current?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "end",
-                          });
                         }}
                         className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                       >
@@ -783,23 +863,22 @@ export function InscricaoPage() {
 
       {/* ================= O EVENTO ================= */}
       <section className="textura-papel textura-papel--clara relative">
-        <div className="mx-auto w-full max-w-[1240px] px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
-          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-4">
+        <div className="mx-auto w-full max-w-[1240px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+            <div className="lg:col-span-3 lg:col-start-10 lg:row-start-1">
               <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
                 O evento
               </p>
               <span
-                className="filete mt-6 block h-px w-full max-w-[180px] bg-gold-deep/40"
+                className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
                 aria-hidden="true"
               />
-              <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
-                Uma noite para reunir quem construiu este ano com a gente. Chegue com calma: a
-                recepção começa no horário marcado.
+              <p className="mt-6 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
+                A recepção abre às 16h30, na Maraponga.
               </p>
             </div>
 
-            <dl className="grid gap-y-8 lg:col-span-8 sm:grid-cols-3 sm:gap-x-10">
+            <dl className="grid gap-y-8 sm:grid-cols-3 sm:gap-x-10 lg:col-span-8 lg:col-start-1 lg:row-start-1">
               <div className="revelar border-t border-border pt-5">
                 <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
                   Data
