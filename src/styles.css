@@ -96,20 +96,20 @@
   --radius: 0.125rem;
 
   /* Paleta institucional: off-white, azul-marinho e dourado discreto */
-  --background: oklch(0.973 0.005 86);
-  --surface: oklch(0.951 0.007 86);
-  --foreground: oklch(0.235 0.042 253);
+  --background: oklch(1 0 0);
+  --surface: oklch(0.968 0.007 247.896);
+  --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.042 253);
+  --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.042 253);
-  --primary: oklch(0.253 0.062 256);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
   --primary-foreground: oklch(0.99 0.002 250);
-  --secondary: oklch(0.955 0.008 250);
+  --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.253 0.062 256);
-  --muted: oklch(0.955 0.008 250);
-  --muted-foreground: oklch(0.5 0.026 254);
-  --accent: oklch(0.951 0.014 250);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.502 0.042 257.417);
+  --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.253 0.062 256);
   --navy: oklch(0.232 0.056 255);
   --navy-deep: oklch(0.176 0.046 256);
@@ -121,8 +121,8 @@
   --gold-soft: oklch(0.872 0.038 86);
   --destructive: oklch(0.55 0.2 27.5);
   --destructive-foreground: oklch(0.99 0.002 250);
-  --border: oklch(0.888 0.01 252);
-  --input: oklch(0.888 0.01 252);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.46 0.075 255);
   --font-display: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
   --font-sans:

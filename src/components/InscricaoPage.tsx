@@ -345,12 +345,18 @@ export function InscricaoPage() {
   const campoErro = "border-b-destructive/70";
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="relative min-h-screen bg-background">
+      {/* Halo claro no topo, como na primeira versão do convite */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-accent to-transparent"
+        aria-hidden="true"
+      />
+
       {/* ================= O CONVITE ================= */}
       <section
         ref={secaoConvite}
         tabIndex={-1}
-        className="textura-papel textura-papel--clara relative bg-background text-foreground outline-none"
+        className="relative bg-transparent text-foreground outline-none"
       >
         <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10 lg:px-14">
           <header className="flex items-center justify-between border-b border-border py-5">
