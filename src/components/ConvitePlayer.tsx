@@ -17,12 +17,6 @@ const IconePlay = () => (
   </svg>
 );
 
-const IconePausa = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full fill-current">
-    <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
-  </svg>
-);
-
 const IconeSom = ({ mudo }: { mudo: boolean }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full fill-current">
     <path d="M4 9v6h3.5L12 19V5L7.5 9z" />
@@ -36,12 +30,6 @@ const IconeSom = ({ mudo }: { mudo: boolean }) => (
         fill="none"
       />
     )}
-  </svg>
-);
-
-const IconeTelaCheia = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full fill-current">
-    <path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z" />
   </svg>
 );
 
@@ -92,7 +80,6 @@ export function ConviteEmPreparacao() {
 
 export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, concluido }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Segundos inteiros efetivamente reproduzidos (não é temporizador nem
   // posição da barra: cada bloco só entra quando o vídeo passa por ele tocando)
@@ -265,32 +252,13 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     setLegendasAtivas(ativar);
   }
 
-  function telaCheia() {
-    const alvo = containerRef.current;
-    const v = videoRef.current as
-      (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-      return;
-    }
-    if (alvo?.requestFullscreen) {
-      void alvo.requestFullscreen().catch(() => v?.webkitEnterFullscreen?.());
-      return;
-    }
-    v?.webkitEnterFullscreen?.();
-  }
-
   const percentualLiberado = duracao > 0 ? Math.min(100, (maxAssistido / duracao) * 100) : 0;
-  const percentualCobertura = concluido ? 100 : Math.round(Math.min(1, cobertura) * 100);
   const botao =
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
 
   return (
     <div className="sobre-escuro w-full">
-      <div
-        ref={containerRef}
-        className="moldura-convite relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2"
-      >
+      <div className="relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2">
         <div className="quadro-convite @container relative overflow-hidden bg-navy-deep">
           <div
             className="relative w-full max-w-full"
@@ -309,6 +277,11 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                   setDuracao(d);
                   onDuracao?.(Math.max(1, Math.floor(d)));
                 }
+                // O convite começa no volume máximo e com som
+                e.currentTarget.volume = 1;
+                e.currentTarget.muted = false;
+                setVolume(1);
+                setMudo(false);
                 const faixa = e.currentTarget.textTracks[0];
                 if (faixa) faixa.mode = "disabled";
               }}
@@ -345,18 +318,20 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             {/* Nada na frente do convite: o vídeo aparece como é e só
                 espera o play. O disco escuro atrás do triângulo garante que
                 o botão continue visível sobre qualquer quadro. */}
-            {!iniciado && !erro && (
+            {!erro && (
               <button
                 type="button"
                 onClick={alternarReproducao}
                 className="group absolute inset-0 flex items-center justify-center"
-                aria-label="Reproduzir o convite"
+                aria-label={tocando ? "Pausar o convite" : "Reproduzir o convite"}
               >
-                <span className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/70 bg-navy-deep/60 text-gold shadow-[0_6px_24px_-8px_rgba(0,0,0,0.7)] transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-navy-deep sm:h-[72px] sm:w-[72px]">
-                  <span className="ml-1 h-6 w-6 sm:h-7 sm:w-7">
-                    <IconePlay />
+                {!tocando && (
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/70 bg-navy-deep/60 text-gold shadow-[0_6px_24px_-8px_rgba(0,0,0,0.7)] transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-navy-deep sm:h-[72px] sm:w-[72px]">
+                    <span className="ml-1 h-6 w-6 sm:h-7 sm:w-7">
+                      <IconePlay />
+                    </span>
                   </span>
-                </span>
+                )}
               </button>
             )}
 
@@ -393,80 +368,47 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
         </div>
       </div>
 
-      {/* Abaixo do vídeo, sem nada cobrindo o convite: a linha do progresso
-          e os controles. A linha fica aberta desde o começo e vai andando. */}
+      {/* Embaixo do vídeo, só o volume. O play e a pausa são o próprio
+          convite: toca-se nele. */}
       <div className="px-2 pb-2.5 pt-2">
-        <div
-          className="h-px w-full bg-white/20"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percentualCobertura}
-          aria-label="Quanto do convite já foi assistido"
-        >
-          <div
-            className="h-px bg-gold transition-[width] duration-500"
-            style={{ width: `${percentualCobertura}%` }}
-          />
-        </div>
-
         {!erro && (
-          <div className="mt-1.5">
-            <div className="flex items-center gap-1 overflow-hidden">
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={alternarMudo}
+              className={botao}
+              aria-label={mudo ? "Ativar o som" : "Desativar o som"}
+            >
+              <span className="h-4.5 w-4.5">
+                <IconeSom mudo={mudo} />
+              </span>
+            </button>
+            <label className="sr-only" htmlFor="volume-convite">
+              Volume
+            </label>
+            <input
+              id="volume-convite"
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={mudo ? 0 : volume}
+              onChange={(e) => alterarVolume(Number(e.target.value))}
+              className="h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-white/25 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            />
+
+            {legendaSrc && (
               <button
                 type="button"
-                onClick={alternarReproducao}
-                className={botao}
-                aria-label={tocando ? "Pausar" : "Reproduzir"}
+                onClick={alternarLegendas}
+                aria-pressed={legendasAtivas}
+                className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
+                  legendasAtivas ? "bg-white/20 text-white" : ""
+                }`}
               >
-                <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
+                CC
               </button>
-
-              <span className="ml-auto flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={alternarMudo}
-                  className={botao}
-                  aria-label={mudo ? "Ativar o som" : "Desativar o som"}
-                >
-                  <span className="h-4.5 w-4.5">
-                    <IconeSom mudo={mudo} />
-                  </span>
-                </button>
-                <label className="sr-only" htmlFor="volume-convite">
-                  Volume
-                </label>
-                <input
-                  id="volume-convite"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={mudo ? 0 : volume}
-                  onChange={(e) => alterarVolume(Number(e.target.value))}
-                  className="h-1.5 w-10 cursor-pointer appearance-none rounded-full bg-white/25 @[21rem]:w-16 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                />
-
-                {legendaSrc && (
-                  <button
-                    type="button"
-                    onClick={alternarLegendas}
-                    aria-pressed={legendasAtivas}
-                    className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
-                      legendasAtivas ? "bg-white/20 text-white" : ""
-                    }`}
-                  >
-                    CC
-                  </button>
-                )}
-
-                <button type="button" onClick={telaCheia} className={botao} aria-label="Tela cheia">
-                  <span className="h-4.5 w-4.5">
-                    <IconeTelaCheia />
-                  </span>
-                </button>
-              </span>
-            </div>
+            )}
           </div>
         )}
 
