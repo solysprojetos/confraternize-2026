@@ -253,12 +253,13 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
   }
 
   const percentualLiberado = duracao > 0 ? Math.min(100, (maxAssistido / duracao) * 100) : 0;
+  const percentualCobertura = concluido ? 100 : Math.round(Math.min(1, cobertura) * 100);
   const botao =
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
 
   return (
     <div className="sobre-escuro w-full">
-      <div className="relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2">
+      <div className="relative w-full border border-gold-deep/55 bg-navy-deep p-2 pb-1.5 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)]">
         <div className="quadro-convite @container relative overflow-hidden bg-navy-deep">
           <div
             className="relative w-full max-w-full"
@@ -366,20 +367,32 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             )}
           </div>
         </div>
-      </div>
 
-      {/* Embaixo do vídeo, só o volume. O play e a pausa são o próprio
-          convite: toca-se nele. */}
-      <div className="px-2 pb-2.5 pt-2">
+        {/* Faixa fina: o progresso atravessa o quadro de ponta a ponta e o
+            volume fica discreto no canto. */}
+        <div
+          className="h-[2px] w-full bg-white/15"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percentualCobertura}
+          aria-label="Quanto do convite já foi assistido"
+        >
+          <div
+            className="h-full bg-gold transition-[width] duration-500"
+            style={{ width: `${percentualCobertura}%` }}
+          />
+        </div>
+
         {!erro && (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-end gap-1.5 pt-1">
             <button
               type="button"
               onClick={alternarMudo}
-              className={botao}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white/75 transition-colors hover:bg-white/15 hover:text-white"
               aria-label={mudo ? "Ativar o som" : "Desativar o som"}
             >
-              <span className="h-4.5 w-4.5">
+              <span className="h-3 w-3">
                 <IconeSom mudo={mudo} />
               </span>
             </button>
@@ -394,7 +407,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
               step={0.05}
               value={mudo ? 0 : volume}
               onChange={(e) => alterarVolume(Number(e.target.value))}
-              className="h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-white/25 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+              className="h-1 w-12 cursor-pointer appearance-none rounded-full bg-white/25 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
             />
 
             {legendaSrc && (
@@ -402,7 +415,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 type="button"
                 onClick={alternarLegendas}
                 aria-pressed={legendasAtivas}
-                className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
+                className={`flex h-7 shrink-0 items-center justify-center rounded-full px-2 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/15 hover:text-white ${
                   legendasAtivas ? "bg-white/20 text-white" : ""
                 }`}
               >
@@ -411,7 +424,9 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             )}
           </div>
         )}
+      </div>
 
+      <div>
         {fimSemCobertura && !concluido && (
           <div role="status" className="mt-3">
             <p className="text-sm leading-relaxed text-white/75">
