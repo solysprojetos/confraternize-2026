@@ -406,20 +406,35 @@ export function InscricaoPage() {
             </p>
           </div>
 
-          {/* O vídeo, no centro da página */}
-          <div className="mx-auto w-full max-w-[940px]">
-            {temVideo ? (
-              <ConvitePlayer
-                key={tentativa}
-                onTrechosAssistidos={mandarProgresso}
-                onConcluir={concluirConvite}
-                onDuracao={abrirSessao}
-                concluido={liberado}
+          {/* O vídeo, no centro da página — emoldurado como peça de convite */}
+          <div className="relative mx-auto w-full max-w-[940px]">
+            <div
+              className="pointer-events-none absolute -inset-[5px] bg-gradient-to-tr from-gold via-gold-soft to-gold opacity-35 blur-[2px]"
+              aria-hidden="true"
+            />
+            <div className="relative border border-gold/25 bg-navy-deep shadow-[0_30px_60px_-30px_color-mix(in_oklab,var(--navy-deep)_60%,transparent)]">
+              {temVideo ? (
+                <ConvitePlayer
+                  key={tentativa}
+                  onTrechosAssistidos={mandarProgresso}
+                  onConcluir={concluirConvite}
+                  onDuracao={abrirSessao}
+                  concluido={liberado}
+                />
+              ) : (
+                <ConviteEmPreparacao />
+              )}
+              <span
+                className="pointer-events-none absolute right-4 top-4 h-6 w-6 border-r border-t border-gold/45"
+                aria-hidden="true"
               />
-            ) : (
-              <ConviteEmPreparacao />
-            )}
+              <span
+                className="pointer-events-none absolute bottom-4 left-4 h-6 w-6 border-b border-l border-gold/45"
+                aria-hidden="true"
+              />
+            </div>
           </div>
+
 
           {/* Etapas e chamada para a confirmação */}
           <div className="mx-auto w-full max-w-[940px] pb-16 pt-9 sm:pb-24 sm:pt-11">
