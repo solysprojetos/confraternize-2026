@@ -391,8 +391,7 @@ export function InscricaoPage() {
               className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
-              Confraternização{" "}
-              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
+              Confraternização <span className="not-italic">2026</span>
             </h1>
 
             <p
