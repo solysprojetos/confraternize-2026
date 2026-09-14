@@ -14,6 +14,11 @@ export const evento = {
   dataExtenso: "Sábado, 19 de dezembro de 2026",
   diaCurto: "19",
   mesCurto: "dez",
+
+  // Busca pelo endereço no Google Maps, usada pelo botão "Ver localização"
+  mapa:
+    "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent("Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175"),
 };
 
 export const videoConvite = {

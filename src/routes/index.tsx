@@ -4,17 +4,21 @@ import { InscricaoPage } from "@/components/InscricaoPage";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Inscrição — Confraternização 2026" },
+      { title: "Confraternização 2026 — Convite oficial" },
       {
         name: "description",
         content:
-          "Garanta sua vaga na Confraternização 2026. Preencha nome, telefone, e-mail e escolha seu grupo: SGroup, Solys ou Grupo Support.",
+          "Convite oficial da Confraternização 2026: sábado, 19 de dezembro, às 16h30, na Av. Godofredo Maciel, 1179, Maraponga, Fortaleza. Assista ao convite e confirme sua presença.",
       },
-      { property: "og:title", content: "Inscrição — Confraternização 2026" },
+      { name: "theme-color", content: "#0d2440" },
+      { property: "og:title", content: "Confraternização 2026 — Convite oficial" },
       {
         property: "og:description",
-        content: "Preencha o formulário e confirme sua presença na Confraternização 2026.",
+        content:
+          "Convite oficial da Confraternização 2026: sábado, 19 de dezembro, às 16h30, na Av. Godofredo Maciel, 1179, Maraponga, Fortaleza. Assista ao convite e confirme sua presença.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:locale", content: "pt_BR" },
     ],
   }),
   component: InscricaoPage,

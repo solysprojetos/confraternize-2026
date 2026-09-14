@@ -52,16 +52,16 @@ const IconeTelaCheia = () => (
   </svg>
 );
 
-/** Moldura fina dourada usada pelo vídeo e pela capa de espera. */
-function MolduraDourada({ children }: { children: React.ReactNode }) {
+/** Filete dourado de um pixel em volta da peça central. */
+function Moldura({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-[18px] bg-[linear-gradient(160deg,color-mix(in_oklab,var(--gold)_55%,transparent)_0%,color-mix(in_oklab,var(--gold)_16%,transparent)_45%,color-mix(in_oklab,var(--gold)_30%,transparent)_100%)] p-px shadow-[0_30px_70px_-40px_rgba(3,12,26,0.95)]">
-      <div className="relative overflow-hidden rounded-[17px] bg-navy-deep">{children}</div>
+    <div className="border border-gold/35 bg-navy-deep p-1.5 sm:p-2">
+      <div className="relative overflow-hidden bg-navy-deep">{children}</div>
     </div>
   );
 }
 
-/** Fundo da capa: papel, luz e um filete dourado. */
+/** Fundo da capa: papel e um clarão contido atrás do centro. */
 function FundoDaCapa() {
   return (
     <>
@@ -69,46 +69,37 @@ function FundoDaCapa() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(115% 85% at 50% 6%, var(--navy-soft) 0%, var(--navy-deep) 72%)",
+            "radial-gradient(105% 80% at 50% 12%, var(--navy-soft) 0%, var(--navy-deep) 74%)",
         }}
         aria-hidden="true"
       />
       <span className="textura-papel pointer-events-none absolute inset-0" aria-hidden="true" />
-      <span className="luz-noturna absolute left-[14%] top-[22%] h-24 w-24" aria-hidden="true" />
-      <span
-        className="luz-noturna absolute right-[16%] top-[58%] h-16 w-16"
-        style={{ animationDelay: "1.8s" }}
-        aria-hidden="true"
-      />
     </>
   );
 }
 
-/** Capa exibida enquanto o convite em vídeo ainda não foi cadastrado. */
+/** Peça exibida enquanto o convite em vídeo ainda não foi cadastrado. */
 export function ConviteEmPreparacao() {
   return (
     <div className="sobre-escuro">
-      <MolduraDourada>
+      <Moldura>
         <div
           className="relative flex w-full max-w-full flex-col items-center justify-center px-6 text-center"
           style={{ aspectRatio: String(videoConvite.proporcao) }}
         >
           <FundoDaCapa />
-          <span className="relative text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
-            Em breve
+          <span className="relative text-[10px] font-medium uppercase tracking-[0.42em] text-gold/80">
+            Convite em vídeo
           </span>
-          <p className="relative mt-3 max-w-md font-display text-lg leading-snug text-white sm:mt-5 sm:text-[1.7rem]">
-            Estamos preparando um convite especial para você
+          <p className="relative mt-6 font-display text-[clamp(1.5rem,4.2vw,2.6rem)] leading-[1.1] text-white/92">
+            {evento.nome}
           </p>
-          <span
-            className="relative mt-3 h-px w-12 bg-gradient-to-r from-transparent via-gold to-transparent sm:mt-5 sm:w-14"
-            aria-hidden="true"
-          />
-          <p className="relative mt-3 max-w-sm text-[13px] leading-relaxed text-white/65 sm:mt-5 sm:text-sm">
-            Assim que o vídeo estiver pronto, a confirmação de presença será liberada aqui mesmo.
+          <span className="relative mt-6 h-px w-12 bg-gold/60 sm:w-16" aria-hidden="true" />
+          <p className="relative mt-6 max-w-xs text-[13px] leading-relaxed text-white/55 sm:max-w-md sm:text-[15px]">
+            O vídeo está sendo finalizado. É por ele que a confirmação de presença será aberta.
           </p>
         </div>
-      </MolduraDourada>
+      </Moldura>
     </div>
   );
 }
@@ -316,9 +307,9 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     <div className="sobre-escuro w-full">
       <div
         ref={containerRef}
-        className="relative w-full rounded-[18px] bg-[linear-gradient(160deg,color-mix(in_oklab,var(--gold)_55%,transparent)_0%,color-mix(in_oklab,var(--gold)_16%,transparent)_45%,color-mix(in_oklab,var(--gold)_30%,transparent)_100%)] p-px shadow-[0_30px_70px_-40px_rgba(3,12,26,0.95)]"
+        className="relative w-full border border-gold/35 bg-navy-deep p-1.5 sm:p-2"
       >
-        <div className="relative overflow-hidden rounded-[17px] bg-navy-deep">
+        <div className="relative overflow-hidden bg-navy-deep">
           <div
             className="relative w-full max-w-full"
             style={{ aspectRatio: String(videoConvite.proporcao) }}
@@ -369,7 +360,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
               )}
             </video>
 
-            {/* Capa: usa a imagem cadastrada ou a identidade do evento */}
+            {/* Capa: a imagem cadastrada ou a capa desenhada do evento */}
             {!iniciado && !erro && (
               <button
                 type="button"
@@ -382,7 +373,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                     className="absolute inset-0"
                     style={{
                       background:
-                        "linear-gradient(to top, color-mix(in oklab, var(--navy-deep) 92%, transparent), color-mix(in oklab, var(--navy-deep) 25%, transparent))",
+                        "linear-gradient(to top, color-mix(in oklab, var(--navy-deep) 88%, transparent), color-mix(in oklab, var(--navy-deep) 22%, transparent))",
                     }}
                     aria-hidden="true"
                   />
@@ -392,33 +383,16 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
 
                 <span className="relative flex flex-col items-center px-6">
                   {!poster && (
-                    <>
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
-                        Convite em vídeo
-                      </span>
-                      <span className="mt-4 font-display text-2xl leading-tight text-white sm:text-[2rem]">
-                        {evento.nome}
-                      </span>
-                      <span
-                        className="mt-4 h-px w-14 bg-gradient-to-r from-transparent via-gold to-transparent"
-                        aria-hidden="true"
-                      />
-                    </>
+                    <span className="mb-7 hidden font-display text-2xl leading-tight text-white/90 sm:block">
+                      {evento.nome}
+                    </span>
                   )}
-
-                  {/* Botão circular de reprodução */}
-                  <span className="relative mt-4 flex h-14 w-14 items-center justify-center sm:mt-7 sm:h-20 sm:w-20">
-                    <span
-                      className="absolute inset-0 rounded-full bg-gold/25 blur-md transition-opacity duration-300 group-hover:opacity-90"
-                      aria-hidden="true"
-                    />
-                    <span className="relative flex h-full w-full items-center justify-center rounded-full bg-gold text-navy-deep ring-1 ring-gold/60 transition-transform duration-300 group-hover:scale-105">
-                      <span className="ml-1 h-6 w-6">
-                        <IconePlay />
-                      </span>
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-gold/60 text-gold transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-navy-deep sm:h-16 sm:w-16">
+                    <span className="ml-0.5 h-5 w-5 sm:h-[22px] sm:w-[22px]">
+                      <IconePlay />
                     </span>
                   </span>
-                  <span className="mt-5 text-sm font-medium tracking-wide text-white/85">
+                  <span className="mt-4 text-[11px] font-medium uppercase tracking-[0.28em] text-white/70">
                     Assistir ao convite
                   </span>
                 </span>
@@ -439,7 +413,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 <button
                   type="button"
                   onClick={tentarNovamente}
-                  className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-navy transition-opacity hover:opacity-90"
+                  className="border border-white/70 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white transition-colors hover:bg-white hover:text-navy-deep"
                 >
                   Tentar novamente
                 </button>
@@ -447,7 +421,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             )}
 
             {avisoAvanco && (
-              <p className="pointer-events-none absolute inset-x-4 bottom-28 mx-auto max-w-xs rounded-full bg-navy-deep/90 px-4 py-2 text-center text-xs text-white">
+              <p className="pointer-events-none absolute inset-x-4 bottom-24 mx-auto max-w-xs border border-white/20 bg-navy-deep/95 px-4 py-2 text-center text-xs text-white">
                 Você pode rever trechos, mas não adiantar o convite.
               </p>
             )}
@@ -553,13 +527,13 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
       </div>
 
       {/* Progresso do convite */}
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-xs text-white/70">
-          <span>{concluido ? "Convite assistido" : "Progresso do convite"}</span>
+      <div className="mt-5">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/45">
+          <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
           <span className="tabular-nums">{percentualCobertura}%</span>
         </div>
         <div
-          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/15"
+          className="mt-2.5 h-px w-full bg-white/15"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -567,14 +541,13 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
           aria-label="Progresso do convite"
         >
           <div
-            className="h-full rounded-full bg-gold transition-[width] duration-500"
+            className="h-px bg-gold transition-[width] duration-500"
             style={{ width: `${percentualCobertura}%` }}
           />
         </div>
         {fimSemCobertura && !concluido && (
-          <p className="mt-3 text-sm leading-relaxed text-white/75">
-            Ainda faltam alguns trechos do convite. Volte na barra e assista às partes que passaram
-            sem reprodução.
+          <p className="mt-4 text-sm leading-relaxed text-white/70">
+            Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem reprodução.
           </p>
         )}
       </div>

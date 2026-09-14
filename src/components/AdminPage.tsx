@@ -8,7 +8,12 @@ type Inscricao = {
   email: string;
   grupo: "sgroup" | "solys" | "grupo_support" | "parceiros" | "convidados";
   created_at: string;
+  /** Só existe depois da migração 20260914120000_resposta_do_convite. */
+  comparecera?: boolean | null;
 };
+
+/** Quem não respondeu "não" conta como presença confirmada. */
+const vaiComparecer = (i: Inscricao) => i.comparecera !== false;
 
 const NOME_GRUPO: Record<Inscricao["grupo"], string> = {
   grupo_support: "Grupo Support",
@@ -92,12 +97,13 @@ export function AdminPage() {
 
   function exportarCsv() {
     const linhas = [
-      ["Nome completo", "Telefone", "E-mail", "Grupo", "Data da inscrição"],
+      ["Nome completo", "Telefone", "E-mail", "Grupo", "Presença", "Data da resposta"],
       ...visiveis.map((i) => [
         i.nome_completo,
         i.telefone,
         i.email,
         NOME_GRUPO[i.grupo],
+        vaiComparecer(i) ? "Confirmada" : "Não irá",
         new Date(i.created_at).toLocaleString("pt-BR"),
       ]),
     ];
@@ -214,8 +220,12 @@ export function AdminPage() {
                 : "border-border bg-card hover:bg-accent"
             }`}
           >
-            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-sm text-muted-foreground">Total de respostas</p>
             <p className="text-3xl font-bold text-foreground">{inscricoes.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {inscricoes.filter(vaiComparecer).length} confirmadas ·{" "}
+              {inscricoes.filter((i) => !vaiComparecer(i)).length} não irão
+            </p>
           </button>
           {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => (
             <button
@@ -267,13 +277,14 @@ export function AdminPage() {
                   <th className="px-4 py-3 font-medium">Telefone</th>
                   <th className="px-4 py-3 font-medium">E-mail</th>
                   <th className="px-4 py-3 font-medium">Grupo</th>
+                  <th className="px-4 py-3 font-medium">Presença</th>
                   <th className="px-4 py-3 font-medium">Data</th>
                 </tr>
               </thead>
               <tbody>
                 {visiveis.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                       Nenhuma inscrição ainda.
                     </td>
                   </tr>
@@ -284,6 +295,13 @@ export function AdminPage() {
                       <td className="px-4 py-3 text-foreground">{i.telefone}</td>
                       <td className="px-4 py-3 text-foreground">{i.email}</td>
                       <td className="px-4 py-3 text-foreground">{NOME_GRUPO[i.grupo]}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={vaiComparecer(i) ? "text-foreground" : "text-muted-foreground"}
+                        >
+                          {vaiComparecer(i) ? "Confirmada" : "Não irá"}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {new Date(i.created_at).toLocaleString("pt-BR")}
                       </td>

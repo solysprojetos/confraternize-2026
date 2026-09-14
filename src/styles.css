@@ -93,36 +93,36 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.125rem;
 
   /* Paleta institucional: off-white, azul-marinho e dourado discreto */
-  --background: oklch(0.976 0.004 84);
-  --surface: oklch(0.958 0.006 84);
-  --foreground: oklch(0.248 0.045 252);
+  --background: oklch(0.973 0.005 86);
+  --surface: oklch(0.951 0.007 86);
+  --foreground: oklch(0.235 0.042 253);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.248 0.045 252);
+  --card-foreground: oklch(0.235 0.042 253);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.248 0.045 252);
+  --popover-foreground: oklch(0.235 0.042 253);
   --primary: oklch(0.253 0.062 256);
   --primary-foreground: oklch(0.99 0.002 250);
   --secondary: oklch(0.955 0.008 250);
   --secondary-foreground: oklch(0.253 0.062 256);
   --muted: oklch(0.955 0.008 250);
-  --muted-foreground: oklch(0.515 0.032 253);
+  --muted-foreground: oklch(0.5 0.026 254);
   --accent: oklch(0.951 0.014 250);
   --accent-foreground: oklch(0.253 0.062 256);
-  --navy: oklch(0.253 0.062 256);
-  --navy-deep: oklch(0.192 0.052 257);
-  --navy-soft: oklch(0.318 0.062 255);
-  --gold: oklch(0.79 0.112 86);
+  --navy: oklch(0.232 0.056 255);
+  --navy-deep: oklch(0.176 0.046 256);
+  --navy-soft: oklch(0.296 0.055 255);
+  --gold: oklch(0.762 0.083 84);
   --gold-deep: oklch(0.605 0.098 78);
   /* Dourado escurecido só para textos pequenos sobre fundo claro (WCAG AA) */
   --gold-texto: oklch(0.47 0.082 72);
-  --gold-soft: oklch(0.885 0.048 88);
+  --gold-soft: oklch(0.872 0.038 86);
   --destructive: oklch(0.55 0.2 27.5);
   --destructive-foreground: oklch(0.99 0.002 250);
-  --border: oklch(0.903 0.012 250);
-  --input: oklch(0.903 0.012 250);
+  --border: oklch(0.888 0.01 252);
+  --input: oklch(0.888 0.01 252);
   --ring: oklch(0.46 0.075 255);
   --font-display: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
   --font-sans:
@@ -212,8 +212,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Acabamento da página do convite: textura de papel, luzes de celebração
-   noturna e movimentos curtos de entrada.
+   Acabamento editorial: papel, filetes e revelação discreta ao rolar.
    -------------------------------------------------------------------------- */
 
 /* Textura de papel: ruído leve, quase imperceptível, só para tirar o aspecto
@@ -228,47 +227,46 @@
   inset: 0;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23r)' opacity='0.55'/%3E%3C/svg%3E");
-  opacity: 0.05;
+  opacity: 0.045;
   mix-blend-mode: overlay;
 }
 
 .textura-papel--clara::before {
-  opacity: 0.035;
+  opacity: 0.03;
   mix-blend-mode: multiply;
 }
 
-/* Pequenos pontos de luz dourada, como luzes de uma noite de celebração */
-.luz-noturna {
-  position: absolute;
-  border-radius: 9999px;
-  pointer-events: none;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--gold) 70%, transparent) 0%,
-    transparent 72%
-  );
-  filter: blur(18px);
-  opacity: 0.14;
-  animation: respirar 9s ease-in-out infinite;
+/* Revelação ao rolar: o elemento entra com um passo curto para cima */
+.revelar {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 0.68, 0.3, 1),
+    transform 0.7s cubic-bezier(0.22, 0.68, 0.3, 1);
+  transition-delay: var(--atraso, 0ms);
 }
 
-@keyframes respirar {
-  0%,
-  100% {
-    opacity: 0.1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.2;
-    transform: scale(1.1);
-  }
+.revelar[data-visivel="true"] {
+  opacity: 1;
+  transform: none;
 }
 
-/* Entradas curtas e escalonadas */
-@keyframes surgir {
+/* Filete que se estende sob títulos e separadores */
+.filete {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.9s cubic-bezier(0.22, 0.68, 0.3, 1) 0.1s;
+}
+
+.filete[data-visivel="true"] {
+  transform: scaleX(1);
+}
+
+/* Abertura da confirmação depois do convite */
+@keyframes abrir-secao {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -276,35 +274,19 @@
   }
 }
 
-.surgir {
-  animation: surgir 0.32s ease-out both;
-}
-
-.entrada {
-  animation: surgir 0.55s cubic-bezier(0.22, 0.68, 0.3, 1) both;
-  animation-delay: var(--atraso, 0ms);
-}
-
-/* Filete dourado que se revela sob o título */
-@keyframes revelar-filete {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.filete-dourado {
-  transform-origin: left;
-  animation: revelar-filete 0.7s 0.25s cubic-bezier(0.22, 0.68, 0.3, 1) both;
+.abrir {
+  animation: abrir-secao 0.6s cubic-bezier(0.22, 0.68, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .surgir,
-  .entrada,
-  .filete-dourado,
-  .luz-noturna {
+  .revelar,
+  .filete {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .abrir {
     animation: none;
   }
 

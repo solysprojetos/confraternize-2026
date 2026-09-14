@@ -121,17 +121,30 @@ export type DadosInscricao = {
   telefone: string;
   email: string;
   grupo: string;
+  /** true = confirma presença; false = avisou que não poderá comparecer. */
+  comparecera: boolean;
 };
 
+/** O banco desta instalação ainda não conhece a resposta "não poderei ir". */
+function campoAusente(error: ErroSupabase): boolean {
+  if (!error) return false;
+  return (
+    error.code === "PGRST204" || error.code === "42703" || /comparecera/i.test(error.message ?? "")
+  );
+}
+
 /**
- * Grava a inscrição. O caminho normal é a função do banco, que rejeita a
- * inscrição quando a sessão do convite não está concluída. Enquanto a
- * migração não estiver aplicada, o site continua usando a inserção direta.
+ * Grava a resposta ao convite. O caminho normal é a função do banco, que
+ * rejeita quem não assistiu ao convite. Enquanto as migrações não estiverem
+ * aplicadas, o site cai para a inserção direta — e, se nem a coluna da
+ * resposta existir, só consegue registrar quem confirma presença.
  */
 export async function registrarInscricao(
   sessao: string | null,
   dados: DadosInscricao,
 ): Promise<{ error: ErroSupabase }> {
+  const { comparecera, ...basico } = dados;
+
   if (sessao) {
     const { error } = await chamarRpc("convite_inscrever", {
       p_sessao: sessao,
@@ -140,10 +153,44 @@ export async function registrarInscricao(
       p_telefone: dados.telefone,
       p_email: dados.email,
       p_grupo: dados.grupo,
+      p_comparecera: comparecera,
     });
     if (!error) return { error: null };
     if (!funcaoAusente(error)) return { error };
+
+    // Banco com a versão anterior da função, que ainda não recebe a resposta
+    if (comparecera) {
+      const { error: erroAntigo } = await chamarRpc("convite_inscrever", {
+        p_sessao: sessao,
+        p_id: dados.id,
+        p_nome: dados.nome_completo,
+        p_telefone: dados.telefone,
+        p_email: dados.email,
+        p_grupo: dados.grupo,
+      });
+      if (!erroAntigo) return { error: null };
+      if (!funcaoAusente(erroAntigo)) return { error: erroAntigo };
+    }
   }
-  const { error } = await supabase.from("inscricoes").insert(dados);
-  return { error };
+
+  // A coluna comparecera ainda não consta no arquivo de tipos gerado pelo
+  // Supabase, por isso a inserção com ela passa por uma tabela sem tipagem.
+  const tabelaSemTipo = supabase.from("inscricoes") as unknown as {
+    insert: (linha: Record<string, unknown>) => Promise<{ error: ErroSupabase }>;
+  };
+  const { error } = await tabelaSemTipo.insert({ ...basico, comparecera });
+  if (!error) return { error: null };
+  if (!campoAusente(error)) return { error };
+
+  // Sem a coluna da resposta no banco: uma confirmação ainda pode ser gravada,
+  // mas uma recusa não tem onde ser registrada — melhor avisar do que fingir.
+  if (!comparecera) {
+    return {
+      error: {
+        code: "SEM_COLUNA_RESPOSTA",
+        message: "Ainda não conseguimos registrar respostas negativas.",
+      },
+    };
+  }
+  return await supabase.from("inscricoes").insert(basico);
 }

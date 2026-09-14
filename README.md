@@ -18,35 +18,50 @@ nenhuma dependência externa de edição.
 
 ## Como funciona
 
-1. **Etapa 1 — convite.** A pessoa vê as informações do evento e assiste ao
-   vídeo-convite. O formulário fica oculto até o vídeo terminar.
-2. **Etapa 2 — inscrição.** Liberado o convite, ela preenche nome, telefone,
-   e-mail e escolhe o grupo (Grupo Support, SGroup Nacional, Solys Gestão
-   Administrativa, Parceiros ou Convidados).
-3. Os dados são validados e gravados na tabela `inscricoes` do projeto
-   Supabase **confraternize-2026** (conta da Solys, região São Paulo).
-4. A lista só pode ser lida na área restrita, com login e senha do
-   administrador — visitantes conseguem apenas se inscrever.
+1. **O convite.** A pessoa abre a página, vê os dados do evento e assiste ao
+   vídeo-convite, que ocupa o centro da composição.
+2. **A confirmação.** Ao fim do vídeo a página abre a confirmação de presença:
+   nome completo, empresa, telefone ou WhatsApp, e-mail e a resposta
+   "confirmarei presença: sim ou não".
+3. As respostas são gravadas na tabela `inscricoes` do projeto Supabase
+   **confraternize-2026** (conta da Solys, região São Paulo). A empresa fica na
+   coluna `grupo` e a resposta na coluna `comparecera`.
+4. Quem confirma recebe o convite com QR code na tela e por e-mail. Quem avisa
+   que não vai fica registrado, sem QR code.
+5. A lista só pode ser lida na área restrita, com login e senha do
+   administrador — visitantes conseguem apenas responder ao convite.
 
-## Liberação da inscrição pelo vídeo
+## Liberação da confirmação pelo vídeo
 
 A trava não é só visual. O navegador informa ao banco **quais segundos do
 vídeo foram realmente reproduzidos**; o banco acumula essa cobertura numa
-sessão de convite e só grava a inscrição quando ela chega a 95% do vídeo.
+sessão de convite e só aceita a resposta quando ela chega a 95% do vídeo.
 
 - A barra permite rever trechos, mas não adiantar o que ainda não passou.
-- Não adianta deixar o vídeo em outra aba e voltar: a cobertura precisa
-  acompanhar o relógio, então um vídeo de 3 minutos leva 3 minutos.
+- A cobertura precisa acompanhar o relógio: um vídeo de 3 minutos leva 3
+  minutos.
 - Abrir o formulário direto, recarregar a página ou chamar a API na mão não
   grava nada: a inserção direta na tabela foi revogada e o único caminho é a
   função `convite_inscrever`, que confere a sessão.
-- A liberação vale para a mesma sessão do navegador: quem já assistiu não
-  precisa ver de novo, e volta do formulário para o convite sem perder o que
-  digitou.
+- A liberação vale para a mesma sessão do navegador, e voltar ao convite não
+  apaga o que já foi digitado.
 
-> **Enquanto não houver vídeo cadastrado, a inscrição fica indisponível.**
-> A página mostra a capa "Estamos preparando um convite especial para você" e
-> o botão de confirmar presença permanece bloqueado.
+> **Enquanto não houver vídeo cadastrado, a confirmação fica indisponível.**
+> A página mostra a peça de espera e o botão permanece bloqueado.
+
+## Migrações pendentes
+
+Duas migrações precisam ser aplicadas no Supabase para o site funcionar por
+inteiro:
+
+| Arquivo                                  | O que faz                                      |
+| ---------------------------------------- | ---------------------------------------------- |
+| `20260913120000_liberacao_por_video.sql` | Valida no servidor que o convite foi assistido |
+| `20260914120000_resposta_do_convite.sql` | Cria a coluna `comparecera` (sim/não)          |
+
+Enquanto elas não forem aplicadas, o site continua recebendo confirmações pelo
+caminho antigo; respostas negativas, porém, só podem ser registradas depois da
+segunda migração.
 
 ## Publicar o vídeo do convite
 
@@ -61,18 +76,19 @@ sessão de convite e só grava a inscrição quando ela chega a 95% do vídeo.
    update public.convite_config set duracao_minima_segundos = 180;
    ```
 
-Os dados do evento (nome, chamada, data, horário e endereço) ficam no mesmo
-`src/config/evento.ts`.
+Os dados do evento (nome, chamada, data, horário, endereço e link do mapa)
+ficam no mesmo `src/config/evento.ts`.
 
 ## Identidade visual
 
-- Azul-marinho profundo na abertura, off-white nas áreas de leitura e dourado
-  discreto nos detalhes.
+- Projeto editorial: azul-marinho profundo no convite, off-white nas áreas de
+  leitura, dourado apenas em filetes, numerais e no botão de confirmação.
 - Títulos em Playfair Display e textos em Inter, servidos pelo próprio site
   (`src/assets/fonts/`), sem depender de servidor externo.
+- Textura de papel quase imperceptível, cantos retos, sem sombras artificiais.
+- Revelação discreta ao rolar, desligada para quem prefere movimento reduzido.
 - Logos oficiais em WebP com PNG de reserva. A do Grupo Support é branca e por
-  isso aparece sempre sobre fundo azul-marinho.
-- Animações curtas, desligadas para quem prefere movimento reduzido.
+  isso aparece sobre um bloco azul-marinho.
 
 ## Publicação
 
