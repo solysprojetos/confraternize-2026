@@ -428,19 +428,15 @@ export function InscricaoPage() {
               </p>
             )}
 
-            <p id="aviso-liberacao" className="sr-only" aria-live="polite">
-              {!temVideo
-                ? "A confirmação de presença será aberta quando o convite em vídeo for publicado."
-                : liberado
-                  ? "Confirmação de presença liberada."
-                  : "Assista ao convite até o fim para liberar a confirmação de presença."}
-            </p>
-
             <div className="flex justify-center">
               <button
                 type="button"
                 aria-disabled={!liberado}
-                aria-describedby="aviso-liberacao"
+                aria-label={
+                  liberado
+                    ? undefined
+                    : "Confirmar minha presença. Disponível depois de assistir ao convite."
+                }
                 onClick={() => {
                   if (!liberado) return;
                   if (done) irAte(destinoConfirmacao.current);
