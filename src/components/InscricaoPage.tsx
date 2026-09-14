@@ -399,18 +399,17 @@ export function InscricaoPage() {
               className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
-              Um ano de conquistas. Um encontro para celebrar.
+              {/* Uma frase por linha */}
+              <span className="block">Um ano de conquistas.</span>{" "}
+              <span className="mt-1 block">Um encontro para celebrar.</span>
             </p>
             <p
               className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
-              <span className="whitespace-nowrap">19 de dezembro de 2026</span>
-              {/* No celular a linha quebra aqui, mantendo duas linhas equilibradas */}
-              <span className="mx-3 text-muted-foreground max-sm:hidden" aria-hidden="true">
-                ·
-              </span>
-              <span className="block sm:inline">
+              {/* Mesmo padrão da chamada: duas linhas em qualquer largura */}
+              <span className="block whitespace-nowrap">19 de dezembro de 2026</span>{" "}
+              <span className="mt-1 block">
                 <span className="whitespace-nowrap">16h30</span>
                 <span className="mx-3 text-muted-foreground" aria-hidden="true">
                   ·

@@ -94,7 +94,7 @@ ficam no mesmo `src/config/evento.ts`.
 
 - Projeto editorial: azul-marinho profundo no convite, off-white nas áreas de
   leitura, dourado apenas em filetes, numerais e no botão de confirmação.
-- Títulos em Playfair Display e textos em Inter, servidos pelo próprio site
+- Títulos em Instrument Serif e textos em Inter, servidos pelo próprio site
   (`src/assets/fonts/`), sem depender de servidor externo.
 - Textura de papel quase imperceptível, cantos retos, sem sombras artificiais.
 - Revelação discreta ao rolar, desligada para quem prefere movimento reduzido.
