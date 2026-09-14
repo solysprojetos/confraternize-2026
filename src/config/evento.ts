@@ -28,10 +28,9 @@ export const videoConvite = {
   // Ex.: src: "convite/convite-confraternizacao-2026.mp4"
   src: "convite/convite-confraternizacao-2026.mp4" as string,
 
-  // Capa personalizada. Sem ela, a própria página desenha uma capa com a
-  // identidade do evento.
-  // Ex.: poster: "convite/capa-convite.jpg"
-  poster: "" as string,
+  // Capa: o primeiro quadro do próprio vídeo, para o convite aparecer como
+  // é — sem tela de abertura na frente dele.
+  poster: "convite/capa-convite.jpg" as string,
 
   // Proporção do vídeo cadastrado (largura / altura). O convite foi
   // gravado na vertical (1080x1920), como as pessoas assistem no celular.

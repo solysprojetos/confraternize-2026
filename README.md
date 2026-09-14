@@ -98,8 +98,12 @@ ficam no mesmo `src/config/evento.ts`.
   (`src/assets/fonts/`), sem depender de servidor externo.
 - Textura de papel quase imperceptível, cantos retos, sem sombras artificiais.
 - Revelação discreta ao rolar, desligada para quem prefere movimento reduzido.
-- Logos oficiais em WebP com PNG de reserva. A do Grupo Support é branca e por
-  isso aparece sobre um bloco azul-marinho.
+- Logos oficiais em WebP com PNG de reserva, abrindo a página como papel
+  timbrado. As três ficam sobre o mesmo fundo claro, sem caixa atrás de
+  nenhuma: a arte do Grupo Support veio branca, então o site usa a versão em
+  marinho (`support-escuro`), gerada a partir dela. Os arquivos são
+  recortados no limite da arte, para que a mesma altura no CSS resulte na
+  mesma altura aparente das três.
 
 ## Publicação
 

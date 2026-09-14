@@ -425,7 +425,7 @@ export function InscricaoPage() {
               tela: assim o quadro inteiro cabe sem precisar rolar. O piso de
               15rem evita que ele vire um selo no celular deitado. */}
           <div
-            className="relative mx-auto w-full"
+            className="relative mx-auto w-full max-w-[26rem]"
             style={{ maxWidth: "min(100%, 26rem, max(15rem, calc(72svh * 9 / 16)))" }}
           >
             <div
@@ -856,72 +856,81 @@ export function InscricaoPage() {
       {/* ================= O EVENTO ================= */}
       <section className="textura-papel textura-papel--clara relative border-t border-border">
         <div className="relative mx-auto w-full max-w-[1240px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
-          <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
-            O evento
-          </p>
-          <span
-            className="filete mt-5 block h-px w-full max-w-[120px] bg-gold-deep/45"
-            aria-hidden="true"
-          />
+          {/* Ficha do evento: rótulo à esquerda, informação à direita, uma
+              linha por assunto — a mesma leitura no celular e no computador. */}
+          <div className="mx-auto w-full max-w-[720px]">
+            <p className="text-center text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
+              O evento
+            </p>
+            <span
+              className="filete mx-auto mt-5 block h-px w-full max-w-[120px] bg-gold-deep/45"
+              aria-hidden="true"
+            />
 
-          <dl className="mt-10 grid gap-x-10 gap-y-10 sm:mt-12 sm:grid-cols-3">
-            <div className="revelar border-t border-border pt-5">
-              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                Data
-              </dt>
-              <dd className="mt-4 font-display text-[1.6rem] leading-tight text-foreground">
-                19 de dezembro
-              </dd>
-              <dd className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
-                Sábado · 2026
-              </dd>
-            </div>
+            <dl className="mt-10 border-t border-border sm:mt-12">
+              <div className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7">
+                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
+                  Data
+                </dt>
+                <dd className="flex-1">
+                  <p className="font-display text-[1.5rem] leading-tight text-foreground sm:text-[1.6rem]">
+                    19 de dezembro de 2026
+                  </p>
+                  <p className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Sábado
+                  </p>
+                </dd>
+              </div>
 
-            <div
-              className="revelar border-t border-border pt-5"
-              style={{ "--atraso": "80ms" } as React.CSSProperties}
-            >
-              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                Início
-              </dt>
-              <dd className="mt-4 font-display text-[1.6rem] leading-tight text-foreground">
-                16h30
-              </dd>
-              <dd className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
-                Recepção
-              </dd>
-            </div>
-
-            <div
-              className="revelar border-t border-border pt-5"
-              style={{ "--atraso": "160ms" } as React.CSSProperties}
-            >
-              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                Local
-              </dt>
-              <dd className="mt-4 text-[15px] leading-relaxed text-foreground">
-                Av. Godofredo Maciel, 1179
-                <br />
-                Maraponga, Fortaleza – CE
-                <br />
-                <span className="text-muted-foreground">60714-175</span>
-              </dd>
-              <a
-                href={evento.mapa}
-                target="_blank"
-                rel="noreferrer"
-                className="group mt-4 inline-flex min-h-[44px] items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-foreground underline-offset-4 hover:text-gold-texto hover:underline"
+              <div
+                className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7"
+                style={{ "--atraso": "80ms" } as React.CSSProperties}
               >
-                Ver localização
-                <span
-                  className="transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden="true"
-                >
-                  →
-                </span>
-              </a>
-            </div>
-          </dl>
+                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
+                  Início
+                </dt>
+                <dd className="flex-1">
+                  <p className="font-display text-[1.5rem] leading-tight text-foreground sm:text-[1.6rem]">
+                    16h30
+                  </p>
+                  <p className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Recepção
+                  </p>
+                </dd>
+              </div>
+
+              <div
+                className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7"
+                style={{ "--atraso": "160ms" } as React.CSSProperties}
+              >
+                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
+                  Local
+                </dt>
+                <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
+                  Av. Godofredo Maciel, 1179
+                  <br />
+                  Maraponga, Fortaleza – CE
+                  <br />
+                  <span className="text-muted-foreground">60714-175</span>
+                </dd>
+              </div>
+            </dl>
+
+            <a
+              href={evento.mapa}
+              target="_blank"
+              rel="noreferrer"
+              className="group mx-auto mt-8 flex min-h-[56px] w-full max-w-sm items-center justify-center gap-3 border border-border bg-card px-6 text-[11px] uppercase tracking-[0.24em] text-foreground transition-colors hover:border-gold-deep hover:text-gold-texto"
+            >
+              Ver localização
+              <span
+                className="transition-transform duration-300 group-hover:translate-x-1"
+                aria-hidden="true"
+              >
+                →
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 

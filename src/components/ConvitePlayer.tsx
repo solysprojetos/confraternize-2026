@@ -300,17 +300,9 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     <div className="sobre-escuro w-full">
       <div
         ref={containerRef}
-        className="relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2"
+        className="moldura-convite relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2"
       >
-        <div className="relative overflow-hidden bg-navy-deep">
-          <span
-            className="pointer-events-none absolute right-3 top-3 z-10 h-6 w-6 border-r border-t border-gold/45"
-            aria-hidden="true"
-          />
-          <span
-            className="pointer-events-none absolute bottom-3 left-3 z-10 h-6 w-6 border-b border-l border-gold/45"
-            aria-hidden="true"
-          />
+        <div className="quadro-convite @container relative overflow-hidden bg-navy-deep">
           <div
             className="relative w-full max-w-full"
             style={{ aspectRatio: String(videoConvite.proporcao) }}
@@ -361,40 +353,19 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
               )}
             </video>
 
-            {/* Capa: a imagem cadastrada ou a capa desenhada do evento */}
+            {/* Nada na frente do convite: o vídeo aparece como é e só
+                espera o play. O disco escuro atrás do triângulo garante que
+                o botão continue visível sobre qualquer quadro. */}
             {!iniciado && !erro && (
               <button
                 type="button"
                 onClick={alternarReproducao}
-                className="group absolute inset-0 flex flex-col items-center justify-center text-center text-white"
+                className="group absolute inset-0 flex items-center justify-center"
                 aria-label="Reproduzir o convite"
               >
-                {poster ? (
-                  <span
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(to top, color-mix(in oklab, var(--navy-deep) 88%, transparent), color-mix(in oklab, var(--navy-deep) 22%, transparent))",
-                    }}
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <FundoDaCapa />
-                )}
-
-                <span className="relative flex flex-col items-center px-6">
-                  {!poster && (
-                    <span className="mb-7 hidden font-display text-2xl leading-tight text-white/90 sm:block">
-                      {evento.nome}
-                    </span>
-                  )}
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-gold/60 text-gold transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-navy-deep sm:h-16 sm:w-16">
-                    <span className="ml-0.5 h-5 w-5 sm:h-[22px] sm:w-[22px]">
-                      <IconePlay />
-                    </span>
-                  </span>
-                  <span className="mt-4 text-[11px] font-medium uppercase tracking-[0.28em] text-white/70">
-                    Assistir ao convite
+                <span className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/70 bg-navy-deep/60 text-gold shadow-[0_6px_24px_-8px_rgba(0,0,0,0.7)] transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-navy-deep sm:h-[72px] sm:w-[72px]">
+                  <span className="ml-1 h-6 w-6 sm:h-7 sm:w-7">
+                    <IconePlay />
                   </span>
                 </span>
               </button>
@@ -470,7 +441,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                     <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
                   </button>
 
-                  <span className="shrink-0 px-1 text-xs tabular-nums text-white/80">
+                  <span className="min-w-0 truncate px-1 text-xs tabular-nums text-white/80">
                     {tempo(posicao)} / {tempo(duracao)}
                   </span>
 
@@ -496,7 +467,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                       step={0.05}
                       value={mudo ? 0 : volume}
                       onChange={(e) => alterarVolume(Number(e.target.value))}
-                      className="hidden h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-white/25 sm:block [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                      className="hidden h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-white/25 @[24rem]:block [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                     />
 
                     {legendaSrc && (
@@ -532,30 +503,39 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
 
       {/* Progresso do convite: só depois que a reprodução começa */}
       <div
-        className={`px-2 pb-3 pt-4 transition-opacity duration-500 ${iniciado || concluido ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`grid transition-all duration-500 ${
+          iniciado || concluido
+            ? "grid-rows-[1fr] opacity-100"
+            : "pointer-events-none grid-rows-[0fr] opacity-0"
+        }`}
       >
-        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/70">
-          <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
-          <span className="tabular-nums">{percentualCobertura}%</span>
+        <div className="overflow-hidden">
+          <div className="px-2 pb-3 pt-4">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/70">
+              <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
+              <span className="tabular-nums">{percentualCobertura}%</span>
+            </div>
+            <div
+              className="mt-2.5 h-px w-full bg-white/20"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percentualCobertura}
+              aria-label="Progresso do convite"
+            >
+              <div
+                className="h-px bg-gold transition-[width] duration-500"
+                style={{ width: `${percentualCobertura}%` }}
+              />
+            </div>
+            {fimSemCobertura && !concluido && (
+              <p role="status" className="mt-4 text-sm leading-relaxed text-white/75">
+                Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem
+                reprodução.
+              </p>
+            )}
+          </div>
         </div>
-        <div
-          className="mt-2.5 h-px w-full bg-white/20"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percentualCobertura}
-          aria-label="Progresso do convite"
-        >
-          <div
-            className="h-px bg-gold transition-[width] duration-500"
-            style={{ width: `${percentualCobertura}%` }}
-          />
-        </div>
-        {fimSemCobertura && !concluido && (
-          <p role="status" className="mt-4 text-sm leading-relaxed text-white/75">
-            Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem reprodução.
-          </p>
-        )}
       </div>
     </div>
   );
