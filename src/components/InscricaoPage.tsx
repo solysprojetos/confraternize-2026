@@ -374,11 +374,13 @@ export function InscricaoPage() {
               Convite oficial
             </p>
             <h1
-              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal leading-[1.05] tracking-[-0.015em]"
+              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
-              Confraternização 2026
+              Confraternização{" "}
+              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
             </h1>
+
             <p
               className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
@@ -404,20 +406,35 @@ export function InscricaoPage() {
             </p>
           </div>
 
-          {/* O vídeo, no centro da página */}
-          <div className="mx-auto w-full max-w-[940px]">
-            {temVideo ? (
-              <ConvitePlayer
-                key={tentativa}
-                onTrechosAssistidos={mandarProgresso}
-                onConcluir={concluirConvite}
-                onDuracao={abrirSessao}
-                concluido={liberado}
+          {/* O vídeo, no centro da página — emoldurado como peça de convite */}
+          <div className="relative mx-auto w-full max-w-[940px]">
+            <div
+              className="pointer-events-none absolute -inset-[5px] bg-gradient-to-tr from-gold via-gold-soft to-gold opacity-35 blur-[2px]"
+              aria-hidden="true"
+            />
+            <div className="relative border border-gold/25 bg-navy-deep shadow-[0_30px_60px_-30px_color-mix(in_oklab,var(--navy-deep)_60%,transparent)]">
+              {temVideo ? (
+                <ConvitePlayer
+                  key={tentativa}
+                  onTrechosAssistidos={mandarProgresso}
+                  onConcluir={concluirConvite}
+                  onDuracao={abrirSessao}
+                  concluido={liberado}
+                />
+              ) : (
+                <ConviteEmPreparacao />
+              )}
+              <span
+                className="pointer-events-none absolute right-4 top-4 h-6 w-6 border-r border-t border-gold/45"
+                aria-hidden="true"
               />
-            ) : (
-              <ConviteEmPreparacao />
-            )}
+              <span
+                className="pointer-events-none absolute bottom-4 left-4 h-6 w-6 border-b border-l border-gold/45"
+                aria-hidden="true"
+              />
+            </div>
           </div>
+
 
           {/* Etapas e chamada para a confirmação */}
           <div className="mx-auto w-full max-w-[940px] pb-16 pt-9 sm:pb-24 sm:pt-11">
@@ -448,13 +465,14 @@ export function InscricaoPage() {
                   if (done) irAte(destinoConfirmacao.current);
                   else abrirConfirmacao();
                 }}
-                className={`w-full max-w-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.26em] transition-colors duration-300 ${
+                className={`w-full max-w-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.26em] transition-all duration-300 active:scale-[0.99] ${
                   done
-                    ? "border border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                    ? "border border-gold/40 text-muted-foreground hover:border-gold-deep hover:text-foreground"
                     : liberado
-                      ? "border border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary"
+                      ? "border border-navy-deep bg-navy-deep text-primary-foreground shadow-[0_18px_40px_-24px_color-mix(in_oklab,var(--navy-deep)_80%,transparent)] hover:border-gold hover:bg-gold hover:text-navy-deep"
                       : "cursor-not-allowed border border-border bg-card/60 text-muted-foreground"
                 }`}
+
               >
                 {done ? "Ver minha resposta" : "Confirmar minha presença"}
               </button>
