@@ -9,8 +9,8 @@
   font-display: swap;
   src: url("./assets/fonts/inter.woff2") format("woff2");
   unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
-    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: "Playfair Display";
@@ -19,10 +19,9 @@
   font-display: swap;
   src: url("./assets/fonts/playfair-display.woff2") format("woff2");
   unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
-    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 
 @custom-variant dark (&:is(.dark *));
 
@@ -86,6 +85,7 @@
   --color-navy-soft: var(--navy-soft);
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
+  --color-gold-texto: var(--gold-texto);
   --color-gold-soft: var(--gold-soft);
   --color-surface: var(--surface);
   --font-display: var(--font-display);
@@ -116,6 +116,8 @@
   --navy-soft: oklch(0.318 0.062 255);
   --gold: oklch(0.79 0.112 86);
   --gold-deep: oklch(0.605 0.098 78);
+  /* Dourado escurecido só para textos pequenos sobre fundo claro (WCAG AA) */
+  --gold-texto: oklch(0.47 0.082 72);
   --gold-soft: oklch(0.885 0.048 88);
   --destructive: oklch(0.55 0.2 27.5);
   --destructive-foreground: oklch(0.99 0.002 250);
@@ -124,8 +126,8 @@
   --ring: oklch(0.46 0.075 255);
   --font-display: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -209,7 +211,60 @@
   }
 }
 
-/* Entrada discreta usada nas trocas de etapa */
+/* --------------------------------------------------------------------------
+   Acabamento da página do convite: textura de papel, luzes de celebração
+   noturna e movimentos curtos de entrada.
+   -------------------------------------------------------------------------- */
+
+/* Textura de papel: ruído leve, quase imperceptível, só para tirar o aspecto
+   chapado das áreas grandes de cor. */
+.textura-papel {
+  position: relative;
+}
+
+.textura-papel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23r)' opacity='0.55'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+.textura-papel--clara::before {
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+}
+
+/* Pequenos pontos de luz dourada, como luzes de uma noite de celebração */
+.luz-noturna {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--gold) 70%, transparent) 0%,
+    transparent 72%
+  );
+  filter: blur(18px);
+  opacity: 0.14;
+  animation: respirar 9s ease-in-out infinite;
+}
+
+@keyframes respirar {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.1);
+  }
+}
+
+/* Entradas curtas e escalonadas */
 @keyframes surgir {
   from {
     opacity: 0;
@@ -225,8 +280,31 @@
   animation: surgir 0.32s ease-out both;
 }
 
+.entrada {
+  animation: surgir 0.55s cubic-bezier(0.22, 0.68, 0.3, 1) both;
+  animation-delay: var(--atraso, 0ms);
+}
+
+/* Filete dourado que se revela sob o título */
+@keyframes revelar-filete {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.filete-dourado {
+  transform-origin: left;
+  animation: revelar-filete 0.7s 0.25s cubic-bezier(0.22, 0.68, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .surgir {
+  .surgir,
+  .entrada,
+  .filete-dourado,
+  .luz-noturna {
     animation: none;
   }
 

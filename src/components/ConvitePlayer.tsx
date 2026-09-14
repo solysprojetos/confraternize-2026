@@ -52,41 +52,64 @@ const IconeTelaCheia = () => (
   </svg>
 );
 
-/** Moldura com a identidade do evento, usada pela capa e pelo aviso de convite em preparação. */
-function MolduraConvite({ children, proporcao }: { children: React.ReactNode; proporcao: number }) {
+/** Moldura fina dourada usada pelo vídeo e pela capa de espera. */
+function MolduraDourada({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="sobre-escuro relative w-full max-w-full overflow-hidden rounded-2xl bg-navy-deep ring-1 ring-white/10"
-      style={{ aspectRatio: String(proporcao) }}
-    >
+    <div className="rounded-[18px] bg-[linear-gradient(160deg,color-mix(in_oklab,var(--gold)_55%,transparent)_0%,color-mix(in_oklab,var(--gold)_16%,transparent)_45%,color-mix(in_oklab,var(--gold)_30%,transparent)_100%)] p-px shadow-[0_30px_70px_-40px_rgba(3,12,26,0.95)]">
+      <div className="relative overflow-hidden rounded-[17px] bg-navy-deep">{children}</div>
+    </div>
+  );
+}
+
+/** Fundo da capa: papel, luz e um filete dourado. */
+function FundoDaCapa() {
+  return (
+    <>
       <span
-        className="pointer-events-none absolute inset-0 opacity-70"
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--navy-soft) 85%, transparent) 0%, transparent 62%)",
+            "radial-gradient(115% 85% at 50% 6%, var(--navy-soft) 0%, var(--navy-deep) 72%)",
         }}
         aria-hidden="true"
       />
-      <div className="relative flex h-full w-full flex-col items-center justify-center px-6 text-center">
-        {children}
-      </div>
-    </div>
+      <span className="textura-papel pointer-events-none absolute inset-0" aria-hidden="true" />
+      <span className="luz-noturna absolute left-[14%] top-[22%] h-24 w-24" aria-hidden="true" />
+      <span
+        className="luz-noturna absolute right-[16%] top-[58%] h-16 w-16"
+        style={{ animationDelay: "1.8s" }}
+        aria-hidden="true"
+      />
+    </>
   );
 }
 
 /** Capa exibida enquanto o convite em vídeo ainda não foi cadastrado. */
 export function ConviteEmPreparacao() {
   return (
-    <MolduraConvite proporcao={videoConvite.proporcao}>
-      <span className="h-px w-10 bg-gold/70" aria-hidden="true" />
-      <p className="mt-5 font-display text-xl leading-snug text-white sm:text-2xl">
-        Estamos preparando um convite especial para você
-      </p>
-      <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/70">
-        Assim que o vídeo estiver pronto, a confirmação de presença será liberada aqui mesmo.
-      </p>
-      <span className="mt-5 h-px w-10 bg-gold/70" aria-hidden="true" />
-    </MolduraConvite>
+    <div className="sobre-escuro">
+      <MolduraDourada>
+        <div
+          className="relative flex w-full max-w-full flex-col items-center justify-center px-6 text-center"
+          style={{ aspectRatio: String(videoConvite.proporcao) }}
+        >
+          <FundoDaCapa />
+          <span className="relative text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
+            Em breve
+          </span>
+          <p className="relative mt-3 max-w-md font-display text-lg leading-snug text-white sm:mt-5 sm:text-[1.7rem]">
+            Estamos preparando um convite especial para você
+          </p>
+          <span
+            className="relative mt-3 h-px w-12 bg-gradient-to-r from-transparent via-gold to-transparent sm:mt-5 sm:w-14"
+            aria-hidden="true"
+          />
+          <p className="relative mt-3 max-w-sm text-[13px] leading-relaxed text-white/65 sm:mt-5 sm:text-sm">
+            Assim que o vídeo estiver pronto, a confirmação de presença será liberada aqui mesmo.
+          </p>
+        </div>
+      </MolduraDourada>
+    </div>
   );
 }
 
@@ -293,220 +316,239 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     <div className="sobre-escuro w-full">
       <div
         ref={containerRef}
-        className="relative w-full overflow-hidden rounded-2xl bg-navy-deep shadow-[0_24px_60px_-30px_rgba(4,16,32,0.85)] ring-1 ring-white/10"
+        className="relative w-full rounded-[18px] bg-[linear-gradient(160deg,color-mix(in_oklab,var(--gold)_55%,transparent)_0%,color-mix(in_oklab,var(--gold)_16%,transparent)_45%,color-mix(in_oklab,var(--gold)_30%,transparent)_100%)] p-px shadow-[0_30px_70px_-40px_rgba(3,12,26,0.95)]"
       >
-        <div
-          className="relative w-full max-w-full"
-          style={{ aspectRatio: String(videoConvite.proporcao) }}
-        >
-          <video
-            ref={videoRef}
-            src={src}
-            poster={poster || undefined}
-            playsInline
-            preload="metadata"
-            className="h-full w-full bg-navy-deep object-contain"
-            onLoadedMetadata={(e) => {
-              const d = e.currentTarget.duration;
-              if (Number.isFinite(d)) {
-                setDuracao(d);
-                onDuracao?.(Math.max(1, Math.floor(d)));
-              }
-              const faixa = e.currentTarget.textTracks[0];
-              if (faixa) faixa.mode = "disabled";
-            }}
-            onTimeUpdate={handleTimeUpdate}
-            onSeeking={handleSeeking}
-            onPlay={() => {
-              setTocando(true);
-              setIniciado(true);
-              setCarregando(false);
-            }}
-            onPause={() => setTocando(false)}
-            onWaiting={() => setCarregando(true)}
-            onPlaying={() => setCarregando(false)}
-            onEnded={() => {
-              setTocando(false);
-              enviarPendentes();
-              if (!concluidoRef.current) setFimSemCobertura(true);
-            }}
-            onError={() => {
-              setErro(true);
-              setTocando(false);
-            }}
+        <div className="relative overflow-hidden rounded-[17px] bg-navy-deep">
+          <div
+            className="relative w-full max-w-full"
+            style={{ aspectRatio: String(videoConvite.proporcao) }}
           >
-            {legendaSrc && (
-              <track
-                kind="subtitles"
-                src={legendaSrc}
-                srcLang={videoConvite.legendas.idioma}
-                label={videoConvite.legendas.rotulo}
-              />
-            )}
-          </video>
-
-          {/* Capa: usa a imagem cadastrada ou a identidade do evento */}
-          {!iniciado && !erro && (
-            <button
-              type="button"
-              onClick={alternarReproducao}
-              className="group absolute inset-0 flex flex-col items-center justify-center text-center text-white"
-              aria-label="Reproduzir o convite"
+            <video
+              ref={videoRef}
+              src={src}
+              poster={poster || undefined}
+              playsInline
+              preload="metadata"
+              className="h-full w-full bg-navy-deep object-contain"
+              onLoadedMetadata={(e) => {
+                const d = e.currentTarget.duration;
+                if (Number.isFinite(d)) {
+                  setDuracao(d);
+                  onDuracao?.(Math.max(1, Math.floor(d)));
+                }
+                const faixa = e.currentTarget.textTracks[0];
+                if (faixa) faixa.mode = "disabled";
+              }}
+              onTimeUpdate={handleTimeUpdate}
+              onSeeking={handleSeeking}
+              onPlay={() => {
+                setTocando(true);
+                setIniciado(true);
+                setCarregando(false);
+              }}
+              onPause={() => setTocando(false)}
+              onWaiting={() => setCarregando(true)}
+              onPlaying={() => setCarregando(false)}
+              onEnded={() => {
+                setTocando(false);
+                enviarPendentes();
+                if (!concluidoRef.current) setFimSemCobertura(true);
+              }}
+              onError={() => {
+                setErro(true);
+                setTocando(false);
+              }}
             >
-              <span
-                className="absolute inset-0"
-                style={{
-                  background: poster
-                    ? "linear-gradient(to top, color-mix(in oklab, var(--navy-deep) 88%, transparent), color-mix(in oklab, var(--navy-deep) 30%, transparent))"
-                    : "radial-gradient(120% 95% at 50% 0%, color-mix(in oklab, var(--navy-soft) 90%, transparent) 0%, var(--navy-deep) 68%)",
-                }}
-                aria-hidden="true"
-              />
-              <span className="relative flex flex-col items-center px-6">
-                {!poster && (
-                  <>
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
-                      Convite em vídeo
-                    </span>
-                    <span className="mt-3 font-display text-2xl leading-tight text-white sm:text-3xl">
-                      {evento.nome}
-                    </span>
-                    <span className="mt-3 h-px w-12 bg-gold/70" aria-hidden="true" />
-                  </>
-                )}
-                <span className="mt-6 flex h-16 w-16 items-center justify-center rounded-full bg-white text-navy shadow-lg transition-transform duration-200 group-hover:scale-105 sm:h-[4.5rem] sm:w-[4.5rem]">
-                  <span className="ml-1 h-6 w-6">
-                    <IconePlay />
-                  </span>
-                </span>
-                <span className="mt-4 text-sm font-medium text-white/90">Assistir ao convite</span>
-              </span>
-            </button>
-          )}
+              {legendaSrc && (
+                <track
+                  kind="subtitles"
+                  src={legendaSrc}
+                  srcLang={videoConvite.legendas.idioma}
+                  label={videoConvite.legendas.rotulo}
+                />
+              )}
+            </video>
 
-          {carregando && iniciado && !erro && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/35 border-t-white" />
-            </div>
-          )}
-
-          {erro && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-navy-deep/95 px-6 text-center text-white">
-              <p className="max-w-xs text-sm leading-relaxed sm:text-base">
-                Não foi possível carregar o vídeo do convite.
-              </p>
+            {/* Capa: usa a imagem cadastrada ou a identidade do evento */}
+            {!iniciado && !erro && (
               <button
                 type="button"
-                onClick={tentarNovamente}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-navy transition-opacity hover:opacity-90"
+                onClick={alternarReproducao}
+                className="group absolute inset-0 flex flex-col items-center justify-center text-center text-white"
+                aria-label="Reproduzir o convite"
               >
-                Tentar novamente
-              </button>
-            </div>
-          )}
-
-          {avisoAvanco && (
-            <p className="pointer-events-none absolute inset-x-4 bottom-28 mx-auto max-w-xs rounded-full bg-navy-deep/90 px-4 py-2 text-center text-xs text-white">
-              Você pode rever trechos, mas não adiantar o convite.
-            </p>
-          )}
-
-          {/* Controles sobre o vídeo */}
-          {iniciado && !erro && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/95 via-navy-deep/70 to-transparent px-3 pb-2.5 pt-8 sm:px-4">
-              <div className="relative h-5">
-                <span className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20">
+                {poster ? (
                   <span
-                    className="absolute inset-y-0 left-0 bg-white/35"
-                    style={{ width: `${percentualLiberado}%` }}
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(to top, color-mix(in oklab, var(--navy-deep) 92%, transparent), color-mix(in oklab, var(--navy-deep) 25%, transparent))",
+                    }}
+                    aria-hidden="true"
                   />
-                  <span
-                    className="absolute inset-y-0 left-0 bg-gold"
-                    style={{ width: `${percentual}%` }}
-                  />
-                </span>
-                <label className="sr-only" htmlFor="barra-convite">
-                  Posição do vídeo
-                </label>
-                <input
-                  id="barra-convite"
-                  type="range"
-                  min={0}
-                  max={Math.max(1, duracao)}
-                  step={0.1}
-                  value={posicao}
-                  onChange={(e) => irPara(Number(e.target.value))}
-                  className="absolute inset-0 h-5 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                  aria-valuetext={`${tempo(posicao)} de ${tempo(duracao)}`}
-                />
-              </div>
+                ) : (
+                  <FundoDaCapa />
+                )}
 
-              <div className="mt-1 flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={alternarReproducao}
-                  className={botao}
-                  aria-label={tocando ? "Pausar" : "Reproduzir"}
-                >
-                  <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
-                </button>
-
-                <span className="px-1 text-xs tabular-nums text-white/80">
-                  {tempo(posicao)} / {tempo(duracao)}
-                </span>
-
-                <span className="ml-auto flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={alternarMudo}
-                    className={botao}
-                    aria-label={mudo ? "Ativar o som" : "Desativar o som"}
-                  >
-                    <span className="h-4.5 w-4.5">
-                      <IconeSom mudo={mudo} />
-                    </span>
-                  </button>
-                  <label className="sr-only" htmlFor="volume-convite">
-                    Volume
-                  </label>
-                  <input
-                    id="volume-convite"
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={mudo ? 0 : volume}
-                    onChange={(e) => alterarVolume(Number(e.target.value))}
-                    className="hidden h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-white/25 sm:block [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                  />
-
-                  {legendaSrc && (
-                    <button
-                      type="button"
-                      onClick={alternarLegendas}
-                      aria-pressed={legendasAtivas}
-                      className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
-                        legendasAtivas ? "bg-white/20 text-white" : ""
-                      }`}
-                    >
-                      CC
-                    </button>
+                <span className="relative flex flex-col items-center px-6">
+                  {!poster && (
+                    <>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
+                        Convite em vídeo
+                      </span>
+                      <span className="mt-4 font-display text-2xl leading-tight text-white sm:text-[2rem]">
+                        {evento.nome}
+                      </span>
+                      <span
+                        className="mt-4 h-px w-14 bg-gradient-to-r from-transparent via-gold to-transparent"
+                        aria-hidden="true"
+                      />
+                    </>
                   )}
 
+                  {/* Botão circular de reprodução */}
+                  <span className="relative mt-4 flex h-14 w-14 items-center justify-center sm:mt-7 sm:h-20 sm:w-20">
+                    <span
+                      className="absolute inset-0 rounded-full bg-gold/25 blur-md transition-opacity duration-300 group-hover:opacity-90"
+                      aria-hidden="true"
+                    />
+                    <span className="relative flex h-full w-full items-center justify-center rounded-full bg-gold text-navy-deep ring-1 ring-gold/60 transition-transform duration-300 group-hover:scale-105">
+                      <span className="ml-1 h-6 w-6">
+                        <IconePlay />
+                      </span>
+                    </span>
+                  </span>
+                  <span className="mt-5 text-sm font-medium tracking-wide text-white/85">
+                    Assistir ao convite
+                  </span>
+                </span>
+              </button>
+            )}
+
+            {carregando && iniciado && !erro && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/35 border-t-white" />
+              </div>
+            )}
+
+            {erro && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-navy-deep/95 px-6 text-center text-white">
+                <p className="max-w-xs text-sm leading-relaxed sm:text-base">
+                  Não foi possível carregar o vídeo do convite.
+                </p>
+                <button
+                  type="button"
+                  onClick={tentarNovamente}
+                  className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-navy transition-opacity hover:opacity-90"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            )}
+
+            {avisoAvanco && (
+              <p className="pointer-events-none absolute inset-x-4 bottom-28 mx-auto max-w-xs rounded-full bg-navy-deep/90 px-4 py-2 text-center text-xs text-white">
+                Você pode rever trechos, mas não adiantar o convite.
+              </p>
+            )}
+
+            {/* Controles sobre o vídeo */}
+            {iniciado && !erro && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/95 via-navy-deep/70 to-transparent px-3 pb-2.5 pt-8 sm:px-4">
+                <div className="relative h-5">
+                  <span className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20">
+                    <span
+                      className="absolute inset-y-0 left-0 bg-white/35"
+                      style={{ width: `${percentualLiberado}%` }}
+                    />
+                    <span
+                      className="absolute inset-y-0 left-0 bg-gold"
+                      style={{ width: `${percentual}%` }}
+                    />
+                  </span>
+                  <label className="sr-only" htmlFor="barra-convite">
+                    Posição do vídeo
+                  </label>
+                  <input
+                    id="barra-convite"
+                    type="range"
+                    min={0}
+                    max={Math.max(1, duracao)}
+                    step={0.1}
+                    value={posicao}
+                    onChange={(e) => irPara(Number(e.target.value))}
+                    className="absolute inset-0 h-5 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                    aria-valuetext={`${tempo(posicao)} de ${tempo(duracao)}`}
+                  />
+                </div>
+
+                <div className="mt-1 flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={telaCheia}
+                    onClick={alternarReproducao}
                     className={botao}
-                    aria-label="Tela cheia"
+                    aria-label={tocando ? "Pausar" : "Reproduzir"}
                   >
-                    <span className="h-4.5 w-4.5">
-                      <IconeTelaCheia />
-                    </span>
+                    <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
                   </button>
-                </span>
+
+                  <span className="px-1 text-xs tabular-nums text-white/80">
+                    {tempo(posicao)} / {tempo(duracao)}
+                  </span>
+
+                  <span className="ml-auto flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={alternarMudo}
+                      className={botao}
+                      aria-label={mudo ? "Ativar o som" : "Desativar o som"}
+                    >
+                      <span className="h-4.5 w-4.5">
+                        <IconeSom mudo={mudo} />
+                      </span>
+                    </button>
+                    <label className="sr-only" htmlFor="volume-convite">
+                      Volume
+                    </label>
+                    <input
+                      id="volume-convite"
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={mudo ? 0 : volume}
+                      onChange={(e) => alterarVolume(Number(e.target.value))}
+                      className="hidden h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-white/25 sm:block [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                    />
+
+                    {legendaSrc && (
+                      <button
+                        type="button"
+                        onClick={alternarLegendas}
+                        aria-pressed={legendasAtivas}
+                        className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
+                          legendasAtivas ? "bg-white/20 text-white" : ""
+                        }`}
+                      >
+                        CC
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={telaCheia}
+                      className={botao}
+                      aria-label="Tela cheia"
+                    >
+                      <span className="h-4.5 w-4.5">
+                        <IconeTelaCheia />
+                      </span>
+                    </button>
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

@@ -199,28 +199,32 @@ function Etapas({ etapa }: { etapa: 1 | 2 }) {
 
 function FaixaLogos() {
   return (
-    <section className="border-b border-border bg-card">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-5 py-8 sm:px-8">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+    <section className="border-t border-border/70">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-7 px-6 py-12 sm:px-8 sm:py-14">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-muted-foreground">
           Uma realização
         </p>
-        <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+        <ul className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8 sm:gap-x-16">
           {grupos
             .filter((g) => g.png)
             .map((g) => (
-              <li
-                key={g.value}
-                className={`flex h-[4.5rem] w-40 items-center justify-center rounded-xl px-4 sm:h-24 sm:w-52 ${
-                  g.fundoEscuro ? "bg-navy" : "bg-background ring-1 ring-border"
-                }`}
-              >
-                <Logo
-                  webp={g.webp}
-                  png={g.png}
-                  alt={g.label}
-                  sigla={g.sigla}
-                  className="max-h-12 w-auto max-w-full object-contain sm:max-h-16"
-                />
+              <li key={g.value} className="flex items-center justify-center">
+                {/* A logo do Grupo Support é branca: só aparece sobre fundo escuro */}
+                <span
+                  className={
+                    g.fundoEscuro
+                      ? "flex items-center justify-center rounded-md bg-navy px-4 py-2.5"
+                      : "flex items-center justify-center"
+                  }
+                >
+                  <Logo
+                    webp={g.webp}
+                    png={g.png}
+                    alt={g.label}
+                    sigla={g.sigla}
+                    className="h-12 w-auto object-contain sm:h-14"
+                  />
+                </span>
               </li>
             ))}
         </ul>
@@ -239,30 +243,28 @@ function InformacoesEvento({ compacto = false }: { compacto?: boolean }) {
   }
   const itens = [
     { Icone: IconeCalendario, rotulo: "Data", valor: evento.dataExtenso, destaque: true },
-    { Icone: IconeRelogio, rotulo: "Início", valor: `${evento.horario}` },
-    { Icone: IconeLocal, rotulo: "Local", valor: evento.endereco },
+    { Icone: IconeRelogio, rotulo: "Início", valor: evento.horario, destaque: false },
+    { Icone: IconeLocal, rotulo: "Local", valor: evento.endereco, destaque: false },
   ];
   return (
-    <dl className="mt-8 space-y-4 border-t border-white/12 pt-6">
+    <dl className="divide-y divide-white/10 border-y border-white/10">
       {itens.map(({ Icone, rotulo, valor, destaque }) => (
-        <div key={rotulo} className="flex gap-4">
-          <span className="mt-0.5 h-5 w-5 shrink-0 text-gold" aria-hidden="true">
+        <div key={rotulo} className="flex items-start gap-4 py-4">
+          <span className="mt-0.5 h-[18px] w-[18px] shrink-0 text-gold/90" aria-hidden="true">
             <Icone />
           </span>
-          <div>
-            <dt className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">
-              {rotulo}
-            </dt>
-            <dd
-              className={
-                destaque
-                  ? "mt-1 font-display text-lg leading-snug text-white sm:text-xl"
-                  : "mt-1 max-w-xs text-pretty text-[15px] leading-relaxed text-white/85"
-              }
-            >
-              {valor}
-            </dd>
-          </div>
+          <dt className="w-16 shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
+            {rotulo}
+          </dt>
+          <dd
+            className={
+              destaque
+                ? "font-display text-lg leading-snug text-white sm:text-xl"
+                : "text-pretty text-[15px] leading-relaxed text-white/80"
+            }
+          >
+            {valor}
+          </dd>
         </div>
       ))}
     </dl>
@@ -465,8 +467,10 @@ export function InscricaoPage() {
     a.click();
   }
 
+  const rotulo =
+    "mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground";
   const campo =
-    "w-full rounded-lg border bg-card px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/20";
+    "w-full rounded-lg border bg-card px-4 py-3.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/55 focus:border-gold-deep focus:ring-2 focus:ring-gold-soft/50";
   const campoErro = "border-destructive/70";
   const campoOk = "border-border";
 
@@ -474,49 +478,72 @@ export function InscricaoPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Abertura em azul-marinho */}
-      <section className="sobre-escuro relative overflow-hidden bg-navy text-white">
+      {/* ---------------------------------------------------------------
+          Abertura: azul-marinho profundo, papel e luzes de celebração
+          --------------------------------------------------------------- */}
+      <section className="sobre-escuro textura-papel relative overflow-hidden bg-navy text-white">
         <span
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(85% 65% at 78% 8%, color-mix(in oklab, var(--navy-soft) 92%, transparent) 0%, transparent 58%)",
+              "radial-gradient(80% 60% at 76% 4%, color-mix(in oklab, var(--navy-soft) 90%, transparent) 0%, transparent 62%)",
           }}
           aria-hidden="true"
         />
+        <span className="luz-noturna left-[6%] top-[16%] h-40 w-40" aria-hidden="true" />
         <span
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/45 to-transparent"
+          className="luz-noturna right-[10%] top-[8%] h-24 w-24"
+          style={{ animationDelay: "2.4s" }}
+          aria-hidden="true"
+        />
+        <span
+          className="luz-noturna bottom-[12%] left-[44%] h-20 w-20"
+          style={{ animationDelay: "4.1s" }}
+          aria-hidden="true"
+        />
+        <span
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"
           aria-hidden="true"
         />
 
         <div
-          className={`relative mx-auto w-full max-w-6xl px-5 sm:px-8 ${
-            mostrarConvite ? "py-12 sm:py-16" : "py-10 sm:py-12"
+          className={`relative mx-auto w-full max-w-6xl px-6 sm:px-8 ${
+            mostrarConvite ? "py-12 sm:py-16 lg:py-24" : "py-10 sm:py-14"
           }`}
         >
-          {!done && <Etapas etapa={etapa} />}
+          {!done && (
+            <div className="entrada">
+              <Etapas etapa={etapa} />
+            </div>
+          )}
 
           {mostrarConvite ? (
-            <div className="mt-10 grid items-center gap-10 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-gold">
+            <div className="mt-12 grid gap-y-10 lg:mt-16 lg:grid-cols-12 lg:grid-rows-[auto_auto] lg:items-start lg:gap-x-16 lg:gap-y-10 lg:content-start">
+              {/* Título, chamada e — no celular — a data logo de saída */}
+              <div className="entrada lg:col-span-5 lg:col-start-1 lg:row-start-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-gold">
                   Convite oficial
                 </p>
-                <h1 className="mt-4 font-display text-[2.15rem] leading-[1.08] tracking-tight text-white sm:text-5xl">
+                <h1 className="mt-5 font-display text-[clamp(2.25rem,6.2vw,3.5rem)] leading-[1.04] tracking-[-0.01em] text-white">
                   {evento.nome}
                 </h1>
-                <p className="mt-5 font-display text-xl leading-snug text-white/90 sm:text-[1.6rem]">
+                <span
+                  className="filete-dourado mt-6 block h-px w-24 bg-gradient-to-r from-gold to-transparent"
+                  aria-hidden="true"
+                />
+                <p className="mt-6 font-display text-[1.35rem] leading-snug text-white/90 sm:text-[1.65rem]">
                   {evento.chamada}
                 </p>
-                <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/70">
-                  Chegamos ao fim de mais um ano de trabalho lado a lado. Preparamos um encontro
-                  para celebrar o caminho que percorremos juntos e agradecer a cada pessoa que faz
-                  parte dele. Sua presença é o que dá sentido a esta noite.
+                <p className="mt-5 text-[15px] text-white/60 lg:hidden">
+                  {evento.dataExtenso} · Início às {evento.horario}
                 </p>
-                <InformacoesEvento />
               </div>
 
-              <div className="lg:pl-2">
+              {/* Convite em vídeo */}
+              <div
+                className="entrada lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1"
+                style={{ "--atraso": "120ms" } as React.CSSProperties}
+              >
                 {temVideo ? (
                   <ConvitePlayer
                     onTrechosAssistidos={mandarProgresso}
@@ -529,9 +556,7 @@ export function InscricaoPage() {
                 )}
 
                 <p
-                  className={`mt-6 text-center text-[15px] ${
-                    liberado ? "text-gold" : "text-white/70"
-                  }`}
+                  className={`mt-7 text-center text-[15px] ${liberado ? "text-gold" : "text-white/65"}`}
                   aria-live="polite"
                 >
                   {!temVideo
@@ -541,24 +566,48 @@ export function InscricaoPage() {
                       : "Assista ao convite para liberar sua inscrição."}
                 </p>
 
-                <button
-                  type="button"
-                  disabled={!liberado}
-                  onClick={irParaFormulario}
-                  className={`mt-4 w-full rounded-full px-6 py-3.5 text-base font-semibold transition-all duration-300 ${
-                    liberado
-                      ? "surgir bg-gold text-navy-deep shadow-[0_14px_30px_-16px_rgba(201,162,39,0.9)] hover:brightness-105"
-                      : "cursor-not-allowed bg-white/10 text-white/45"
-                  }`}
-                >
-                  Confirmar minha presença
-                </button>
+                <div className="mt-5">
+                  <button
+                    type="button"
+                    disabled={!liberado}
+                    onClick={irParaFormulario}
+                    className={`w-full rounded-full px-7 py-4 text-base font-semibold tracking-wide transition-all duration-300 ${
+                      liberado
+                        ? "surgir bg-gold text-navy-deep shadow-[0_16px_38px_-18px_rgba(224,190,110,0.95)] hover:brightness-105"
+                        : "cursor-not-allowed border border-white/25 bg-white/[0.04] text-white/55"
+                    }`}
+                  >
+                    Confirmar minha presença
+                  </button>
+                  {!liberado && (
+                    <p className="mt-3 text-center text-xs text-white/55">
+                      {temVideo
+                        ? "Disponível ao final do convite"
+                        : "Disponível quando o convite for publicado"}
+                    </p>
+                  )}
+                </div>
 
                 {errors["form"] && (
-                  <p className="mt-3 text-center text-sm text-gold" role="alert">
+                  <p className="mt-4 text-center text-sm text-gold" role="alert">
                     {errors["form"]}
                   </p>
                 )}
+              </div>
+
+              {/* Texto de convite e informações do evento */}
+              <div
+                className="entrada lg:col-span-5 lg:col-start-1 lg:row-start-2"
+                style={{ "--atraso": "220ms" } as React.CSSProperties}
+              >
+                <p className="max-w-md text-[15px] leading-relaxed text-white/65">
+                  Chegamos ao fim de mais um ano de trabalho lado a lado. Preparamos um encontro
+                  para celebrar o caminho que percorremos juntos e agradecer a cada pessoa que faz
+                  parte dele.
+                </p>
+                <div className="mt-8">
+                  <InformacoesEvento />
+                </div>
               </div>
             </div>
           ) : (
@@ -576,233 +625,246 @@ export function InscricaoPage() {
 
       {mostrarConvite && <FaixaLogos />}
 
-      {/* Formulário */}
+      {/* ---------------------------------------------------------------
+          Confirmação de presença
+          --------------------------------------------------------------- */}
       {!done && etapa === 2 && (
-        <section className="surgir mx-auto w-full max-w-2xl px-5 py-12 sm:px-8 sm:py-16">
-          <h2
-            ref={tituloFormulario}
-            tabIndex={-1}
-            className="font-display text-[1.75rem] leading-tight text-foreground sm:text-4xl"
-          >
-            Vamos confirmar sua presença?
-          </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            Preencha seus dados e selecione o grupo do qual você faz parte.
-          </p>
+        <section className="textura-papel textura-papel--clara relative">
+          <div className="surgir relative mx-auto w-full max-w-2xl px-6 py-14 sm:px-8 sm:py-20">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-gold-texto">
+              Etapa 2
+            </p>
+            <h2
+              ref={tituloFormulario}
+              tabIndex={-1}
+              className="mt-4 font-display text-[clamp(1.85rem,4.6vw,2.5rem)] leading-tight text-foreground"
+            >
+              Vamos confirmar sua presença?
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              Preencha seus dados e selecione o grupo do qual você faz parte.
+            </p>
 
-          <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-6">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="nome" className="mb-2 block text-sm font-medium text-foreground">
-                  Nome completo
-                </label>
-                <input
-                  id="nome"
-                  className={`${campo} ${errors["nome_completo"] ? campoErro : campoOk}`}
-                  value={form.nome_completo}
-                  maxLength={120}
-                  autoComplete="name"
-                  placeholder="Como você quer ser chamado no convite"
-                  aria-invalid={Boolean(errors["nome_completo"])}
-                  aria-describedby={errors["nome_completo"] ? "erro-nome" : undefined}
-                  onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
-                  onBlur={() => validarCampo("nome_completo")}
-                />
-                {errors["nome_completo"] && (
-                  <p id="erro-nome" className="mt-1.5 text-sm text-destructive">
-                    {errors["nome_completo"]}
-                  </p>
-                )}
+            <form onSubmit={handleSubmit} noValidate className="mt-10 space-y-8">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label htmlFor="nome" className={rotulo}>
+                    Nome completo
+                  </label>
+                  <input
+                    id="nome"
+                    className={`${campo} ${errors["nome_completo"] ? campoErro : campoOk}`}
+                    value={form.nome_completo}
+                    maxLength={120}
+                    autoComplete="name"
+                    placeholder="Como você quer ser chamado no convite"
+                    aria-invalid={Boolean(errors["nome_completo"])}
+                    aria-describedby={errors["nome_completo"] ? "erro-nome" : undefined}
+                    onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
+                    onBlur={() => validarCampo("nome_completo")}
+                  />
+                  {errors["nome_completo"] && (
+                    <p id="erro-nome" className="mt-2 text-sm text-destructive">
+                      {errors["nome_completo"]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="telefone" className={rotulo}>
+                    Telefone
+                  </label>
+                  <input
+                    id="telefone"
+                    type="tel"
+                    inputMode="tel"
+                    className={`${campo} ${errors["telefone"] ? campoErro : campoOk}`}
+                    value={form.telefone}
+                    maxLength={16}
+                    autoComplete="tel"
+                    placeholder="(85) 99999-8888"
+                    aria-invalid={Boolean(errors["telefone"])}
+                    aria-describedby={errors["telefone"] ? "erro-telefone" : undefined}
+                    onChange={(e) =>
+                      setForm({ ...form, telefone: formatarTelefone(e.target.value) })
+                    }
+                    onBlur={() => validarCampo("telefone")}
+                  />
+                  {errors["telefone"] && (
+                    <p id="erro-telefone" className="mt-2 text-sm text-destructive">
+                      {errors["telefone"]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="email" className={rotulo}>
+                    E-mail
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    className={`${campo} ${errors["email"] ? campoErro : campoOk}`}
+                    value={form.email}
+                    maxLength={255}
+                    autoComplete="email"
+                    placeholder="voce@empresa.com.br"
+                    aria-invalid={Boolean(errors["email"])}
+                    aria-describedby={errors["email"] ? "erro-email" : undefined}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onBlur={() => validarCampo("email")}
+                  />
+                  {errors["email"] && (
+                    <p id="erro-email" className="mt-2 text-sm text-destructive">
+                      {errors["email"]}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label
-                  htmlFor="telefone"
-                  className="mb-2 block text-sm font-medium text-foreground"
+              <fieldset>
+                <legend className={rotulo}>Você faz parte de qual grupo?</legend>
+                <div
+                  className="mt-1 grid gap-2.5 sm:grid-cols-2"
+                  role="radiogroup"
+                  aria-label="Grupo"
                 >
-                  Telefone
-                </label>
-                <input
-                  id="telefone"
-                  type="tel"
-                  inputMode="tel"
-                  className={`${campo} ${errors["telefone"] ? campoErro : campoOk}`}
-                  value={form.telefone}
-                  maxLength={16}
-                  autoComplete="tel"
-                  placeholder="(85) 99999-8888"
-                  aria-invalid={Boolean(errors["telefone"])}
-                  aria-describedby={errors["telefone"] ? "erro-telefone" : undefined}
-                  onChange={(e) => setForm({ ...form, telefone: formatarTelefone(e.target.value) })}
-                  onBlur={() => validarCampo("telefone")}
-                />
-                {errors["telefone"] && (
-                  <p id="erro-telefone" className="mt-1.5 text-sm text-destructive">
-                    {errors["telefone"]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
-                  E-mail
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className={`${campo} ${errors["email"] ? campoErro : campoOk}`}
-                  value={form.email}
-                  maxLength={255}
-                  autoComplete="email"
-                  placeholder="voce@empresa.com.br"
-                  aria-invalid={Boolean(errors["email"])}
-                  aria-describedby={errors["email"] ? "erro-email" : undefined}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  onBlur={() => validarCampo("email")}
-                />
-                {errors["email"] && (
-                  <p id="erro-email" className="mt-1.5 text-sm text-destructive">
-                    {errors["email"]}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <fieldset>
-              <legend className="mb-3 text-sm font-medium text-foreground">
-                Você faz parte de qual grupo?
-              </legend>
-              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Grupo">
-                {grupos.map((g, indice) => {
-                  const ativo = form.grupo === g.value;
-                  const ultimoSozinho = indice === grupos.length - 1 && grupos.length % 2 === 1;
-                  return (
-                    <button
-                      key={g.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={ativo}
-                      onClick={() => {
-                        setForm({ ...form, grupo: g.value });
-                        setErrors((atuais) => {
-                          const proximos = { ...atuais };
-                          delete proximos["grupo"];
-                          return proximos;
-                        });
-                      }}
-                      className={`relative flex min-h-[72px] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors ${
-                        ultimoSozinho ? "sm:col-span-2" : ""
-                      } ${
-                        ativo
-                          ? "border-primary bg-accent shadow-[inset_0_0_0_1px_var(--primary)]"
-                          : "border-border bg-card hover:border-gold-soft hover:bg-accent/50"
-                      }`}
-                    >
-                      {g.png ? (
-                        <span
-                          className={`flex h-12 w-20 shrink-0 items-center justify-center rounded-lg px-2 ${
-                            g.fundoEscuro ? "bg-navy" : "bg-background ring-1 ring-border/70"
-                          }`}
-                        >
-                          <Logo
-                            webp={g.webp}
-                            png={g.png}
-                            alt={g.label}
-                            sigla={g.sigla}
-                            className="max-h-9 w-auto max-w-full object-contain"
-                          />
+                  {grupos.map((g, indice) => {
+                    const ativo = form.grupo === g.value;
+                    const ultimoSozinho = indice === grupos.length - 1 && grupos.length % 2 === 1;
+                    return (
+                      <button
+                        key={g.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={ativo}
+                        onClick={() => {
+                          setForm({ ...form, grupo: g.value });
+                          setErrors((atuais) => {
+                            const proximos = { ...atuais };
+                            delete proximos["grupo"];
+                            return proximos;
+                          });
+                        }}
+                        className={`relative flex min-h-[68px] items-center gap-4 rounded-lg border px-4 py-3 text-left transition-all duration-200 ${
+                          ultimoSozinho ? "sm:col-span-2" : ""
+                        } ${
+                          ativo
+                            ? "border-primary/70 bg-card shadow-[0_1px_0_0_var(--gold)_inset,0_10px_24px_-20px_rgba(16,36,64,0.8)]"
+                            : "border-border/80 bg-transparent hover:border-gold-soft hover:bg-card/60"
+                        }`}
+                      >
+                        {g.png ? (
+                          <span
+                            className={`flex h-11 w-[70px] shrink-0 items-center justify-center ${
+                              g.fundoEscuro ? "rounded-md bg-navy px-2.5 py-1.5" : ""
+                            }`}
+                          >
+                            <Logo
+                              webp={g.webp}
+                              png={g.png}
+                              alt={g.label}
+                              sigla={g.sigla}
+                              className="max-h-9 w-auto max-w-full object-contain"
+                            />
+                          </span>
+                        ) : (
+                          <span
+                            className="flex h-11 w-[70px] shrink-0 items-center justify-center font-display text-lg text-muted-foreground"
+                            aria-hidden="true"
+                          >
+                            {g.sigla}
+                          </span>
+                        )}
+                        <span className="text-[15px] font-medium leading-snug text-foreground">
+                          {g.label}
                         </span>
-                      ) : (
                         <span
-                          className="flex h-12 w-20 shrink-0 items-center justify-center rounded-lg bg-secondary font-display text-lg text-primary"
+                          className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold transition-colors ${
+                            ativo
+                              ? "border-gold-deep bg-gold-deep text-white"
+                              : "border-border text-transparent"
+                          }`}
                           aria-hidden="true"
                         >
-                          {g.sigla}
+                          ✓
                         </span>
-                      )}
-                      <span className="text-[15px] font-medium leading-snug text-foreground">
-                        {g.label}
-                      </span>
-                      <span
-                        className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
-                          ativo
-                            ? "border-gold-deep bg-gold-deep text-white"
-                            : "border-border bg-transparent text-transparent"
-                        }`}
-                        aria-hidden="true"
-                      >
-                        ✓
-                      </span>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors["grupo"] && (
+                  <p className="mt-2 text-sm text-destructive">{errors["grupo"]}</p>
+                )}
+              </fieldset>
+
+              {errors["form"] && (
+                <p
+                  className="border-l-2 border-destructive/70 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                  role="alert"
+                >
+                  {errors["form"]}
+                </p>
+              )}
+
+              <div className="border-t border-border/70 pt-8">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  aria-busy={loading}
+                  className="flex w-full items-center justify-center gap-2.5 rounded-full bg-gold px-7 py-4 text-base font-semibold tracking-wide text-navy-deep shadow-[0_16px_38px_-20px_rgba(224,190,110,0.95)] transition-all duration-300 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-65"
+                >
+                  {loading && (
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-navy-deep/35 border-t-navy-deep"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {loading ? "Confirmando presença..." : "Confirmar minha presença"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEtapa(1)}
+                  className="mx-auto mt-5 block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  Voltar ao convite
+                </button>
               </div>
-              {errors["grupo"] && (
-                <p className="mt-2 text-sm text-destructive">{errors["grupo"]}</p>
-              )}
-            </fieldset>
-
-            {errors["form"] && (
-              <p
-                className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-                role="alert"
-              >
-                {errors["form"]}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              aria-busy={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading && (
-                <span
-                  className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
-                  aria-hidden="true"
-                />
-              )}
-              {loading ? "Confirmando presença..." : "Confirmar minha presença"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setEtapa(1)}
-              className="mx-auto block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              Voltar ao convite
-            </button>
-          </form>
+            </form>
+          </div>
         </section>
       )}
 
-      {/* Confirmação */}
+      {/* ---------------------------------------------------------------
+          Presença confirmada
+          --------------------------------------------------------------- */}
       {done && (
-        <section className="surgir mx-auto w-full max-w-2xl px-5 py-12 sm:px-8 sm:py-16">
-          <div className="text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-gold-deep">
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-7 w-7">
-                <path
-                  d="M5 12.5l4.5 4.5L19 7.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <h2 className="mt-5 font-display text-[1.75rem] leading-tight text-foreground sm:text-4xl">
-              Presença confirmada!
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              Obrigado, {form.nome_completo.split(" ")[0]}. Guardamos o seu lugar na {evento.nome}.
-            </p>
-          </div>
+        <section className="textura-papel textura-papel--clara relative">
+          <div className="surgir relative mx-auto w-full max-w-2xl px-6 py-14 sm:px-8 sm:py-20">
+            <div className="text-center">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-gold/45 text-gold-deep">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+                  <path
+                    d="M5 12.5l4.5 4.5L19 7.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <h2 className="mt-6 font-display text-[clamp(1.85rem,4.6vw,2.5rem)] leading-tight text-foreground">
+                Presença confirmada!
+              </h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                Obrigado, {form.nome_completo.split(" ")[0]}. Guardamos o seu lugar na {evento.nome}
+                .
+              </p>
+            </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
-            <dl className="divide-y divide-border">
+            <dl className="mt-12 divide-y divide-border/70 border-y border-border/70">
               {[
                 { rotulo: "Nome", valor: form.nome_completo },
                 { rotulo: "Grupo", valor: nomeDoGrupo },
@@ -810,8 +872,8 @@ export function InscricaoPage() {
                 { rotulo: "Início", valor: evento.horario },
                 { rotulo: "Local", valor: evento.endereco },
               ].map((linha) => (
-                <div key={linha.rotulo} className="flex flex-wrap gap-x-6 gap-y-1 px-5 py-3.5">
-                  <dt className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <div key={linha.rotulo} className="flex flex-wrap gap-x-8 gap-y-1 py-4">
+                  <dt className="w-16 shrink-0 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {linha.rotulo}
                   </dt>
                   <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
@@ -820,72 +882,77 @@ export function InscricaoPage() {
                 </div>
               ))}
             </dl>
-          </div>
 
-          {qrUrl && (
-            <div className="mt-8 flex flex-col items-center gap-3">
-              <img
-                src={qrUrl}
-                alt="QR code do convite"
-                className="h-40 w-40 rounded-xl border border-border bg-white p-2"
-              />
-              <p className="text-center text-xs text-muted-foreground">
-                Este é o seu convite. Salve e apresente o QR code na entrada.
-              </p>
-              {emailStatus === "enviando" && (
-                <p className="text-xs text-muted-foreground">Enviando o convite por e-mail...</p>
-              )}
-              {emailStatus === "ok" && (
-                <p className="text-xs font-medium text-foreground">
-                  Convite enviado para {form.email}.
+            {qrUrl && (
+              <div className="mt-12 flex flex-col items-center gap-3">
+                <img
+                  src={qrUrl}
+                  alt="QR code do convite"
+                  className="h-40 w-40 bg-white p-2 ring-1 ring-border"
+                />
+                <p className="text-center text-xs text-muted-foreground">
+                  Este é o seu convite. Salve e apresente o QR code na entrada.
                 </p>
-              )}
-            </div>
-          )}
+                {emailStatus === "enviando" && (
+                  <p className="text-xs text-muted-foreground">Enviando o convite por e-mail...</p>
+                )}
+                {emailStatus === "ok" && (
+                  <p className="text-xs font-medium text-foreground">
+                    Convite enviado para {form.email}.
+                  </p>
+                )}
+                {emailStatus === "erro" && (
+                  <p className="text-xs text-muted-foreground">
+                    Não conseguimos enviar o e-mail agora, mas sua presença está confirmada.
+                  </p>
+                )}
+              </div>
+            )}
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={baixarQr}
+                className="rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Baixar QR code
+              </button>
+              <button
+                type="button"
+                onClick={enviarEmail}
+                className="rounded-full border border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-gold-soft hover:bg-card"
+              >
+                Enviar por e-mail
+              </button>
+              <button
+                type="button"
+                onClick={enviarWhatsApp}
+                className="rounded-full border border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-gold-soft hover:bg-card"
+              >
+                Enviar no WhatsApp
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={baixarQr}
-              className="rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              onClick={() => {
+                setForm({ nome_completo: "", telefone: "", email: "", grupo: "" });
+                setQrUrl("");
+                setInscricaoId("");
+                setEmailStatus("");
+                setDone(false);
+                setEtapa(1);
+              }}
+              className="mx-auto mt-10 block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              Baixar QR code
-            </button>
-            <button
-              type="button"
-              onClick={enviarEmail}
-              className="rounded-full border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-            >
-              Enviar por e-mail
-            </button>
-            <button
-              type="button"
-              onClick={enviarWhatsApp}
-              className="rounded-full border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-            >
-              Enviar no WhatsApp
+              Inscrever outra pessoa
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setForm({ nome_completo: "", telefone: "", email: "", grupo: "" });
-              setQrUrl("");
-              setInscricaoId("");
-              setEmailStatus("");
-              setDone(false);
-              setEtapa(1);
-            }}
-            className="mx-auto mt-8 block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Inscrever outra pessoa
-          </button>
         </section>
       )}
 
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-5 py-8 text-center text-xs text-muted-foreground sm:px-8">
+      <footer className="border-t border-border/70">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-center text-xs tracking-wide text-muted-foreground sm:px-8">
           {evento.nome} · {evento.dataExtenso} · Início às {evento.horario}
         </div>
       </footer>
