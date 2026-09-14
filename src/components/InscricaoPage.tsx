@@ -374,11 +374,13 @@ export function InscricaoPage() {
               Convite oficial
             </p>
             <h1
-              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal leading-[1.05] tracking-[-0.015em]"
+              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
-              Confraternização 2026
+              Confraternização{" "}
+              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
             </h1>
+
             <p
               className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
