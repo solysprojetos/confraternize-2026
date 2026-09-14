@@ -11,13 +11,6 @@ type Props = {
   concluido: boolean;
 };
 
-function tempo(segundos: number): string {
-  if (!Number.isFinite(segundos) || segundos < 0) return "0:00";
-  const m = Math.floor(segundos / 60);
-  const s = Math.floor(segundos % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 const IconePlay = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-full w-full fill-current">
     <path d="M8 5.14v13.72L19 12z" />
@@ -112,7 +105,6 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
   const [iniciado, setIniciado] = useState(false);
   const [tocando, setTocando] = useState(false);
   const [duracao, setDuracao] = useState(0);
-  const [posicao, setPosicao] = useState(0);
   const [maxAssistido, setMaxAssistido] = useState(0);
   const [cobertura, setCobertura] = useState(0);
   const [mudo, setMudo] = useState(false);
@@ -173,7 +165,6 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     if (!v) return;
     const atual = v.currentTime;
     const anterior = posicaoAnteriorRef.current;
-    setPosicao(atual);
     if (!v.paused && !v.seeking) {
       // Marca todo o intervalo percorrido desde o quadro anterior — se o
       // navegador atrasar um evento, o trecho reproduzido não se perde.
@@ -217,7 +208,6 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     }
     v.currentTime = Math.max(0, destino);
     posicaoAnteriorRef.current = v.currentTime;
-    setPosicao(v.currentTime);
   }
 
   async function alternarReproducao() {
@@ -290,7 +280,6 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     v?.webkitEnterFullscreen?.();
   }
 
-  const percentual = duracao > 0 ? Math.min(100, (posicao / duracao) * 100) : 0;
   const percentualLiberado = duracao > 0 ? Math.min(100, (maxAssistido / duracao) * 100) : 0;
   const percentualCobertura = concluido ? 100 : Math.round(Math.min(1, cobertura) * 100);
   const botao =
@@ -400,142 +389,104 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 Você pode rever trechos, mas não adiantar o convite.
               </p>
             )}
-
-            {/* Controles sobre o vídeo */}
-            {iniciado && !erro && (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/95 via-navy-deep/70 to-transparent px-3 pb-2.5 pt-8 sm:px-4">
-                <div className="relative h-8">
-                  <span className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20">
-                    <span
-                      className="absolute inset-y-0 left-0 bg-white/35"
-                      style={{ width: `${percentualLiberado}%` }}
-                    />
-                    <span
-                      className="absolute inset-y-0 left-0 bg-gold"
-                      style={{ width: `${percentual}%` }}
-                    />
-                  </span>
-                  <label className="sr-only" htmlFor="barra-convite">
-                    Posição do vídeo
-                  </label>
-                  <input
-                    id="barra-convite"
-                    type="range"
-                    min={0}
-                    max={Math.max(1, duracao)}
-                    step={0.1}
-                    value={posicao}
-                    onChange={(e) => irPara(Number(e.target.value))}
-                    className="absolute inset-0 h-8 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                    aria-valuetext={`${tempo(posicao)} de ${tempo(duracao)}`}
-                  />
-                </div>
-
-                <div className="mt-1 flex items-center gap-1 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={alternarReproducao}
-                    className={botao}
-                    aria-label={tocando ? "Pausar" : "Reproduzir"}
-                  >
-                    <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
-                  </button>
-
-                  <span className="min-w-0 truncate px-1 text-xs tabular-nums text-white/80">
-                    {tempo(posicao)} / {tempo(duracao)}
-                  </span>
-
-                  <span className="ml-auto flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={alternarMudo}
-                      className={botao}
-                      aria-label={mudo ? "Ativar o som" : "Desativar o som"}
-                    >
-                      <span className="h-4.5 w-4.5">
-                        <IconeSom mudo={mudo} />
-                      </span>
-                    </button>
-                    <label className="sr-only" htmlFor="volume-convite">
-                      Volume
-                    </label>
-                    <input
-                      id="volume-convite"
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={mudo ? 0 : volume}
-                      onChange={(e) => alterarVolume(Number(e.target.value))}
-                      className="hidden h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-white/25 @[24rem]:block [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                    />
-
-                    {legendaSrc && (
-                      <button
-                        type="button"
-                        onClick={alternarLegendas}
-                        aria-pressed={legendasAtivas}
-                        className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
-                          legendasAtivas ? "bg-white/20 text-white" : ""
-                        }`}
-                      >
-                        CC
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={telaCheia}
-                      className={botao}
-                      aria-label="Tela cheia"
-                    >
-                      <span className="h-4.5 w-4.5">
-                        <IconeTelaCheia />
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Progresso do convite: só depois que a reprodução começa */}
-      <div
-        className={`grid transition-all duration-500 ${
-          iniciado || concluido
-            ? "grid-rows-[1fr] opacity-100"
-            : "pointer-events-none grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <div className="px-2 pb-3 pt-4">
-            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/70">
-              <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
-              <span className="tabular-nums">{percentualCobertura}%</span>
-            </div>
-            <div
-              className="mt-2.5 h-px w-full bg-white/20"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percentualCobertura}
-              aria-label="Progresso do convite"
-            >
-              <div
-                className="h-px bg-gold transition-[width] duration-500"
-                style={{ width: `${percentualCobertura}%` }}
-              />
-            </div>
-            {fimSemCobertura && !concluido && (
-              <p role="status" className="mt-4 text-sm leading-relaxed text-white/75">
-                Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem
-                reprodução.
-              </p>
-            )}
-          </div>
+      {/* Abaixo do vídeo, sem nada cobrindo o convite: a linha do progresso
+          e os controles. A linha fica aberta desde o começo e vai andando. */}
+      <div className="px-2 pb-2.5 pt-2">
+        <div
+          className="h-px w-full bg-white/20"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percentualCobertura}
+          aria-label="Quanto do convite já foi assistido"
+        >
+          <div
+            className="h-px bg-gold transition-[width] duration-500"
+            style={{ width: `${percentualCobertura}%` }}
+          />
         </div>
+
+        {!erro && (
+          <div className="mt-1.5">
+            <div className="flex items-center gap-1 overflow-hidden">
+              <button
+                type="button"
+                onClick={alternarReproducao}
+                className={botao}
+                aria-label={tocando ? "Pausar" : "Reproduzir"}
+              >
+                <span className="h-4.5 w-4.5">{tocando ? <IconePausa /> : <IconePlay />}</span>
+              </button>
+
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={alternarMudo}
+                  className={botao}
+                  aria-label={mudo ? "Ativar o som" : "Desativar o som"}
+                >
+                  <span className="h-4.5 w-4.5">
+                    <IconeSom mudo={mudo} />
+                  </span>
+                </button>
+                <label className="sr-only" htmlFor="volume-convite">
+                  Volume
+                </label>
+                <input
+                  id="volume-convite"
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={mudo ? 0 : volume}
+                  onChange={(e) => alterarVolume(Number(e.target.value))}
+                  className="h-1.5 w-10 cursor-pointer appearance-none rounded-full bg-white/25 @[21rem]:w-16 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                />
+
+                {legendaSrc && (
+                  <button
+                    type="button"
+                    onClick={alternarLegendas}
+                    aria-pressed={legendasAtivas}
+                    className={`${botao} w-auto px-2.5 text-[11px] font-semibold ${
+                      legendasAtivas ? "bg-white/20 text-white" : ""
+                    }`}
+                  >
+                    CC
+                  </button>
+                )}
+
+                <button type="button" onClick={telaCheia} className={botao} aria-label="Tela cheia">
+                  <span className="h-4.5 w-4.5">
+                    <IconeTelaCheia />
+                  </span>
+                </button>
+              </span>
+            </div>
+          </div>
+        )}
+
+        {fimSemCobertura && !concluido && (
+          <div role="status" className="mt-3">
+            <p className="text-sm leading-relaxed text-white/75">
+              Faltaram alguns trechos do convite.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                irPara(0);
+                videoRef.current?.play().catch(() => {});
+              }}
+              className="mt-3 flex min-h-[44px] items-center justify-center border border-gold/60 px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-navy-deep"
+            >
+              Ver o convite de novo
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
