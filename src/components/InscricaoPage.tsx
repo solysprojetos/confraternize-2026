@@ -383,9 +383,40 @@ export function InscricaoPage() {
           </header>
 
           {/* Abertura */}
-          <div className="pb-8 pt-9 text-center sm:pb-10 sm:pt-12">
+          <div className="mx-auto max-w-3xl pb-9 pt-10 text-center sm:pb-14 sm:pt-16">
             <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
               Convite oficial
+            </p>
+            <h1
+              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
+              style={{ "--atraso": "60ms" } as React.CSSProperties}
+            >
+              Confraternização{" "}
+              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
+            </h1>
+
+            <p
+              className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
+              style={{ "--atraso": "120ms" } as React.CSSProperties}
+            >
+              Um ano de conquistas. Um encontro para celebrar.
+            </p>
+            <p
+              className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
+              style={{ "--atraso": "180ms" } as React.CSSProperties}
+            >
+              <span className="whitespace-nowrap">19 de dezembro de 2026</span>
+              {/* No celular a linha quebra aqui, mantendo duas linhas equilibradas */}
+              <span className="mx-3 text-muted-foreground max-sm:hidden" aria-hidden="true">
+                ·
+              </span>
+              <span className="block sm:inline">
+                <span className="whitespace-nowrap">16h30</span>
+                <span className="mx-3 text-muted-foreground" aria-hidden="true">
+                  ·
+                </span>
+                <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
+              </span>
             </p>
           </div>
 
@@ -399,9 +430,9 @@ export function InscricaoPage() {
               <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
                 Confraternização 2026
               </p>
-              <h1 className="mt-4 text-center font-display text-[clamp(1.5rem,5.6vw,2rem)] font-normal leading-[1.15] text-foreground">
+              <h2 className="mt-4 text-center font-display text-[clamp(1.5rem,5.6vw,2rem)] font-normal leading-[1.15] text-foreground">
                 Uma mensagem especial para você
-              </h1>
+              </h2>
               <p className="mx-auto mt-3 max-w-[22rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
                 Dê o play e descubra o que preparamos para esse momento.
               </p>
@@ -430,33 +461,6 @@ export function InscricaoPage() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* A voz do convite, logo abaixo do painel */}
-          <div className="mx-auto max-w-2xl pt-9 text-center sm:pt-11">
-            <p
-              className="revelar font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground"
-              style={{ "--atraso": "120ms" } as React.CSSProperties}
-            >
-              Um ano de conquistas. Um encontro para celebrar.
-            </p>
-            <p
-              className="revelar mt-6 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:text-[13px] sm:tracking-[0.16em]"
-              style={{ "--atraso": "180ms" } as React.CSSProperties}
-            >
-              <span className="whitespace-nowrap">19 de dezembro de 2026</span>
-              {/* No celular a linha quebra aqui, mantendo duas linhas equilibradas */}
-              <span className="mx-3 text-muted-foreground max-sm:hidden" aria-hidden="true">
-                ·
-              </span>
-              <span className="block sm:inline">
-                <span className="whitespace-nowrap">16h30</span>
-                <span className="mx-3 text-muted-foreground" aria-hidden="true">
-                  ·
-                </span>
-                <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
-              </span>
-            </p>
           </div>
 
           {/* Etapas e chamada para a confirmação */}

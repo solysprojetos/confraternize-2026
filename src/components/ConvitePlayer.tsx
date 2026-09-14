@@ -112,6 +112,10 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
 
   const [iniciado, setIniciado] = useState(false);
   const [posicao, setPosicao] = useState(0);
+  // A faixa de controles some enquanto o convite corre e volta quando a
+  // pessoa mexe no vídeo.
+  const [controlesVisiveis, setControlesVisiveis] = useState(true);
+  const ocultarRef = useRef<number | null>(null);
   const [tocando, setTocando] = useState(false);
   const [duracao, setDuracao] = useState(0);
   const [maxAssistido, setMaxAssistido] = useState(0);
@@ -152,6 +156,12 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
   const legendaSrc = urlDoAsset(videoConvite.legendas.src);
   const poster = urlDoAsset(videoConvite.poster);
   const src = urlDoAsset(videoConvite.src);
+
+  useEffect(() => {
+    return () => {
+      if (ocultarRef.current) window.clearTimeout(ocultarRef.current);
+    };
+  }, []);
 
   function marcarBloco(t: number) {
     const total = totalBlocos();
@@ -276,6 +286,24 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     setLegendasAtivas(ativar);
   }
 
+  function mostrarControles() {
+    setControlesVisiveis(true);
+    if (ocultarRef.current) window.clearTimeout(ocultarRef.current);
+    ocultarRef.current = null;
+    if (videoRef.current && !videoRef.current.paused) {
+      ocultarRef.current = window.setTimeout(() => setControlesVisiveis(false), 2800);
+    }
+  }
+
+  /** Um toque na imagem revela os controles; o seguinte pausa. */
+  function tocarNaImagem() {
+    if (tocando && !controlesVisiveis) {
+      mostrarControles();
+      return;
+    }
+    void alternarReproducao();
+  }
+
   function telaCheia() {
     const alvo = containerRef.current;
     const v = videoRef.current as
@@ -307,6 +335,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
           <div
             className="relative w-full max-w-full"
             style={{ aspectRatio: String(videoConvite.proporcao) }}
+            onPointerMove={mostrarControles}
           >
             <video
               ref={videoRef}
@@ -335,8 +364,16 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 setTocando(true);
                 setIniciado(true);
                 setCarregando(false);
+                setControlesVisiveis(true);
+                if (ocultarRef.current) window.clearTimeout(ocultarRef.current);
+                ocultarRef.current = window.setTimeout(() => setControlesVisiveis(false), 2800);
               }}
-              onPause={() => setTocando(false)}
+              onPause={() => {
+                setTocando(false);
+                if (ocultarRef.current) window.clearTimeout(ocultarRef.current);
+                ocultarRef.current = null;
+                setControlesVisiveis(true);
+              }}
               onWaiting={() => setCarregando(true)}
               onPlaying={() => setCarregando(false)}
               onEnded={() => {
@@ -364,9 +401,15 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             {!erro && (
               <button
                 type="button"
-                onClick={alternarReproducao}
+                onClick={tocarNaImagem}
                 className="group absolute inset-0 flex items-center justify-center"
-                aria-label={tocando ? "Pausar o convite" : "Reproduzir o convite"}
+                aria-label={
+                  tocando
+                    ? controlesVisiveis
+                      ? "Pausar o convite"
+                      : "Mostrar os controles do convite"
+                    : "Reproduzir o convite"
+                }
               >
                 {!tocando && (
                   <span className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-navy-deep/55 text-white ring-1 ring-white/25 backdrop-blur-[2px] transition-colors duration-300 group-hover:bg-navy-deep/75 group-hover:ring-gold/60 sm:h-[76px] sm:w-[76px]">
@@ -412,7 +455,12 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 depois do play, para não repetir o botão central, e daí em
                 diante fica sempre visível. */}
             {iniciado && !erro && (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/55 to-transparent px-2.5 pb-1.5 pt-10">
+              <div
+                onFocusCapture={mostrarControles}
+                className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/55 to-transparent px-2.5 pb-1.5 pt-10 transition-opacity duration-300 ${
+                  controlesVisiveis ? "opacity-100" : "pointer-events-none opacity-0"
+                }`}
+              >
                 <div className="relative h-6">
                   <span className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-white/25">
                     <span
