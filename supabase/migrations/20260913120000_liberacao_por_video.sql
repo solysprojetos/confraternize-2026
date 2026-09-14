@@ -15,7 +15,10 @@ CREATE TABLE public.convite_config (
   cobertura_minima numeric NOT NULL DEFAULT 0.95 CHECK (cobertura_minima > 0 AND cobertura_minima <= 1),
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
-INSERT INTO public.convite_config (id) VALUES (true);
+-- O convite publicado tem 58,5 s (1080x1920). Guardamos 58 (o segundo
+-- inteiro que o navegador informa) para que o servidor exija a duração real
+-- mesmo que alguém chame a função à mão dizendo que o vídeo é curtinho.
+INSERT INTO public.convite_config (id, duracao_minima_segundos) VALUES (true, 58);
 
 ALTER TABLE public.convite_config ENABLE ROW LEVEL SECURITY;
 GRANT ALL ON public.convite_config TO service_role;

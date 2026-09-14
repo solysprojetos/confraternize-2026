@@ -303,6 +303,14 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
         className="relative w-full border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2"
       >
         <div className="relative overflow-hidden bg-navy-deep">
+          <span
+            className="pointer-events-none absolute right-3 top-3 z-10 h-6 w-6 border-r border-t border-gold/45"
+            aria-hidden="true"
+          />
+          <span
+            className="pointer-events-none absolute bottom-3 left-3 z-10 h-6 w-6 border-b border-l border-gold/45"
+            aria-hidden="true"
+          />
           <div
             className="relative w-full max-w-full"
             style={{ aspectRatio: String(videoConvite.proporcao) }}
@@ -524,14 +532,14 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
 
       {/* Progresso do convite: só depois que a reprodução começa */}
       <div
-        className={`mt-5 transition-opacity duration-500 ${iniciado || concluido ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`px-2 pb-3 pt-4 transition-opacity duration-500 ${iniciado || concluido ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
-        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/70">
           <span>{concluido ? "Convite assistido" : "Convite em andamento"}</span>
           <span className="tabular-nums">{percentualCobertura}%</span>
         </div>
         <div
-          className="mt-2.5 h-px w-full bg-border"
+          className="mt-2.5 h-px w-full bg-white/20"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -539,12 +547,12 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
           aria-label="Progresso do convite"
         >
           <div
-            className="h-px bg-gold-deep transition-[width] duration-500"
+            className="h-px bg-gold transition-[width] duration-500"
             style={{ width: `${percentualCobertura}%` }}
           />
         </div>
         {fimSemCobertura && !concluido && (
-          <p role="status" className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          <p role="status" className="mt-4 text-sm leading-relaxed text-white/75">
             Faltaram alguns trechos. Volte na barra e assista às partes que passaram sem reprodução.
           </p>
         )}

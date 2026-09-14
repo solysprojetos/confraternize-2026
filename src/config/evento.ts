@@ -26,15 +26,16 @@ export const videoConvite = {
   // página mostra a capa de convite em preparação e a inscrição permanece
   // indisponível.
   // Ex.: src: "convite/convite-confraternizacao-2026.mp4"
-  src: "" as string,
+  src: "convite/convite-confraternizacao-2026.mp4" as string,
 
   // Capa personalizada. Sem ela, a própria página desenha uma capa com a
   // identidade do evento.
   // Ex.: poster: "convite/capa-convite.jpg"
   poster: "" as string,
 
-  // Proporção do vídeo cadastrado (largura / altura). 16/9 é o padrão.
-  proporcao: 16 / 9,
+  // Proporção do vídeo cadastrado (largura / altura). O convite foi
+  // gravado na vertical (1080x1920), como as pessoas assistem no celular.
+  proporcao: 9 / 16,
 
   // Legendas (WebVTT). Deixe src vazio para esconder o botão de legendas.
   // Ex.: legendas: { src: "convite/convite-pt-br.vtt", idioma: "pt-BR", rotulo: "Português" }

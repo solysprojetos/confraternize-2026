@@ -18,8 +18,8 @@ import sgroupPng from "@/assets/logos/sgroup.png";
 import sgroupWebp from "@/assets/logos/sgroup.webp";
 import solysPng from "@/assets/logos/solys.png";
 import solysWebp from "@/assets/logos/solys.webp";
-import supportPng from "@/assets/logos/support.png";
-import supportWebp from "@/assets/logos/support.webp";
+import supportPng from "@/assets/logos/support-escuro.png";
+import supportWebp from "@/assets/logos/support-escuro.webp";
 
 /** Rola até o elemento e leva o foco junto, respeitando movimento reduzido. */
 function irAte(elemento: HTMLElement | null | undefined) {
@@ -40,11 +40,15 @@ const empresas = [
   { value: "convidados", label: "Convidados" },
 ];
 
-/** Só três das empresas têm logo oficial; a do Grupo Support é branca. */
+/**
+ * As três logos que assinam o convite. A arte do Grupo Support veio em
+ * branco, então usamos a versão em marinho: assim as três ficam no mesmo
+ * padrão, sobre o mesmo fundo claro e sem caixa atrás de nenhuma.
+ */
 const logos = [
-  { label: "Grupo Support", png: supportPng, webp: supportWebp, fundoEscuro: true },
-  { label: "SGroup Nacional", png: sgroupPng, webp: sgroupWebp, fundoEscuro: false },
-  { label: "Solys Gestão Administrativa", png: solysPng, webp: solysWebp, fundoEscuro: false },
+  { label: "Grupo Support", png: supportPng, webp: supportWebp },
+  { label: "SGroup Nacional", png: sgroupPng, webp: sgroupWebp },
+  { label: "Solys Gestão Administrativa", png: solysPng, webp: solysWebp },
 ];
 
 const schema = z.object({
@@ -352,70 +356,102 @@ export function InscricaoPage() {
         aria-hidden="true"
       />
 
-      {/* O convite é uma peça só, no formato de quem abre pelo celular */}
-      <div className="relative mx-auto w-full max-w-[560px] px-3 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-10">
-        <article className="border border-border bg-card shadow-[0_26px_60px_-48px_rgba(16,36,64,0.7)]">
-          {/* ================= ABERTURA ================= */}
-          <section
-            ref={secaoConvite}
-            tabIndex={-1}
-            className="px-5 pb-7 pt-9 text-center outline-none sm:px-9 sm:pb-8 sm:pt-12"
-          >
-            <span
-              className="filete mx-auto block h-px w-14 bg-gold-deep/55 sm:w-16"
-              aria-hidden="true"
-            />
-            <p className="revelar mt-6 text-[10px] font-medium uppercase tracking-[0.4em] text-gold-texto">
+      {/* ================= O CONVITE ================= */}
+      <section
+        ref={secaoConvite}
+        tabIndex={-1}
+        className="relative bg-transparent text-foreground outline-none"
+      >
+        <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10 lg:px-14">
+          {/* Papel timbrado: quem assina o convite abre a página */}
+          <header className="border-b border-border py-7 text-center sm:py-8">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Uma realização
+            </p>
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-14">
+              {logos.map((logo) => (
+                <li key={logo.label} className="flex items-center justify-center">
+                  <Logo
+                    webp={logo.webp}
+                    png={logo.png}
+                    alt={logo.label}
+                    className="h-9 w-auto object-contain sm:h-11"
+                  />
+                </li>
+              ))}
+            </ul>
+          </header>
+
+          {/* Abertura */}
+          <div className="mx-auto max-w-3xl pb-9 pt-10 text-center sm:pb-14 sm:pt-16">
+            <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
               Convite oficial
             </p>
             <h1
-              className="revelar mt-5 font-display text-[clamp(1.85rem,8vw,2.7rem)] font-normal leading-[1.08] tracking-[-0.015em] text-foreground"
+              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
-              Confraternização 2026
+              Confraternização{" "}
+              <span className="not-italic border-b border-gold-deep/45 pb-1">2026</span>
             </h1>
+
             <p
-              className="revelar mx-auto mt-4 max-w-[19rem] font-display text-[clamp(1rem,4.4vw,1.2rem)] leading-snug text-muted-foreground sm:max-w-none"
+              className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
-              <span className="block sm:inline">Um ano de conquistas.</span>{" "}
-              <span className="block sm:inline">Um encontro para celebrar.</span>
+              Um ano de conquistas. Um encontro para celebrar.
             </p>
             <p
-              className="revelar mt-7 text-[11px] uppercase leading-[1.9] tracking-[0.16em] text-muted-foreground sm:text-[12px]"
+              className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
-              <span className="block">19 de dezembro de 2026</span>
-              <span className="block">
+              <span className="whitespace-nowrap">19 de dezembro de 2026</span>
+              {/* No celular a linha quebra aqui, mantendo duas linhas equilibradas */}
+              <span className="mx-3 text-muted-foreground max-sm:hidden" aria-hidden="true">
+                ·
+              </span>
+              <span className="block sm:inline">
                 <span className="whitespace-nowrap">16h30</span>
-                <span className="mx-2.5" aria-hidden="true">
+                <span className="mx-3 text-muted-foreground" aria-hidden="true">
                   ·
                 </span>
                 <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
               </span>
             </p>
-          </section>
-
-          {/* ================= O VÍDEO ================= */}
-          <div className="px-5 sm:px-9">
-            {temVideo ? (
-              <ConvitePlayer
-                key={tentativa}
-                onTrechosAssistidos={mandarProgresso}
-                onConcluir={concluirConvite}
-                onDuracao={abrirSessao}
-                concluido={liberado}
-              />
-            ) : (
-              <ConviteEmPreparacao />
-            )}
           </div>
 
-          {/* ================= A CHAMADA ================= */}
-          <div className="px-5 pb-8 pt-6 sm:px-9 sm:pb-10 sm:pt-7">
+          {/* O vídeo, no centro da página — emoldurado como peça de convite.
+              Como o convite é vertical, a largura é limitada pela altura da
+              tela: assim o quadro inteiro cabe sem precisar rolar. O piso de
+              15rem evita que ele vire um selo no celular deitado. */}
+          <div
+            className="relative mx-auto w-full"
+            style={{ maxWidth: "min(100%, 26rem, max(15rem, calc(72svh * 9 / 16)))" }}
+          >
+            <div
+              className="pointer-events-none absolute -inset-[5px] bg-gradient-to-tr from-gold via-gold-soft to-gold opacity-35 blur-[2px]"
+              aria-hidden="true"
+            />
+            <div className="relative border border-gold/25 bg-navy-deep shadow-[0_30px_60px_-30px_color-mix(in_oklab,var(--navy-deep)_60%,transparent)]">
+              {temVideo ? (
+                <ConvitePlayer
+                  key={tentativa}
+                  onTrechosAssistidos={mandarProgresso}
+                  onConcluir={concluirConvite}
+                  onDuracao={abrirSessao}
+                  concluido={liberado}
+                />
+              ) : (
+                <ConviteEmPreparacao />
+              )}
+            </div>
+          </div>
+
+          {/* Etapas e chamada para a confirmação */}
+          <div className="mx-auto w-full max-w-[940px] pb-16 pt-9 sm:pb-24 sm:pt-11">
             {(liberado || done) && (
               <p
-                className="mb-6 text-center text-[15px] leading-relaxed text-foreground"
+                className="text-center text-[15px] leading-relaxed text-foreground"
                 aria-live="polite"
               >
                 {done
@@ -426,29 +462,31 @@ export function InscricaoPage() {
               </p>
             )}
 
-            <button
-              type="button"
-              aria-disabled={!liberado}
-              aria-label={
-                liberado
-                  ? undefined
-                  : "Confirmar minha presença. Disponível depois de assistir ao convite."
-              }
-              onClick={() => {
-                if (!liberado) return;
-                if (done) irAte(destinoConfirmacao.current);
-                else abrirConfirmacao();
-              }}
-              className={`flex min-h-[56px] w-full items-center justify-center px-6 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors duration-300 ${
-                done
-                  ? "border border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
-                  : liberado
-                    ? "border border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary"
-                    : "cursor-not-allowed border border-border bg-surface text-muted-foreground"
-              }`}
-            >
-              {done ? "Ver minha resposta" : "Confirmar minha presença"}
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                aria-disabled={!liberado}
+                aria-label={
+                  liberado
+                    ? undefined
+                    : "Confirmar minha presença. Disponível depois de assistir ao convite."
+                }
+                onClick={() => {
+                  if (!liberado) return;
+                  if (done) irAte(destinoConfirmacao.current);
+                  else abrirConfirmacao();
+                }}
+                className={`w-full max-w-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.26em] transition-all duration-300 active:scale-[0.99] ${
+                  done
+                    ? "border border-gold/40 text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                    : liberado
+                      ? "border border-navy-deep bg-navy-deep text-primary-foreground shadow-[0_18px_40px_-24px_color-mix(in_oklab,var(--navy-deep)_80%,transparent)] hover:border-gold hover:bg-gold hover:text-navy-deep"
+                      : "cursor-not-allowed border border-border bg-card/60 text-muted-foreground"
+                }`}
+              >
+                {done ? "Ver minha resposta" : "Confirmar minha presença"}
+              </button>
+            </div>
 
             {errors["form"] && !abriuFormulario && (
               <p className="mt-5 text-center text-sm text-destructive" role="alert">
@@ -456,450 +494,449 @@ export function InscricaoPage() {
               </p>
             )}
           </div>
+        </div>
+      </section>
 
-          {/* ================= RESPOSTA ================= */}
-          <div ref={secaoConfirmacao}>
-            {done ? (
-              <section className="abrir textura-papel textura-papel--clara border-t border-border">
-                <div
-                  ref={destinoConfirmacao}
-                  tabIndex={-1}
-                  className="px-5 py-9 outline-none sm:px-9 sm:py-11"
-                >
-                  <p className="text-[10px] font-medium uppercase tracking-[0.4em] text-gold-texto">
-                    {confirmou ? "Presença confirmada" : "Resposta registrada"}
-                  </p>
-                  <span
-                    className="filete mt-5 block h-px w-full max-w-[120px] bg-gold-deep/40"
-                    aria-hidden="true"
-                  />
-                  <h2 className="mt-5 font-display text-[clamp(1.6rem,6.5vw,2.1rem)] font-normal leading-[1.12] text-foreground">
-                    {confirmou ? "Presença confirmada." : "Obrigado por avisar."}
-                  </h2>
-                  <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-                    {confirmou
-                      ? "Será uma alegria celebrar este momento com você."
-                      : "Sentiremos sua falta. Sua resposta foi registrada com a organização."}
-                  </p>
+      {/* ================= CONFIRMAÇÃO ================= */}
+      <div ref={secaoConfirmacao}>
+        {done ? (
+          <section className="abrir textura-papel textura-papel--clara relative border-b border-border">
+            <div
+              ref={destinoConfirmacao}
+              tabIndex={-1}
+              className="mx-auto w-full max-w-[1240px] px-6 py-16 outline-none sm:px-10 sm:py-24 lg:px-14"
+            >
+              <div className="mx-auto max-w-2xl">
+                <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
+                  {confirmou ? "Presença confirmada" : "Resposta registrada"}
+                </p>
+                <span
+                  className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
+                  aria-hidden="true"
+                />
+                <h2 className="mt-6 font-display text-[clamp(1.9rem,5vw,2.9rem)] font-normal leading-[1.1] text-foreground">
+                  {confirmou ? "Presença confirmada." : "Obrigado por avisar."}
+                </h2>
+                <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">
+                  {confirmou
+                    ? "Será uma alegria celebrar este momento com você."
+                    : "Sentiremos sua falta. Sua resposta foi registrada com a organização."}
+                </p>
 
-                  <dl className="mt-8 border-t border-border">
-                    {[
-                      { rotulo: "Nome", valor: form.nome_completo },
-                      { rotulo: "Empresa", valor: nomeDaEmpresa },
-                      ...(confirmou
-                        ? [
-                            { rotulo: "Data", valor: evento.dataExtenso },
-                            { rotulo: "Início", valor: evento.horario },
-                            { rotulo: "Local", valor: evento.endereco },
-                          ]
-                        : []),
-                    ].map((linha) => (
-                      <div key={linha.rotulo} className="border-b border-border py-4">
-                        <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                          {linha.rotulo}
-                        </dt>
-                        <dd className="mt-1.5 text-[15px] leading-relaxed text-foreground">
-                          {linha.valor}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+                <dl className="mt-12 border-t border-border">
+                  {[
+                    { rotulo: "Nome", valor: form.nome_completo },
+                    { rotulo: "Empresa", valor: nomeDaEmpresa },
+                    ...(confirmou
+                      ? [
+                          { rotulo: "Data", valor: evento.dataExtenso },
+                          { rotulo: "Início", valor: evento.horario },
+                          { rotulo: "Local", valor: evento.endereco },
+                        ]
+                      : []),
+                  ].map((linha) => (
+                    <div
+                      key={linha.rotulo}
+                      className="flex flex-wrap gap-x-10 gap-y-1 border-b border-border py-4"
+                    >
+                      <dt className="w-20 shrink-0 pt-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                        {linha.rotulo}
+                      </dt>
+                      <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
+                        {linha.valor}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
 
-                  {confirmou && qrUrl && (
-                    <div className="mt-9">
-                      <div className="flex flex-col items-center gap-5 text-center">
-                        <img
-                          src={qrUrl}
-                          alt="QR code do convite"
-                          className="h-40 w-40 border border-border bg-white p-2"
-                        />
-                        <div className="text-[13px] leading-relaxed text-muted-foreground">
-                          <p className="text-foreground">Este é o seu convite.</p>
-                          <p className="mt-1">Salve a imagem e apresente o código na entrada.</p>
-                          {emailStatus === "enviando" && (
-                            <p className="mt-3">Enviando o convite por e-mail...</p>
-                          )}
-                          {emailStatus === "ok" && (
-                            <p className="mt-3 text-foreground">
-                              Enviamos uma cópia para {form.email}.
-                            </p>
-                          )}
-                          {emailStatus === "erro" && (
-                            <p className="mt-3">
-                              Não conseguimos enviar o e-mail agora, mas sua presença está
-                              confirmada.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-8 grid gap-3">
-                        <button
-                          type="button"
-                          onClick={baixarQr}
-                          className="flex min-h-[56px] items-center justify-center border border-primary bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary"
-                        >
-                          Baixar convite
-                        </button>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={enviarEmail}
-                            className="flex min-h-[56px] items-center justify-center border border-border px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-gold-deep"
-                          >
-                            E-mail
-                          </button>
-                          <button
-                            type="button"
-                            onClick={enviarWhatsApp}
-                            className="flex min-h-[56px] items-center justify-center border border-border px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-gold-deep"
-                          >
-                            WhatsApp
-                          </button>
-                        </div>
+                {confirmou && qrUrl && (
+                  <div className="mt-12">
+                    <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
+                      <img
+                        src={qrUrl}
+                        alt="QR code do convite"
+                        className="h-36 w-36 border border-border bg-white p-2"
+                      />
+                      <div className="text-[13px] leading-relaxed text-muted-foreground">
+                        <p className="text-foreground">Este é o seu convite.</p>
+                        <p className="mt-1">Salve a imagem e apresente o código na entrada.</p>
+                        {emailStatus === "enviando" && (
+                          <p className="mt-3">Enviando o convite por e-mail...</p>
+                        )}
+                        {emailStatus === "ok" && (
+                          <p className="mt-3 text-foreground">
+                            Enviamos uma cópia para {form.email}.
+                          </p>
+                        )}
+                        {emailStatus === "erro" && (
+                          <p className="mt-3">
+                            Não conseguimos enviar o e-mail agora, mas sua presença está confirmada.
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // A sessão do convite é de uso único: quem responde agora
-                      // precisa assistir ao convite outra vez.
-                      reiniciarConvite();
-                      setForm({ nome_completo: "", grupo: "", telefone: "", email: "" });
-                      setResposta("sim");
-                      setQrUrl("");
-                      setInscricaoId("");
-                      setEmailStatus("");
-                      setErrors({});
-                      setDone(false);
-                    }}
-                    className="mt-9 flex min-h-[44px] w-full items-center justify-center text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                  >
-                    Responder por outra pessoa
-                  </button>
-                </div>
-              </section>
-            ) : (
-              abriuFormulario && (
-                <section className="abrir textura-papel textura-papel--clara border-t border-border">
-                  <div className="px-5 py-9 sm:px-9 sm:py-11">
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={baixarQr}
+                        className="border border-primary bg-primary px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary"
+                      >
+                        Baixar convite
+                      </button>
+                      <button
+                        type="button"
+                        onClick={enviarEmail}
+                        className="border border-border px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground transition-colors hover:border-gold-deep"
+                      >
+                        Enviar por e-mail
+                      </button>
+                      <button
+                        type="button"
+                        onClick={enviarWhatsApp}
+                        className="border border-border px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground transition-colors hover:border-gold-deep"
+                      >
+                        Enviar no WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    // A sessão do convite é de uso único: quem responde agora
+                    // precisa assistir ao convite outra vez.
+                    reiniciarConvite();
+                    setForm({ nome_completo: "", grupo: "", telefone: "", email: "" });
+                    setResposta("sim");
+                    setQrUrl("");
+                    setInscricaoId("");
+                    setEmailStatus("");
+                    setErrors({});
+                    setDone(false);
+                  }}
+                  className="mt-12 text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  Responder por outra pessoa
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : (
+          abriuFormulario && (
+            <section className="abrir textura-papel textura-papel--clara relative border-b border-border">
+              <div className="mx-auto w-full max-w-[1240px] px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
+                <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+                  <div className="lg:col-span-4">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
+                      Etapa 02
+                    </p>
                     <span
-                      className="filete block h-px w-full max-w-[120px] bg-gold-deep/40"
+                      className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
                       aria-hidden="true"
                     />
-                    <h2 className="mt-5 font-display text-[clamp(1.6rem,6.5vw,2.1rem)] font-normal leading-[1.12] text-foreground">
+                    <h2 className="mt-6 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground">
                       Podemos contar com você?
                     </h2>
+                  </div>
 
-                    <form onSubmit={handleSubmit} noValidate className="mt-8">
-                      <div className="grid gap-7">
-                        <div>
-                          <label htmlFor="nome" className={rotulo}>
-                            Nome completo
-                          </label>
-                          <input
-                            id="nome"
-                            className={`${campo} ${errors["nome_completo"] ? campoErro : campoOk}`}
-                            value={form.nome_completo}
-                            maxLength={120}
-                            autoComplete="name"
-                            placeholder="Como você quer ser chamado no convite"
-                            aria-invalid={Boolean(errors["nome_completo"])}
-                            aria-describedby="erro-nome"
-                            onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
-                            onBlur={() => validarCampo("nome_completo")}
-                          />
-                          <p
-                            id="erro-nome"
-                            role="alert"
-                            className="mt-2 min-h-[1.25rem] text-sm text-destructive"
-                          >
-                            {errors["nome_completo"] ?? ""}
-                          </p>
-                        </div>
+                  <form onSubmit={handleSubmit} noValidate className="lg:col-span-8">
+                    <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <label htmlFor="nome" className={rotulo}>
+                          Nome completo
+                        </label>
+                        <input
+                          id="nome"
+                          className={`${campo} ${errors["nome_completo"] ? campoErro : campoOk}`}
+                          value={form.nome_completo}
+                          maxLength={120}
+                          autoComplete="name"
+                          placeholder="Como você quer ser chamado no convite"
+                          aria-invalid={Boolean(errors["nome_completo"])}
+                          aria-describedby="erro-nome"
+                          onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
+                          onBlur={() => validarCampo("nome_completo")}
+                        />
+                        <p
+                          id="erro-nome"
+                          role="alert"
+                          className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                        >
+                          {errors["nome_completo"] ?? ""}
+                        </p>
+                      </div>
 
-                        <div>
-                          <label htmlFor="telefone" className={rotulo}>
-                            Telefone ou WhatsApp
-                          </label>
-                          <input
-                            id="telefone"
-                            type="tel"
-                            inputMode="tel"
-                            className={`${campo} ${errors["telefone"] ? campoErro : campoOk}`}
-                            value={form.telefone}
-                            maxLength={16}
-                            autoComplete="tel"
-                            placeholder="(85) 99999-8888"
-                            aria-invalid={Boolean(errors["telefone"])}
-                            aria-describedby="erro-telefone"
-                            onChange={(e) =>
-                              setForm({ ...form, telefone: formatarTelefone(e.target.value) })
-                            }
-                            onBlur={() => validarCampo("telefone")}
-                          />
+                      <div>
+                        <label htmlFor="telefone" className={rotulo}>
+                          Telefone ou WhatsApp
+                        </label>
+                        <input
+                          id="telefone"
+                          type="tel"
+                          inputMode="tel"
+                          className={`${campo} ${errors["telefone"] ? campoErro : campoOk}`}
+                          value={form.telefone}
+                          maxLength={16}
+                          autoComplete="tel"
+                          placeholder="(85) 99999-8888"
+                          aria-invalid={Boolean(errors["telefone"])}
+                          aria-describedby="erro-telefone"
+                          onChange={(e) =>
+                            setForm({ ...form, telefone: formatarTelefone(e.target.value) })
+                          }
+                          onBlur={() => validarCampo("telefone")}
+                        />
+                        {errors["telefone"] && (
                           <p
                             id="erro-telefone"
                             role="alert"
-                            className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                            className="mt-2 text-sm text-destructive"
                           >
-                            {errors["telefone"] ?? ""}
+                            {errors["telefone"]}
                           </p>
-                        </div>
-
-                        <div>
-                          <label htmlFor="email" className={rotulo}>
-                            E-mail
-                          </label>
-                          <input
-                            id="email"
-                            type="email"
-                            className={`${campo} ${errors["email"] ? campoErro : campoOk}`}
-                            value={form.email}
-                            maxLength={255}
-                            autoComplete="email"
-                            placeholder="voce@empresa.com.br"
-                            aria-invalid={Boolean(errors["email"])}
-                            aria-describedby="erro-email"
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            onBlur={() => validarCampo("email")}
-                          />
-                          <p
-                            id="erro-email"
-                            role="alert"
-                            className="mt-2 min-h-[1.25rem] text-sm text-destructive"
-                          >
-                            {errors["email"] ?? ""}
-                          </p>
-                        </div>
+                        )}
                       </div>
 
-                      <fieldset className="mt-8">
-                        <legend className={rotulo}>Empresa</legend>
-                        <div className="mt-3 border-t border-border">
-                          {empresas.map((empresa) => {
-                            const ativa = form.grupo === empresa.value;
+                      <div>
+                        <label htmlFor="email" className={rotulo}>
+                          E-mail
+                        </label>
+                        <input
+                          id="email"
+                          type="email"
+                          className={`${campo} ${errors["email"] ? campoErro : campoOk}`}
+                          value={form.email}
+                          maxLength={255}
+                          autoComplete="email"
+                          placeholder="voce@empresa.com.br"
+                          aria-invalid={Boolean(errors["email"])}
+                          aria-describedby="erro-email"
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          onBlur={() => validarCampo("email")}
+                        />
+                        <p
+                          id="erro-email"
+                          role="alert"
+                          className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                        >
+                          {errors["email"] ?? ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <fieldset className="mt-10">
+                      <legend className={rotulo}>Empresa</legend>
+                      <div className="mt-3 border-t border-border">
+                        {empresas.map((empresa) => {
+                          const ativa = form.grupo === empresa.value;
+                          return (
+                            <label
+                              key={empresa.value}
+                              className="flex min-h-[56px] cursor-pointer items-center gap-4 border-b border-border transition-colors hover:bg-surface has-[:focus-visible]:bg-surface has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-gold-deep"
+                            >
+                              <input
+                                type="radio"
+                                name="empresa"
+                                value={empresa.value}
+                                checked={ativa}
+                                onChange={() => {
+                                  setForm({ ...form, grupo: empresa.value });
+                                  setErrors((atuais) => {
+                                    const proximos = { ...atuais };
+                                    delete proximos["grupo"];
+                                    return proximos;
+                                  });
+                                }}
+                                className="sr-only"
+                              />
+                              <span
+                                className={`h-px transition-all duration-300 ${
+                                  ativa ? "w-8 bg-gold-deep" : "w-3 bg-border"
+                                }`}
+                                aria-hidden="true"
+                              />
+                              <span
+                                className={`py-4 text-[15px] transition-colors ${
+                                  ativa ? "text-foreground" : "text-muted-foreground"
+                                }`}
+                              >
+                                {empresa.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <p role="alert" className="mt-2 min-h-[1.25rem] text-sm text-destructive">
+                        {errors["grupo"] ?? ""}
+                      </p>
+                    </fieldset>
+
+                    {aceitaResposta && (
+                      <fieldset className="mt-10">
+                        <legend className={rotulo}>Confirmarei presença</legend>
+                        <div className="mt-3 flex gap-3">
+                          {[
+                            { valor: "sim" as const, texto: "Sim, estarei lá" },
+                            { valor: "nao" as const, texto: "Não poderei ir" },
+                          ].map((opcao) => {
+                            const ativa = resposta === opcao.valor;
                             return (
                               <label
-                                key={empresa.value}
-                                className="flex min-h-[56px] cursor-pointer items-center gap-4 border-b border-border transition-colors hover:bg-surface has-[:focus-visible]:bg-surface has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-gold-deep"
+                                key={opcao.valor}
+                                className={`flex min-h-[56px] flex-1 cursor-pointer items-center justify-center border px-4 text-center text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-deep ${
+                                  ativa
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                                }`}
                               >
                                 <input
                                   type="radio"
-                                  name="empresa"
-                                  value={empresa.value}
+                                  name="presenca"
+                                  value={opcao.valor}
                                   checked={ativa}
-                                  onChange={() => {
-                                    setForm({ ...form, grupo: empresa.value });
-                                    setErrors((atuais) => {
-                                      const proximos = { ...atuais };
-                                      delete proximos["grupo"];
-                                      return proximos;
-                                    });
-                                  }}
+                                  onChange={() => setResposta(opcao.valor)}
                                   className="sr-only"
                                 />
-                                <span
-                                  className={`h-px transition-all duration-300 ${
-                                    ativa ? "w-8 bg-gold-deep" : "w-3 bg-border"
-                                  }`}
-                                  aria-hidden="true"
-                                />
-                                <span
-                                  className={`py-4 text-[15px] transition-colors ${
-                                    ativa ? "text-foreground" : "text-muted-foreground"
-                                  }`}
-                                >
-                                  {empresa.label}
-                                </span>
+                                {opcao.texto}
                               </label>
                             );
                           })}
                         </div>
-                        <p role="alert" className="mt-2 min-h-[1.25rem] text-sm text-destructive">
-                          {errors["grupo"] ?? ""}
-                        </p>
                       </fieldset>
+                    )}
 
-                      {aceitaResposta && (
-                        <fieldset className="mt-6">
-                          <legend className={rotulo}>Confirmarei presença</legend>
-                          <div className="mt-3 grid grid-cols-2 gap-3">
-                            {[
-                              { valor: "sim" as const, texto: "Sim, estarei lá" },
-                              { valor: "nao" as const, texto: "Não poderei ir" },
-                            ].map((opcao) => {
-                              const ativa = resposta === opcao.valor;
-                              return (
-                                <label
-                                  key={opcao.valor}
-                                  className={`flex min-h-[56px] cursor-pointer items-center justify-center border px-3 text-center text-[13px] leading-snug transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-deep ${
-                                    ativa
-                                      ? "border-primary bg-primary text-primary-foreground"
-                                      : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name="presenca"
-                                    value={opcao.valor}
-                                    checked={ativa}
-                                    onChange={() => setResposta(opcao.valor)}
-                                    className="sr-only"
-                                  />
-                                  {opcao.texto}
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </fieldset>
-                      )}
+                    {errors["form"] && (
+                      <p
+                        className="mt-8 border-l-2 border-destructive/70 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                        role="alert"
+                      >
+                        {errors["form"]}
+                      </p>
+                    )}
 
-                      {errors["form"] && (
-                        <p
-                          className="mt-7 border-l-2 border-destructive/70 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-                          role="alert"
-                        >
-                          {errors["form"]}
-                        </p>
-                      )}
-
-                      <div className="mt-8 border-t border-border pt-7">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          aria-busy={loading}
-                          className="flex min-h-[56px] w-full items-center justify-center gap-3 border border-primary bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {loading && (
-                            <span
-                              className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
-                              aria-hidden="true"
-                            />
-                          )}
-                          {loading
-                            ? "Registrando..."
-                            : !aceitaResposta || resposta === "sim"
-                              ? "Enviar confirmação"
-                              : "Enviar resposta"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAbriuFormulario(false);
-                          }}
-                          className="mt-4 flex min-h-[44px] w-full items-center justify-center text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                        >
-                          Voltar ao convite
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </section>
-              )
-            )}
-          </div>
-
-          {/* ================= O EVENTO ================= */}
-          <section className="border-t border-border bg-surface/70 px-5 py-9 sm:px-9 sm:py-10">
-            <p className="text-[10px] font-medium uppercase tracking-[0.4em] text-gold-texto">
-              O evento
-            </p>
-
-            <dl className="mt-6">
-              <div className="revelar border-t border-border py-5">
-                <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                  Data
-                </dt>
-                <dd className="mt-2.5 font-display text-[1.45rem] leading-tight text-foreground">
-                  19 de dezembro
-                </dd>
-                <dd className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Sábado · 2026
-                </dd>
+                    <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-border pt-8">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        aria-busy={loading}
+                        className="flex min-h-[56px] items-center justify-center gap-3 border border-primary bg-primary px-9 text-[11px] font-semibold uppercase tracking-[0.26em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {loading && (
+                          <span
+                            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
+                            aria-hidden="true"
+                          />
+                        )}
+                        {loading
+                          ? "Registrando..."
+                          : !aceitaResposta || resposta === "sim"
+                            ? "Enviar confirmação"
+                            : "Enviar resposta"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAbriuFormulario(false);
+                        }}
+                        className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                      >
+                        Voltar ao convite
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
-
-              <div
-                className="revelar border-t border-border py-5"
-                style={{ "--atraso": "80ms" } as React.CSSProperties}
-              >
-                <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                  Início
-                </dt>
-                <dd className="mt-2.5 font-display text-[1.45rem] leading-tight text-foreground">
-                  16h30
-                </dd>
-                <dd className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Recepção
-                </dd>
-              </div>
-
-              <div
-                className="revelar border-y border-border py-5"
-                style={{ "--atraso": "160ms" } as React.CSSProperties}
-              >
-                <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                  Local
-                </dt>
-                <dd className="mt-2.5 text-[15px] leading-relaxed text-foreground">
-                  Av. Godofredo Maciel, 1179
-                  <br />
-                  Maraponga, Fortaleza – CE
-                  <br />
-                  <span className="text-muted-foreground">60714-175</span>
-                </dd>
-              </div>
-            </dl>
-
-            <a
-              href={evento.mapa}
-              target="_blank"
-              rel="noreferrer"
-              className="group mt-5 flex min-h-[56px] items-center justify-center gap-2 border border-border bg-card text-[11px] uppercase tracking-[0.24em] text-foreground transition-colors hover:border-gold-deep hover:text-gold-texto"
-            >
-              Ver localização
-              <span
-                className="transition-transform duration-300 group-hover:translate-x-1"
-                aria-hidden="true"
-              >
-                →
-              </span>
-            </a>
-          </section>
-
-          {/* ================= REALIZAÇÃO ================= */}
-          <div className="border-t border-border px-5 py-8 text-center sm:px-9">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Uma realização
-            </p>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-4">
-              {logos.map((logo) => (
-                <li key={logo.label}>
-                  {/* A logo do Grupo Support é branca: só aparece sobre fundo escuro */}
-                  <span
-                    className={`flex h-[52px] w-[92px] items-center justify-center px-3 sm:h-[60px] sm:w-[112px] ${
-                      logo.fundoEscuro ? "bg-navy" : ""
-                    }`}
-                  >
-                    <Logo
-                      webp={logo.webp}
-                      png={logo.png}
-                      alt={logo.label}
-                      className="max-h-7 w-auto max-w-full object-contain sm:max-h-8"
-                    />
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-8 border-t border-border pt-6 text-[10px] uppercase leading-[2] tracking-[0.24em] text-muted-foreground">
-              Confraternização 2026
-              <span className="block">19 de dezembro · 16h30 · Fortaleza</span>
-            </p>
-          </div>
-        </article>
+            </section>
+          )
+        )}
       </div>
+
+      {/* ================= O EVENTO ================= */}
+      <section className="textura-papel textura-papel--clara relative border-t border-border">
+        <div className="relative mx-auto w-full max-w-[1240px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
+          <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
+            O evento
+          </p>
+          <span
+            className="filete mt-5 block h-px w-full max-w-[120px] bg-gold-deep/45"
+            aria-hidden="true"
+          />
+
+          <dl className="mt-10 grid gap-x-10 gap-y-10 sm:mt-12 sm:grid-cols-3">
+            <div className="revelar border-t border-border pt-5">
+              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                Data
+              </dt>
+              <dd className="mt-4 font-display text-[1.6rem] leading-tight text-foreground">
+                19 de dezembro
+              </dd>
+              <dd className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+                Sábado · 2026
+              </dd>
+            </div>
+
+            <div
+              className="revelar border-t border-border pt-5"
+              style={{ "--atraso": "80ms" } as React.CSSProperties}
+            >
+              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                Início
+              </dt>
+              <dd className="mt-4 font-display text-[1.6rem] leading-tight text-foreground">
+                16h30
+              </dd>
+              <dd className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+                Recepção
+              </dd>
+            </div>
+
+            <div
+              className="revelar border-t border-border pt-5"
+              style={{ "--atraso": "160ms" } as React.CSSProperties}
+            >
+              <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                Local
+              </dt>
+              <dd className="mt-4 text-[15px] leading-relaxed text-foreground">
+                Av. Godofredo Maciel, 1179
+                <br />
+                Maraponga, Fortaleza – CE
+                <br />
+                <span className="text-muted-foreground">60714-175</span>
+              </dd>
+              <a
+                href={evento.mapa}
+                target="_blank"
+                rel="noreferrer"
+                className="group mt-4 inline-flex min-h-[44px] items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-foreground underline-offset-4 hover:text-gold-texto hover:underline"
+              >
+                Ver localização
+                <span
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
+              </a>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      {/* ================= REALIZAÇÃO ================= */}
+      <footer className="border-t border-border bg-surface">
+        <div className="mx-auto w-full max-w-[1240px] px-6 py-10 sm:px-10 sm:py-12 lg:px-14">
+          <p className="text-center text-[10px] uppercase leading-[2] tracking-[0.26em] text-muted-foreground">
+            Confraternização 2026
+            <span className="mx-3 max-sm:hidden" aria-hidden="true">
+              ·
+            </span>
+            <span className="block sm:inline">19 de dezembro · 16h30 · Fortaleza</span>
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

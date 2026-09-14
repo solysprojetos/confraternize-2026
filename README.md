@@ -63,17 +63,28 @@ Enquanto elas não forem aplicadas, o site continua recebendo confirmações pel
 caminho antigo; respostas negativas, porém, só podem ser registradas depois da
 segunda migração.
 
-## Publicar o vídeo do convite
+## O vídeo do convite
+
+O convite publicado é `public/convite/convite-confraternizacao-2026.mp4`:
+vertical (1080x1920), 58,5 s, H.264 + AAC, com o índice no começo do arquivo
+para começar a tocar sem baixar tudo. O `<video>` usa `preload="metadata"`,
+então os 30 MB só descem quando a pessoa aperta play.
+
+O banco guarda a duração real (58 s) em `convite_config`. É ela que o
+servidor exige, então não adianta chamar a função à mão dizendo que o vídeo
+é curto.
+
+### Para trocar o vídeo
 
 1. Coloque os arquivos em `public/convite/` (vídeo MP4, capa e, se houver,
    legendas em `.vtt`).
 2. Aponte os caminhos em `src/config/evento.ts` (`videoConvite.src`,
-   `poster` e `legendas.src`). Se o vídeo não for 16:9, ajuste `proporcao`.
-3. Cadastre a duração do vídeo no banco, em segundos — é ela que o servidor
-   usa para validar a liberação:
+   `poster` e `legendas.src`) e ajuste `proporcao` para a proporção real
+   (9/16 no vídeo vertical de hoje, 16/9 num horizontal).
+3. Cadastre a nova duração no banco, em segundos:
 
    ```sql
-   update public.convite_config set duracao_minima_segundos = 180;
+   update public.convite_config set duracao_minima_segundos = 58;
    ```
 
 Os dados do evento (nome, chamada, data, horário, endereço e link do mapa)
