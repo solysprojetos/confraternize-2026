@@ -429,11 +429,13 @@ export function InscricaoPage() {
               Confraternização <span className="italic text-gold-texto">2026</span>
             </h1>
 
+            {/* O texto fica em caixa normal no código e sobe para maiúsculas
+                pelo CSS: assim o leitor de tela não soletra letra por letra. */}
             <p
-              className="revelar mx-auto mt-6 max-w-2xl font-display text-[clamp(1.15rem,3vw,1.55rem)] leading-snug text-muted-foreground"
+              className="revelar mx-auto mt-6 max-w-2xl font-display text-[clamp(1rem,2.6vw,1.35rem)] uppercase leading-snug tracking-[0.02em] text-muted-foreground"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
-              Um encontro para celebrar nossas conquistas e quem faz parte dessa história.
+              Juntos, transformamos desafios em conquistas. Agora, é hora de celebrar!
             </p>
             {/* Só a informação: sem caixa, sem riscos e sem ícones */}
             <p
