@@ -52,11 +52,11 @@ const IconeSom = ({ mudo }: { mudo: boolean }) => (
   </svg>
 );
 
-/** Filete dourado de um pixel em volta da peça central. */
+/** Filete dourado discreto em volta da peça central. */
 function Moldura({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border border-gold-deep/55 bg-navy-deep p-2 shadow-[0_20px_50px_-35px_rgba(16,36,64,0.6)] sm:p-2">
-      <div className="relative overflow-hidden bg-navy-deep">{children}</div>
+    <div className="overflow-hidden rounded-lg border border-gold-deep/35 bg-navy-deep p-1.5 shadow-[0_20px_50px_-35px_color-mix(in_oklab,var(--navy-deep)_65%,transparent)]">
+      <div className="relative overflow-hidden rounded-md bg-navy-deep">{children}</div>
     </div>
   );
 }
@@ -329,7 +329,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     <div className="sobre-escuro w-full">
       <div
         ref={containerRef}
-        className="moldura-convite quadro-convite @container relative w-full overflow-hidden rounded-xl border border-navy/15 bg-navy-deep shadow-[0_14px_36px_-24px_rgba(16,36,64,0.45)]"
+        className="moldura-convite quadro-convite @container relative w-full overflow-hidden rounded-lg border border-gold-deep/35 bg-navy-deep shadow-[0_22px_56px_-34px_color-mix(in_oklab,var(--navy-deep)_70%,transparent)]"
       >
         <div>
           <div

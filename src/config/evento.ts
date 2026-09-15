@@ -19,6 +19,17 @@ export const evento = {
   mapa:
     "https://www.google.com/maps/search/?api=1&query=" +
     encodeURIComponent("Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175"),
+  mapaEmbed:
+    "https://www.google.com/maps?q=" +
+    encodeURIComponent("Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175") +
+    "&output=embed",
+  waze:
+    "https://www.waze.com/ul?q=" +
+    encodeURIComponent("Av. Godofredo Maciel, 1179 - Maraponga, Fortaleza - CE, 60714-175") +
+    "&navigate=yes",
+  // Fortaleza não adota horário de verão. O deslocamento -03:00 deixa a
+  // contagem correta para convidados em qualquer fuso.
+  inicioIso: "2026-12-19T16:30:00-03:00",
 };
 
 export const videoConvite = {
