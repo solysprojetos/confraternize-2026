@@ -388,8 +388,9 @@ export function InscricaoPage() {
   const campoErro = "border-b-destructive/70";
 
   return (
-    <main className={`relative min-h-screen overflow-x-clip bg-background ${liberado && !done ? "pb-24 sm:pb-0" : ""}`}>
-
+    <main
+      className={`relative min-h-screen overflow-x-clip bg-background ${liberado && !done ? "pb-24 sm:pb-0" : ""}`}
+    >
       {/* ================= O CONVITE ================= */}
       <section
         ref={secaoConvite}
@@ -404,7 +405,7 @@ export function InscricaoPage() {
             </p>
             <ul className="mx-auto mt-4 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:mt-5 sm:gap-10">
               {logos.map((logo) => (
-                 <li key={logo.label} className="flex min-w-0 items-center justify-center">
+                <li key={logo.label} className="flex min-w-0 items-center justify-center">
                   <Logo
                     webp={logo.webp}
                     png={logo.png}
@@ -443,11 +444,18 @@ export function InscricaoPage() {
                 { Icon: Clock3, label: "Horário", value: evento.horario },
                 { Icon: MapPin, label: "Local", value: evento.bairro },
               ].map(({ Icon, label, value }) => (
-                <span key={label} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 bg-card px-4 py-4 sm:px-5">
+                <span
+                  key={label}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 bg-card px-4 py-4 sm:px-5"
+                >
                   <Icon className="h-4 w-4 shrink-0 text-gold-texto" aria-hidden="true" />
                   <span className="min-w-0">
-                    <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
-                    <span className="mt-1 block text-[12px] font-medium normal-case leading-snug tracking-[0] text-foreground">{value}</span>
+                    <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      {label}
+                    </span>
+                    <span className="mt-1 block text-[12px] font-medium normal-case leading-snug tracking-[0] text-foreground">
+                      {value}
+                    </span>
                   </span>
                 </span>
               ))}
@@ -461,7 +469,9 @@ export function InscricaoPage() {
             style={{ "--atraso": "60ms" } as React.CSSProperties}
           >
             <div className="border border-border bg-card px-4 py-7 shadow-[0_22px_60px_-42px_color-mix(in_oklab,var(--navy-deep)_55%,transparent)] sm:px-8 sm:py-10 lg:px-12">
-              <p className="text-center text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">Memórias que nos unem</p>
+              <p className="text-center text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">
+                Memórias que nos unem
+              </p>
               <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.8rem,5vw,3rem)] font-normal leading-[1.08] text-foreground">
                 Relembre os melhores momentos de 2025.
               </h2>
@@ -494,7 +504,10 @@ export function InscricaoPage() {
 
           {/* Etapas e chamada para a confirmação */}
           <div className="mx-auto w-full max-w-[940px] pb-14 pt-7 sm:pb-20 sm:pt-9">
-            <p className={`mb-5 text-center text-[15px] leading-relaxed ${liberado ? "text-foreground" : "text-muted-foreground"}`} aria-live="polite">
+            <p
+              className={`mb-5 text-center text-[15px] leading-relaxed ${liberado ? "text-foreground" : "text-muted-foreground"}`}
+              aria-live="polite"
+            >
               {done
                 ? confirmou
                   ? "Sua presença está confirmada. O convite fica logo abaixo."
@@ -520,7 +533,7 @@ export function InscricaoPage() {
                 }}
                 className={`min-h-[56px] w-full max-w-sm rounded-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-300 active:scale-[0.99] ${
                   done
-                    ? "border border-gold/40 text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                    ? "border border-gold/40 bg-card text-foreground hover:border-gold-deep hover:bg-surface"
                     : liberado
                       ? "border border-navy-deep bg-navy-deep text-primary-foreground shadow-[0_18px_40px_-24px_color-mix(in_oklab,var(--navy-deep)_80%,transparent)] hover:border-gold hover:bg-gold hover:text-navy-deep"
                       : "cursor-not-allowed border border-border bg-card/60 text-muted-foreground"
@@ -899,7 +912,9 @@ export function InscricaoPage() {
       <section className="sobre-escuro textura-papel relative bg-navy-deep text-primary-foreground">
         <div className="relative mx-auto grid w-full max-w-[1100px] gap-8 px-6 py-12 sm:px-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center lg:gap-16 lg:px-14">
           <div className="revelar min-w-0 text-center lg:text-left">
-            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold">Contagem regressiva</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold">
+              Contagem regressiva
+            </p>
             <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.8rem)] font-normal leading-tight">
               Nosso encontro está chegando.
             </h2>
@@ -912,18 +927,30 @@ export function InscricaoPage() {
       <section className="textura-papel textura-papel--clara relative border-t border-border">
         <div className="relative mx-auto grid w-full max-w-[1240px] gap-8 px-6 py-14 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch lg:gap-12 lg:px-14">
           <div className="revelar flex min-w-0 flex-col justify-center">
-            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">Localização</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">
+              Localização
+            </p>
             <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.25rem)] font-normal leading-tight text-foreground">
               Maraponga, Fortaleza
             </h2>
-            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">{evento.endereco}</p>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+              {evento.endereco}
+            </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <Button asChild variant="default" className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]">
+              <Button
+                asChild
+                variant="default"
+                className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              >
                 <a href={evento.mapa} target="_blank" rel="noreferrer">
                   Abrir no Google Maps <ArrowUpRight aria-hidden="true" />
                 </a>
               </Button>
-              <Button asChild variant="outline" className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]">
+              <Button
+                asChild
+                variant="outline"
+                className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              >
                 <a href={evento.waze} target="_blank" rel="noreferrer">
                   Abrir no Waze <ArrowUpRight aria-hidden="true" />
                 </a>
@@ -945,7 +972,9 @@ export function InscricaoPage() {
       {/* ================= REALIZAÇÃO ================= */}
       <footer className="border-t border-border bg-card">
         <div className="mx-auto w-full max-w-[1240px] px-6 py-10 text-center sm:px-10 sm:py-14 lg:px-14">
-          <p className="font-display text-xl text-foreground sm:text-2xl">Esperamos você para celebrarmos juntos.</p>
+          <p className="font-display text-xl text-foreground sm:text-2xl">
+            Esperamos você para celebrarmos juntos.
+          </p>
           <span className="mx-auto mt-5 block h-px w-12 bg-gold-deep/50" aria-hidden="true" />
           <ul className="mx-auto mt-7 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:gap-10">
             {logos.map((logo) => (
@@ -967,7 +996,11 @@ export function InscricaoPage() {
 
       {liberado && !done && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-12px_32px_-24px_color-mix(in_oklab,var(--navy-deep)_55%,transparent)] backdrop-blur-md sm:hidden">
-          <Button type="button" onClick={abrirConfirmacao} className="min-h-[52px] w-full rounded-sm text-[11px] font-semibold uppercase tracking-[0.18em]">
+          <Button
+            type="button"
+            onClick={abrirConfirmacao}
+            className="min-h-[52px] w-full rounded-sm text-[11px] font-semibold uppercase tracking-[0.18em]"
+          >
             Confirmar minha presença
           </Button>
         </div>
