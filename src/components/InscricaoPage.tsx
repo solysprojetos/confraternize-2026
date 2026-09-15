@@ -466,14 +466,6 @@ export function InscricaoPage() {
               <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.45rem,4.4vw,2.5rem)] font-normal uppercase leading-[1.12] tracking-[0.015em] text-foreground">
                 Uma mensagem especial para você
               </h2>
-              <p className="mx-auto mt-3 max-w-[32rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
-                Dê o play e descubra o que preparamos para esse momento.
-              </p>
-
-              <span
-                className="filete mx-auto mt-6 block h-px w-10 bg-gold-deep/40"
-                aria-hidden="true"
-              />
 
               {/* O convite foi gravado na vertical: a largura é limitada pela
                   altura da tela para o quadro inteiro caber sem rolar. */}
@@ -496,7 +488,7 @@ export function InscricaoPage() {
           {/* Etapas e chamada para a confirmação */}
           <div className="mx-auto w-full max-w-[940px] pb-14 pt-7 sm:pb-20 sm:pt-9">
             <p
-              className={`mb-5 text-center text-[15px] leading-relaxed ${liberado ? "text-foreground" : "text-muted-foreground"}`}
+              className={`mb-5 text-center text-[13px] uppercase leading-relaxed tracking-[0.08em] sm:text-[14px] ${liberado ? "text-foreground" : "text-muted-foreground"}`}
               aria-live="polite"
             >
               {done
