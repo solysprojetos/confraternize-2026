@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUpRight, CalendarDays, Clock3, MapPin } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { ConvitePlayer, ConviteEmPreparacao } from "@/components/ConvitePlayer";
+import { Button } from "@/components/ui/button";
 import { evento, temVideoConvite } from "@/config/evento";
 import { useRevelar } from "@/hooks/useRevelar";
 import { digitosDoTelefone, formatarTelefone } from "@/lib/telefone";
@@ -80,6 +82,43 @@ function Logo({
       <source srcSet={webp} type="image/webp" />
       <img src={png} alt={alt} className={className} loading="lazy" decoding="async" />
     </picture>
+  );
+}
+
+function ContagemRegressiva() {
+  const calcular = useCallback(() => {
+    const restante = Math.max(0, new Date(evento.inicioIso).getTime() - Date.now());
+    const minutos = Math.floor(restante / 60000);
+    return {
+      dias: Math.floor(minutos / 1440),
+      horas: Math.floor((minutos % 1440) / 60),
+      minutos: minutos % 60,
+    };
+  }, []);
+  const [tempoRestante, setTempoRestante] = useState(calcular);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTempoRestante(calcular()), 30000);
+    return () => window.clearInterval(id);
+  }, [calcular]);
+
+  return (
+    <div className="grid grid-cols-3 divide-x divide-gold/25 border-y border-gold/25 py-4 text-center sm:py-5">
+      {[
+        [tempoRestante.dias, "dias"],
+        [tempoRestante.horas, "horas"],
+        [tempoRestante.minutos, "minutos"],
+      ].map(([valor, unidade]) => (
+        <div key={unidade} className="px-3">
+          <strong className="block font-display text-2xl font-normal tabular-nums text-primary-foreground sm:text-3xl">
+            {String(valor).padStart(2, "0")}
+          </strong>
+          <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.2em] text-primary-foreground/55">
+            {unidade}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -349,12 +388,7 @@ export function InscricaoPage() {
   const campoErro = "border-b-destructive/70";
 
   return (
-    <main className="relative min-h-screen bg-background">
-      {/* Halo claro no topo, como na primeira versão do convite */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-accent to-transparent"
-        aria-hidden="true"
-      />
+    <main className={`relative min-h-screen overflow-x-clip bg-background ${liberado && !done ? "pb-24 sm:pb-0" : ""}`}>
 
       {/* ================= O CONVITE ================= */}
       <section
@@ -364,18 +398,18 @@ export function InscricaoPage() {
       >
         <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10 lg:px-14">
           {/* Papel timbrado: quem assina o convite abre a página */}
-          <header className="border-b border-border py-7 text-center sm:py-8">
+          <header className="border-b border-border py-5 text-center sm:py-6">
             <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               Uma realização
             </p>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-14">
+            <ul className="mx-auto mt-4 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:mt-5 sm:gap-10">
               {logos.map((logo) => (
-                <li key={logo.label} className="flex items-center justify-center">
+                 <li key={logo.label} className="flex min-w-0 items-center justify-center">
                   <Logo
                     webp={logo.webp}
                     png={logo.png}
                     alt={logo.label}
-                    className="h-9 w-auto object-contain sm:h-11"
+                    className="h-12 w-full max-w-[5.25rem] object-contain sm:h-16 sm:max-w-[7rem]"
                   />
                 </li>
               ))}
@@ -383,56 +417,56 @@ export function InscricaoPage() {
           </header>
 
           {/* Abertura */}
-          <div className="mx-auto max-w-3xl pb-9 pt-10 text-center sm:pb-14 sm:pt-16">
+          <div className="mx-auto max-w-4xl pb-10 pt-9 text-center sm:pb-12 sm:pt-14">
             <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
               Convite oficial
             </p>
             <h1
-              className="revelar mt-7 font-display text-[clamp(2.3rem,8vw,4.25rem)] font-normal italic leading-[1.05] tracking-[-0.015em]"
+              className="revelar mt-5 font-display text-[clamp(2.65rem,8vw,5.25rem)] font-normal leading-[0.98]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
-              Confraternização <span className="not-italic">2026</span>
+              Confraternização <span className="italic text-gold-texto">2026</span>
             </h1>
 
             <p
-              className="revelar mx-auto mt-5 max-w-xl font-display text-[clamp(1.05rem,3.2vw,1.35rem)] leading-snug text-muted-foreground sm:mt-6"
+              className="revelar mx-auto mt-6 max-w-2xl font-display text-[clamp(1.15rem,3vw,1.55rem)] leading-snug text-muted-foreground"
               style={{ "--atraso": "120ms" } as React.CSSProperties}
             >
-              {/* Uma frase por linha */}
-              <span className="block">Um ano de conquistas.</span>{" "}
-              <span className="mt-1 block">Um encontro para celebrar.</span>
+              Um encontro para celebrar nossas conquistas e quem faz parte dessa história.
             </p>
             <p
-              className="revelar mt-7 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:mt-9 sm:text-[13px] sm:tracking-[0.16em]"
+              className="revelar mx-auto mt-8 grid max-w-3xl gap-px overflow-hidden border border-border bg-border text-left sm:grid-cols-3"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
-              {/* Mesmo padrão da chamada: duas linhas em qualquer largura */}
-              <span className="block whitespace-nowrap">19 de dezembro de 2026</span>{" "}
-              <span className="mt-1 block">
-                <span className="whitespace-nowrap">16h30</span>
-                <span className="mx-3 text-muted-foreground" aria-hidden="true">
-                  ·
+              {[
+                { Icon: CalendarDays, label: "Data", value: "19 de dezembro de 2026" },
+                { Icon: Clock3, label: "Horário", value: evento.horario },
+                { Icon: MapPin, label: "Local", value: evento.bairro },
+              ].map(({ Icon, label, value }) => (
+                <span key={label} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 bg-card px-4 py-4 sm:px-5">
+                  <Icon className="h-4 w-4 shrink-0 text-gold-texto" aria-hidden="true" />
+                  <span className="min-w-0">
+                    <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+                    <span className="mt-1 block text-[12px] font-medium normal-case leading-snug tracking-[0] text-foreground">{value}</span>
+                  </span>
                 </span>
-                <span className="whitespace-nowrap">Maraponga, Fortaleza</span>
-              </span>
+              ))}
             </p>
           </div>
 
           {/* Painel do convite em vídeo: cartão claro, borda fina, cantos
               suaves e sombra discreta. O vídeo é o destaque da abertura. */}
           <div
-            className="revelar mx-auto w-full max-w-[30rem]"
+            className="revelar mx-auto w-full max-w-[68rem]"
             style={{ "--atraso": "60ms" } as React.CSSProperties}
           >
-            <div className="rounded-2xl border border-border bg-card px-5 py-6 shadow-[0_18px_44px_-30px_rgba(16,36,64,0.45)] sm:px-7 sm:py-8">
-              <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
-                Confraternização 2026
-              </p>
-              <h2 className="mt-4 text-center font-display text-[clamp(1.5rem,5.6vw,2rem)] font-normal leading-[1.15] text-foreground">
-                Uma mensagem especial para você
+            <div className="border border-border bg-card px-4 py-7 shadow-[0_22px_60px_-42px_color-mix(in_oklab,var(--navy-deep)_55%,transparent)] sm:px-8 sm:py-10 lg:px-12">
+              <p className="text-center text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">Memórias que nos unem</p>
+              <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.8rem,5vw,3rem)] font-normal leading-[1.08] text-foreground">
+                Relembre os melhores momentos de 2025.
               </h2>
-              <p className="mx-auto mt-3 max-w-[22rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
-                Dê o play e descubra o que preparamos para esse momento.
+              <p className="mx-auto mt-3 max-w-[32rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
+                Um capítulo especial da nossa história, feito por todos nós.
               </p>
 
               <span
@@ -442,10 +476,7 @@ export function InscricaoPage() {
 
               {/* O convite foi gravado na vertical: a largura é limitada pela
                   altura da tela para o quadro inteiro caber sem rolar. */}
-              <div
-                className="mx-auto mt-6 w-full max-w-[26rem]"
-                style={{ maxWidth: "min(100%, 26rem, max(15rem, calc(66svh * 9 / 16)))" }}
-              >
+              <div className="mx-auto mt-7 w-full max-w-[27rem] sm:mt-8">
                 {temVideo ? (
                   <ConvitePlayer
                     key={tentativa}
@@ -462,22 +493,19 @@ export function InscricaoPage() {
           </div>
 
           {/* Etapas e chamada para a confirmação */}
-          <div className="mx-auto w-full max-w-[940px] pb-16 pt-9 sm:pb-24 sm:pt-11">
-            {(liberado || done) && (
-              <p
-                className="text-center text-[15px] leading-relaxed text-foreground"
-                aria-live="polite"
-              >
-                {done
-                  ? confirmou
-                    ? "Sua presença está confirmada. O convite fica logo abaixo."
-                    : "Sua resposta foi registrada. Obrigado por avisar."
-                  : "Agora queremos saber se podemos contar com a sua presença."}
-              </p>
-            )}
+          <div className="mx-auto w-full max-w-[940px] pb-14 pt-7 sm:pb-20 sm:pt-9">
+            <p className={`mb-5 text-center text-[15px] leading-relaxed ${liberado ? "text-foreground" : "text-muted-foreground"}`} aria-live="polite">
+              {done
+                ? confirmou
+                  ? "Sua presença está confirmada. O convite fica logo abaixo."
+                  : "Sua resposta foi registrada. Obrigado por avisar."
+                : liberado
+                  ? "Agora confirme sua presença. Vamos celebrar juntos!"
+                  : "Assista ao vídeo para liberar sua confirmação de presença."}
+            </p>
 
             <div className="flex justify-center">
-              <button
+              <Button
                 type="button"
                 aria-disabled={!liberado}
                 aria-label={
@@ -490,7 +518,7 @@ export function InscricaoPage() {
                   if (done) irAte(destinoConfirmacao.current);
                   else abrirConfirmacao();
                 }}
-                className={`w-full max-w-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.26em] transition-all duration-300 active:scale-[0.99] ${
+                className={`min-h-[56px] w-full max-w-sm rounded-sm px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-300 active:scale-[0.99] ${
                   done
                     ? "border border-gold/40 text-muted-foreground hover:border-gold-deep hover:text-foreground"
                     : liberado
@@ -499,7 +527,7 @@ export function InscricaoPage() {
                 }`}
               >
                 {done ? "Ver minha resposta" : "Confirmar minha presença"}
-              </button>
+              </Button>
             </div>
 
             {errors["form"] && !abriuFormulario && (
