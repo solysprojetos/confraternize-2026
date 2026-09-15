@@ -33,6 +33,9 @@ function irAte(elemento: HTMLElement | null | undefined) {
   elemento.focus({ preventScroll: true });
 }
 
+/** Só quem é de uma das empresas do grupo informa o cargo. */
+const empresasComCargo = ["grupo_support", "sgroup", "solys"];
+
 /** As empresas continuam gravadas na coluna "grupo" do banco. */
 const empresas = [
   { value: "grupo_support", label: "Grupo Support" },
@@ -53,18 +56,29 @@ const logos = [
   { label: "Solys Gestão Administrativa", png: solysPng, webp: solysWebp },
 ];
 
-const schema = z.object({
-  nome_completo: z.string().trim().min(3, "Informe seu nome completo").max(120),
-  grupo: z.enum(["sgroup", "solys", "grupo_support", "parceiros", "convidados"], {
-    message: "Selecione a sua empresa",
-  }),
-  telefone: z
-    .string()
-    .trim()
-    .refine((v) => digitosDoTelefone(v).length >= 10, "Informe um telefone com DDD")
-    .refine((v) => digitosDoTelefone(v).length <= 11, "Telefone muito longo"),
-  email: z.string().trim().email("Informe um e-mail válido").max(255),
-});
+const schema = z
+  .object({
+    nome_completo: z.string().trim().min(3, "Informe seu nome completo").max(120),
+    grupo: z.enum(["sgroup", "solys", "grupo_support", "parceiros", "convidados"], {
+      message: "Selecione a sua empresa",
+    }),
+    telefone: z
+      .string()
+      .trim()
+      .refine((v) => digitosDoTelefone(v).length >= 10, "Informe um telefone com DDD")
+      .refine((v) => digitosDoTelefone(v).length <= 11, "Telefone muito longo"),
+    email: z.string().trim().email("Informe um e-mail válido").max(255),
+    cargo: z.string().trim().max(120, "Cargo muito longo"),
+  })
+  .superRefine((dados, ctx) => {
+    if (empresasComCargo.includes(dados.grupo) && dados.cargo.trim().length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["cargo"],
+        message: "Informe o seu cargo",
+      });
+    }
+  });
 
 function Logo({
   webp,
@@ -128,6 +142,7 @@ export function InscricaoPage() {
     grupo: "",
     telefone: "",
     email: "",
+    cargo: "",
   });
   const [resposta, setResposta] = useState<"sim" | "nao">("sim");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -277,7 +292,7 @@ export function InscricaoPage() {
       for (const issue of analise.error.issues) proximos[String(issue.path[0])] = issue.message;
       setErrors(proximos);
       // Leva o foco ao primeiro campo com problema
-      const ordem = ["nome_completo", "telefone", "email", "grupo"] as const;
+      const ordem = ["nome_completo", "telefone", "email", "grupo", "cargo"] as const;
       const primeiro = ordem.find((campo) => proximos[campo]);
       const seletor =
         primeiro === "grupo"
@@ -302,6 +317,7 @@ export function InscricaoPage() {
     const id = crypto.randomUUID();
     const { error } = await registrarInscricao(convite.current?.sessao ?? null, {
       ...analise.data,
+      cargo: empresasComCargo.includes(analise.data.grupo) ? analise.data.cargo.trim() : "",
       id,
       comparecera,
     });
@@ -638,7 +654,7 @@ export function InscricaoPage() {
                     // A sessão do convite é de uso único: quem responde agora
                     // precisa assistir ao convite outra vez.
                     reiniciarConvite();
-                    setForm({ nome_completo: "", grupo: "", telefone: "", email: "" });
+                    setForm({ nome_completo: "", grupo: "", telefone: "", email: "", cargo: "" });
                     setResposta("sim");
                     setQrUrl("");
                     setInscricaoId("");
@@ -772,10 +788,17 @@ export function InscricaoPage() {
                                 value={empresa.value}
                                 checked={ativa}
                                 onChange={() => {
-                                  setForm({ ...form, grupo: empresa.value });
+                                  const pedeCargo = empresasComCargo.includes(empresa.value);
+                                  setForm({
+                                    ...form,
+                                    grupo: empresa.value,
+                                    // Parceiros e convidados não têm cargo no grupo
+                                    cargo: pedeCargo ? form.cargo : "",
+                                  });
                                   setErrors((atuais) => {
                                     const proximos = { ...atuais };
                                     delete proximos["grupo"];
+                                    if (!pedeCargo) delete proximos["cargo"];
                                     return proximos;
                                   });
                                 }}
@@ -788,7 +811,7 @@ export function InscricaoPage() {
                                 aria-hidden="true"
                               />
                               <span
-                                className={`py-4 text-[15px] transition-colors ${
+                                className={`py-4 text-[14px] uppercase tracking-[0.06em] transition-colors ${
                                   ativa ? "text-foreground" : "text-muted-foreground"
                                 }`}
                               >
@@ -802,6 +825,51 @@ export function InscricaoPage() {
                         {errors["grupo"] ?? ""}
                       </p>
                     </fieldset>
+
+                    {/* Quem é de uma das empresas do grupo informa o cargo */}
+                    {empresasComCargo.includes(form.grupo) && (
+                      <div className="abrir mt-8">
+                        <label htmlFor="cargo" className={rotulo}>
+                          Qual é o seu cargo{" "}
+                          <span className="text-destructive" aria-hidden="true">
+                            *
+                          </span>
+                          <span className="sr-only">(obrigatório)</span>
+                        </label>
+                        <input
+                          id="cargo"
+                          className={`${campo} ${errors["cargo"] ? campoErro : campoOk}`}
+                          value={form.cargo}
+                          maxLength={120}
+                          autoComplete="organization-title"
+                          required
+                          placeholder="Ex.: Analista financeiro"
+                          aria-invalid={Boolean(errors["cargo"])}
+                          aria-describedby="erro-cargo"
+                          onChange={(e) => {
+                            const valor = e.target.value;
+                            setForm({ ...form, cargo: valor });
+                            // O aviso some assim que o campo deixa de estar vazio
+                            if (valor.trim().length >= 2) {
+                              setErrors((atuais) => {
+                                if (!atuais["cargo"]) return atuais;
+                                const proximos = { ...atuais };
+                                delete proximos["cargo"];
+                                return proximos;
+                              });
+                            }
+                          }}
+                          onBlur={() => validarCampo("cargo")}
+                        />
+                        <p
+                          id="erro-cargo"
+                          role="alert"
+                          className="mt-2 min-h-[1.25rem] text-sm text-destructive"
+                        >
+                          {errors["cargo"] ?? ""}
+                        </p>
+                      </div>
+                    )}
 
                     {aceitaResposta && (
                       <fieldset className="mt-10">

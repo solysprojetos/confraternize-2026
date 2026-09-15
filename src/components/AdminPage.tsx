@@ -10,6 +10,7 @@ type Inscricao = {
   created_at: string;
   /** Só existe depois da migração 20260914120000_resposta_do_convite. */
   comparecera?: boolean | null;
+  cargo?: string | null;
 };
 
 /** Quem não respondeu "não" conta como presença confirmada. */
@@ -97,12 +98,13 @@ export function AdminPage() {
 
   function exportarCsv() {
     const linhas = [
-      ["Nome completo", "Telefone", "E-mail", "Grupo", "Presença", "Data da resposta"],
+      ["Nome completo", "Telefone", "E-mail", "Grupo", "Cargo", "Presença", "Data da resposta"],
       ...visiveis.map((i) => [
         i.nome_completo,
         i.telefone,
         i.email,
         NOME_GRUPO[i.grupo],
+        i.cargo ?? "",
         vaiComparecer(i) ? "Confirmada" : "Não irá",
         new Date(i.created_at).toLocaleString("pt-BR"),
       ]),
@@ -277,6 +279,7 @@ export function AdminPage() {
                   <th className="px-4 py-3 font-medium">Telefone</th>
                   <th className="px-4 py-3 font-medium">E-mail</th>
                   <th className="px-4 py-3 font-medium">Grupo</th>
+                  <th className="px-4 py-3 font-medium">Cargo</th>
                   <th className="px-4 py-3 font-medium">Presença</th>
                   <th className="px-4 py-3 font-medium">Data</th>
                 </tr>
@@ -284,7 +287,7 @@ export function AdminPage() {
               <tbody>
                 {visiveis.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                       Nenhuma inscrição ainda.
                     </td>
                   </tr>
@@ -295,6 +298,9 @@ export function AdminPage() {
                       <td className="px-4 py-3 text-foreground">{i.telefone}</td>
                       <td className="px-4 py-3 text-foreground">{i.email}</td>
                       <td className="px-4 py-3 text-foreground">{NOME_GRUPO[i.grupo]}</td>
+                      <td className="px-4 py-3 text-foreground">
+                        {i.cargo || <span className="text-muted-foreground">—</span>}
+                      </td>
                       <td className="px-4 py-3">
                         <span
                           className={vaiComparecer(i) ? "text-foreground" : "text-muted-foreground"}

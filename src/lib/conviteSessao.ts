@@ -128,13 +128,17 @@ export type DadosInscricao = {
   grupo: string;
   /** true = confirma presença; false = avisou que não poderá comparecer. */
   comparecera: boolean;
+  /** Cargo de quem é do grupo; vazio para parceiros e convidados. */
+  cargo: string;
 };
 
 /** O banco desta instalação ainda não conhece a resposta "não poderei ir". */
 function campoAusente(error: ErroSupabase): boolean {
   if (!error) return false;
   return (
-    error.code === "PGRST204" || error.code === "42703" || /comparecera/i.test(error.message ?? "")
+    error.code === "PGRST204" ||
+    error.code === "42703" ||
+    /comparecera|cargo/i.test(error.message ?? "")
   );
 }
 
@@ -148,7 +152,7 @@ export async function registrarInscricao(
   sessao: string | null,
   dados: DadosInscricao,
 ): Promise<{ error: ErroSupabase }> {
-  const { comparecera, ...basico } = dados;
+  const { comparecera, cargo, ...basico } = dados;
 
   if (sessao) {
     const { error } = await chamarRpc("convite_inscrever", {
@@ -159,9 +163,23 @@ export async function registrarInscricao(
       p_email: dados.email,
       p_grupo: dados.grupo,
       p_comparecera: comparecera,
+      p_cargo: cargo || null,
     });
     if (!error) return { error: null };
     if (!funcaoAusente(error)) return { error };
+
+    // Banco sem a coluna do cargo: tenta a versão anterior da função
+    const { error: erroSemCargo } = await chamarRpc("convite_inscrever", {
+      p_sessao: sessao,
+      p_id: dados.id,
+      p_nome: dados.nome_completo,
+      p_telefone: dados.telefone,
+      p_email: dados.email,
+      p_grupo: dados.grupo,
+      p_comparecera: comparecera,
+    });
+    if (!erroSemCargo) return { error: null };
+    if (!funcaoAusente(erroSemCargo)) return { error: erroSemCargo };
 
     // Banco com a versão anterior da função, que ainda não recebe a resposta
     if (comparecera) {
@@ -183,9 +201,20 @@ export async function registrarInscricao(
   const tabelaSemTipo = supabase.from("inscricoes") as unknown as {
     insert: (linha: Record<string, unknown>) => Promise<{ error: ErroSupabase }>;
   };
-  const { error } = await tabelaSemTipo.insert({ ...basico, comparecera });
+  const { error } = await tabelaSemTipo.insert({
+    ...basico,
+    comparecera,
+    ...(cargo ? { cargo } : {}),
+  });
   if (!error) return { error: null };
   if (!campoAusente(error)) return { error };
+
+  // Sem a coluna do cargo, tenta gravar ao menos o resto
+  if (cargo) {
+    const { error: erroSemCargo } = await tabelaSemTipo.insert({ ...basico, comparecera });
+    if (!erroSemCargo) return { error: null };
+    if (!campoAusente(erroSemCargo)) return { error: erroSemCargo };
+  }
 
   // Sem a coluna da resposta no banco: uma confirmação ainda pode ser gravada,
   // mas uma recusa não tem onde ser registrada — melhor avisar do que fingir.
