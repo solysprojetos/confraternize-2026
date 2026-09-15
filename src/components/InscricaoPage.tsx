@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, CalendarDays, Clock3, MapPin } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { ConvitePlayer, ConviteEmPreparacao } from "@/components/ConvitePlayer";
@@ -435,30 +435,19 @@ export function InscricaoPage() {
             >
               Um encontro para celebrar nossas conquistas e quem faz parte dessa história.
             </p>
+            {/* Só a informação: sem caixa, sem riscos e sem ícones */}
             <p
-              className="revelar mx-auto mt-8 grid max-w-3xl gap-px overflow-hidden border border-border bg-border text-left sm:grid-cols-3"
+              className="revelar mx-auto mt-8 text-[12px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:text-[13px] sm:tracking-[0.16em]"
               style={{ "--atraso": "180ms" } as React.CSSProperties}
             >
-              {[
-                { Icon: CalendarDays, label: "Data", value: "19 de dezembro de 2026" },
-                { Icon: Clock3, label: "Horário", value: evento.horario },
-                { Icon: MapPin, label: "Local", value: evento.bairro },
-              ].map(({ Icon, label, value }) => (
-                <span
-                  key={label}
-                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 bg-card px-4 py-4 sm:px-5"
-                >
-                  <Icon className="h-4 w-4 shrink-0 text-gold-texto" aria-hidden="true" />
-                  <span className="min-w-0">
-                    <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      {label}
-                    </span>
-                    <span className="mt-1 block text-[12px] font-medium normal-case leading-snug tracking-[0] text-foreground">
-                      {value}
-                    </span>
-                  </span>
+              <span className="block whitespace-nowrap">19 de dezembro de 2026</span>{" "}
+              <span className="mt-1 block">
+                <span className="whitespace-nowrap">{evento.horario}</span>
+                <span className="mx-3" aria-hidden="true">
+                  ·
                 </span>
-              ))}
+                <span className="whitespace-nowrap">{evento.bairro}</span>
+              </span>
             </p>
           </div>
 
