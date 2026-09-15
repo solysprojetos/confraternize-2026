@@ -459,13 +459,13 @@ export function InscricaoPage() {
           >
             <div className="border border-border bg-card px-4 py-7 shadow-[0_22px_60px_-42px_color-mix(in_oklab,var(--navy-deep)_55%,transparent)] sm:px-8 sm:py-10 lg:px-12">
               <p className="text-center text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">
-                Memórias que nos unem
+                Convite em vídeo
               </p>
               <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.8rem,5vw,3rem)] font-normal leading-[1.08] text-foreground">
-                Relembre os melhores momentos de 2025.
+                Uma mensagem especial para você
               </h2>
               <p className="mx-auto mt-3 max-w-[32rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
-                Um capítulo especial da nossa história, feito por todos nós.
+                Dê o play e descubra o que preparamos para esse momento.
               </p>
 
               <span
