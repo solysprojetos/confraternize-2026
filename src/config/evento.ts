@@ -37,8 +37,12 @@ export const evento = {
  * para incluir, tirar ou renomear um setor — o formulário, a área de
  * inscrições e a contagem por setor saem daqui.
  *
- * O banco só exige que o setor venha preenchido; quem manda nos nomes é
- * esta lista. Assim, mudar um setor não pede migração nova.
+ * Os mesmos nomes estão cadastrados no banco, na tabela convite_setores, que
+ * é quem recusa um setor inventado por fora do site. Ao mexer aqui, mexa lá
+ * também — é editar linha, não pede migração:
+ *   INSERT INTO public.convite_setores (nome, ordem) VALUES ('Compras', 13);
+ *   UPDATE public.convite_setores SET ativo = false WHERE nome = 'Marketing';
+ * Um nome que exista aqui e não lá aparece na lista e é recusado no envio.
  */
 export const setores = [
   "Administrativo",
