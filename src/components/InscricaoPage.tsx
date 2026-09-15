@@ -895,99 +895,83 @@ export function InscricaoPage() {
         )}
       </div>
 
-      {/* ================= O EVENTO ================= */}
+      {/* ================= CONTAGEM ================= */}
+      <section className="sobre-escuro textura-papel relative bg-navy-deep text-primary-foreground">
+        <div className="relative mx-auto grid w-full max-w-[1100px] gap-8 px-6 py-12 sm:px-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center lg:gap-16 lg:px-14">
+          <div className="revelar min-w-0 text-center lg:text-left">
+            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold">Contagem regressiva</p>
+            <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.8rem)] font-normal leading-tight">
+              Nosso encontro está chegando.
+            </h2>
+          </div>
+          <ContagemRegressiva />
+        </div>
+      </section>
+
+      {/* ================= LOCALIZAÇÃO ================= */}
       <section className="textura-papel textura-papel--clara relative border-t border-border">
-        <div className="relative mx-auto w-full max-w-[1240px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
-          {/* Ficha do evento: rótulo à esquerda, informação à direita, uma
-              linha por assunto — a mesma leitura no celular e no computador. */}
-          <div className="mx-auto w-full max-w-[720px]">
-            <p className="text-center text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
-              O evento
-            </p>
-            <span
-              className="filete mx-auto mt-5 block h-px w-full max-w-[120px] bg-gold-deep/45"
-              aria-hidden="true"
+        <div className="relative mx-auto grid w-full max-w-[1240px] gap-8 px-6 py-14 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch lg:gap-12 lg:px-14">
+          <div className="revelar flex min-w-0 flex-col justify-center">
+            <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">Localização</p>
+            <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.25rem)] font-normal leading-tight text-foreground">
+              Maraponga, Fortaleza
+            </h2>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">{evento.endereco}</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <Button asChild variant="default" className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]">
+                <a href={evento.mapa} target="_blank" rel="noreferrer">
+                  Abrir no Google Maps <ArrowUpRight aria-hidden="true" />
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="min-h-[52px] rounded-sm px-5 text-[11px] font-semibold uppercase tracking-[0.16em]">
+                <a href={evento.waze} target="_blank" rel="noreferrer">
+                  Abrir no Waze <ArrowUpRight aria-hidden="true" />
+                </a>
+              </Button>
+            </div>
+          </div>
+          <div className="revelar min-h-[320px] overflow-hidden border border-border bg-card shadow-[0_18px_48px_-38px_color-mix(in_oklab,var(--navy-deep)_50%,transparent)] sm:min-h-[390px]">
+            <iframe
+              title="Mapa do local da Confraternização 2026"
+              src={evento.mapaEmbed}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-full min-h-[320px] w-full border-0 sm:min-h-[390px]"
             />
-
-            <dl className="mt-10 border-t border-border sm:mt-12">
-              <div className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7">
-                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
-                  Data
-                </dt>
-                <dd className="flex-1">
-                  <p className="font-display text-[1.5rem] leading-tight text-foreground sm:text-[1.6rem]">
-                    19 de dezembro de 2026
-                  </p>
-                  <p className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Sábado
-                  </p>
-                </dd>
-              </div>
-
-              <div
-                className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7"
-                style={{ "--atraso": "80ms" } as React.CSSProperties}
-              >
-                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
-                  Início
-                </dt>
-                <dd className="flex-1">
-                  <p className="font-display text-[1.5rem] leading-tight text-foreground sm:text-[1.6rem]">
-                    16h30
-                  </p>
-                  <p className="mt-2 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Recepção
-                  </p>
-                </dd>
-              </div>
-
-              <div
-                className="revelar flex flex-col gap-2 border-b border-border py-6 sm:flex-row sm:items-baseline sm:gap-10 sm:py-7"
-                style={{ "--atraso": "160ms" } as React.CSSProperties}
-              >
-                <dt className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:w-24">
-                  Local
-                </dt>
-                <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
-                  Av. Godofredo Maciel, 1179
-                  <br />
-                  Maraponga, Fortaleza – CE
-                  <br />
-                  <span className="text-muted-foreground">60714-175</span>
-                </dd>
-              </div>
-            </dl>
-
-            <a
-              href={evento.mapa}
-              target="_blank"
-              rel="noreferrer"
-              className="group mx-auto mt-8 flex min-h-[56px] w-full max-w-sm items-center justify-center gap-3 border border-border bg-card px-6 text-[11px] uppercase tracking-[0.24em] text-foreground transition-colors hover:border-gold-deep hover:text-gold-texto"
-            >
-              Ver localização
-              <span
-                className="transition-transform duration-300 group-hover:translate-x-1"
-                aria-hidden="true"
-              >
-                →
-              </span>
-            </a>
           </div>
         </div>
       </section>
 
       {/* ================= REALIZAÇÃO ================= */}
-      <footer className="border-t border-border bg-surface">
-        <div className="mx-auto w-full max-w-[1240px] px-6 py-10 sm:px-10 sm:py-12 lg:px-14">
-          <p className="text-center text-[10px] uppercase leading-[2] tracking-[0.26em] text-muted-foreground">
-            Confraternização 2026
-            <span className="mx-3 max-sm:hidden" aria-hidden="true">
-              ·
-            </span>
-            <span className="block sm:inline">19 de dezembro · 16h30 · Fortaleza</span>
+      <footer className="border-t border-border bg-card">
+        <div className="mx-auto w-full max-w-[1240px] px-6 py-10 text-center sm:px-10 sm:py-14 lg:px-14">
+          <p className="font-display text-xl text-foreground sm:text-2xl">Esperamos você para celebrarmos juntos.</p>
+          <span className="mx-auto mt-5 block h-px w-12 bg-gold-deep/50" aria-hidden="true" />
+          <ul className="mx-auto mt-7 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:gap-10">
+            {logos.map((logo) => (
+              <li key={logo.label} className="flex min-w-0 items-center justify-center">
+                <Logo
+                  webp={logo.webp}
+                  png={logo.png}
+                  alt={logo.label}
+                  className="h-11 w-full max-w-[5rem] object-contain sm:h-14 sm:max-w-[6.5rem]"
+                />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-8 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+            Confraternização 2026 · 19 de dezembro · 16h30
           </p>
         </div>
       </footer>
+
+      {liberado && !done && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-12px_32px_-24px_color-mix(in_oklab,var(--navy-deep)_55%,transparent)] backdrop-blur-md sm:hidden">
+          <Button type="button" onClick={abrirConfirmacao} className="min-h-[52px] w-full rounded-sm text-[11px] font-semibold uppercase tracking-[0.18em]">
+            Confirmar minha presença
+          </Button>
+        </div>
+      )}
     </main>
   );
 }
