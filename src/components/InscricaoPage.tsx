@@ -1088,11 +1088,7 @@ export function InscricaoPage() {
       {/* ================= REALIZAÇÃO ================= */}
       <footer className="border-t border-border bg-card">
         <div className="mx-auto w-full max-w-[1240px] px-6 py-10 text-center sm:px-10 sm:py-14 lg:px-14">
-          <p className="font-display text-xl text-foreground sm:text-2xl">
-            Esperamos você para celebrarmos juntos.
-          </p>
-          <span className="mx-auto mt-5 block h-px w-12 bg-gold-deep/50" aria-hidden="true" />
-          <ul className="mx-auto mt-7 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:gap-10">
+          <ul className="mx-auto grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:gap-10">
             {logos.map((logo) => (
               <li key={logo.label} className="flex min-w-0 items-center justify-center">
                 <Logo
@@ -1104,9 +1100,6 @@ export function InscricaoPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
-            Confraternização 2026 · 19 de dezembro · 16h30
-          </p>
         </div>
       </footer>
 
