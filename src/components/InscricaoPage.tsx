@@ -423,7 +423,7 @@ export function InscricaoPage() {
               Convite oficial
             </p>
             <h1
-              className="revelar mt-5 font-display text-[clamp(2.65rem,8vw,5.25rem)] font-normal leading-[0.98]"
+              className="revelar mt-5 font-display text-[clamp(2rem,7vw,4.25rem)] font-normal uppercase leading-[1.02] tracking-[0.015em]"
               style={{ "--atraso": "60ms" } as React.CSSProperties}
             >
               Confraternização <span className="italic text-gold-texto">2026</span>
@@ -461,7 +461,7 @@ export function InscricaoPage() {
               <p className="text-center text-[10px] font-medium uppercase tracking-[0.32em] text-gold-texto">
                 Convite em vídeo
               </p>
-              <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.8rem,5vw,3rem)] font-normal leading-[1.08] text-foreground">
+              <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(1.45rem,4.4vw,2.5rem)] font-normal uppercase leading-[1.12] tracking-[0.015em] text-foreground">
                 Uma mensagem especial para você
               </h2>
               <p className="mx-auto mt-3 max-w-[32rem] text-center text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
