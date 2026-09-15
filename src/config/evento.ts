@@ -32,6 +32,29 @@ export const evento = {
   inicioIso: "2026-12-19T16:30:00-03:00",
 };
 
+/**
+ * Setores das três empresas do grupo. Esta lista é o único lugar a mexer
+ * para incluir, tirar ou renomear um setor — o formulário, a área de
+ * inscrições e a contagem por setor saem daqui.
+ *
+ * O banco só exige que o setor venha preenchido; quem manda nos nomes é
+ * esta lista. Assim, mudar um setor não pede migração nova.
+ */
+export const setores = [
+  "Administrativo",
+  "Financeiro",
+  "Comercial",
+  "Recursos Humanos",
+  "Operações",
+  "Tecnologia da Informação",
+  "Marketing",
+  "Jurídico",
+  "Logística",
+  "Atendimento",
+  "Diretoria",
+  "Outro",
+];
+
 export const videoConvite = {
   // Arquivo do vídeo (MP4 H.264 recomendado). Enquanto estiver vazio, a
   // página mostra a capa de convite em preparação e a inscrição permanece

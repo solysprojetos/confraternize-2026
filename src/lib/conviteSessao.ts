@@ -130,6 +130,8 @@ export type DadosInscricao = {
   comparecera: boolean;
   /** Cargo de quem é do grupo; vazio para parceiros e convidados. */
   cargo: string;
+  /** Setor de quem é do grupo; vazio para parceiros e convidados. */
+  setor: string;
 };
 
 /** O banco desta instalação ainda não conhece a resposta "não poderei ir". */
@@ -138,7 +140,7 @@ function campoAusente(error: ErroSupabase): boolean {
   return (
     error.code === "PGRST204" ||
     error.code === "42703" ||
-    /comparecera|cargo/i.test(error.message ?? "")
+    /comparecera|cargo|setor/i.test(error.message ?? "")
   );
 }
 
@@ -152,7 +154,7 @@ export async function registrarInscricao(
   sessao: string | null,
   dados: DadosInscricao,
 ): Promise<{ error: ErroSupabase }> {
-  const { comparecera, cargo, ...basico } = dados;
+  const { comparecera, cargo, setor, ...basico } = dados;
 
   if (sessao) {
     const { error } = await chamarRpc("convite_inscrever", {
@@ -164,9 +166,24 @@ export async function registrarInscricao(
       p_grupo: dados.grupo,
       p_comparecera: comparecera,
       p_cargo: cargo || null,
+      p_setor: setor || null,
     });
     if (!error) return { error: null };
     if (!funcaoAusente(error)) return { error };
+
+    // Banco sem a coluna do setor: tenta a versão que só tem o cargo
+    const { error: erroSemSetor } = await chamarRpc("convite_inscrever", {
+      p_sessao: sessao,
+      p_id: dados.id,
+      p_nome: dados.nome_completo,
+      p_telefone: dados.telefone,
+      p_email: dados.email,
+      p_grupo: dados.grupo,
+      p_comparecera: comparecera,
+      p_cargo: cargo || null,
+    });
+    if (!erroSemSetor) return { error: null };
+    if (!funcaoAusente(erroSemSetor)) return { error: erroSemSetor };
 
     // Banco sem a coluna do cargo: tenta a versão anterior da função
     const { error: erroSemCargo } = await chamarRpc("convite_inscrever", {
@@ -205,12 +222,13 @@ export async function registrarInscricao(
     ...basico,
     comparecera,
     ...(cargo ? { cargo } : {}),
+    ...(setor ? { setor } : {}),
   });
   if (!error) return { error: null };
   if (!campoAusente(error)) return { error };
 
-  // Sem a coluna do cargo, tenta gravar ao menos o resto
-  if (cargo) {
+  // Sem a coluna do setor ou do cargo, tenta gravar ao menos o resto
+  if (cargo || setor) {
     const { error: erroSemCargo } = await tabelaSemTipo.insert({ ...basico, comparecera });
     if (!erroSemCargo) return { error: null };
     if (!campoAusente(erroSemCargo)) return { error: erroSemCargo };

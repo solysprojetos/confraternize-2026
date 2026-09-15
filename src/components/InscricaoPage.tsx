@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { ConvitePlayer, ConviteEmPreparacao } from "@/components/ConvitePlayer";
 import { Button } from "@/components/ui/button";
-import { evento, temVideoConvite } from "@/config/evento";
+import { evento, setores, temVideoConvite } from "@/config/evento";
 import { useRevelar } from "@/hooks/useRevelar";
 import { digitosDoTelefone, formatarTelefone } from "@/lib/telefone";
 import {
@@ -69,9 +69,18 @@ const schema = z
       .refine((v) => digitosDoTelefone(v).length <= 11, "Telefone muito longo"),
     email: z.string().trim().email("Informe um e-mail válido").max(255),
     cargo: z.string().trim().max(120, "Cargo muito longo"),
+    setor: z.string().trim().max(80),
   })
   .superRefine((dados, ctx) => {
-    if (empresasComCargo.includes(dados.grupo) && dados.cargo.trim().length < 2) {
+    if (!empresasComCargo.includes(dados.grupo)) return;
+    if (!setores.includes(dados.setor)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["setor"],
+        message: "Selecione o seu setor",
+      });
+    }
+    if (dados.cargo.trim().length < 2) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["cargo"],
@@ -142,6 +151,7 @@ export function InscricaoPage() {
     grupo: "",
     telefone: "",
     email: "",
+    setor: "",
     cargo: "",
   });
   const [resposta, setResposta] = useState<"sim" | "nao">("sim");
@@ -292,14 +302,16 @@ export function InscricaoPage() {
       for (const issue of analise.error.issues) proximos[String(issue.path[0])] = issue.message;
       setErrors(proximos);
       // Leva o foco ao primeiro campo com problema
-      const ordem = ["nome_completo", "telefone", "email", "grupo", "cargo"] as const;
+      const ordem = ["nome_completo", "telefone", "email", "grupo", "setor", "cargo"] as const;
       const primeiro = ordem.find((campo) => proximos[campo]);
       const seletor =
         primeiro === "grupo"
           ? 'input[name="empresa"]'
-          : primeiro === "nome_completo"
-            ? "#nome"
-            : `#${primeiro}`;
+          : primeiro === "setor"
+            ? 'input[name="setor"]'
+            : primeiro === "nome_completo"
+              ? "#nome"
+              : `#${primeiro}`;
       window.requestAnimationFrame(() =>
         document.querySelector<HTMLElement>(seletor)?.focus({ preventScroll: false }),
       );
@@ -318,6 +330,7 @@ export function InscricaoPage() {
     const { error } = await registrarInscricao(convite.current?.sessao ?? null, {
       ...analise.data,
       cargo: empresasComCargo.includes(analise.data.grupo) ? analise.data.cargo.trim() : "",
+      setor: empresasComCargo.includes(analise.data.grupo) ? analise.data.setor : "",
       id,
       comparecera,
     });
@@ -654,7 +667,14 @@ export function InscricaoPage() {
                     // A sessão do convite é de uso único: quem responde agora
                     // precisa assistir ao convite outra vez.
                     reiniciarConvite();
-                    setForm({ nome_completo: "", grupo: "", telefone: "", email: "", cargo: "" });
+                    setForm({
+                      nome_completo: "",
+                      grupo: "",
+                      telefone: "",
+                      email: "",
+                      setor: "",
+                      cargo: "",
+                    });
                     setResposta("sim");
                     setQrUrl("");
                     setInscricaoId("");
@@ -792,13 +812,18 @@ export function InscricaoPage() {
                                   setForm({
                                     ...form,
                                     grupo: empresa.value,
-                                    // Parceiros e convidados não têm cargo no grupo
+                                    // Parceiros e convidados não têm setor
+                                    // nem cargo no grupo
                                     cargo: pedeCargo ? form.cargo : "",
+                                    setor: pedeCargo ? form.setor : "",
                                   });
                                   setErrors((atuais) => {
                                     const proximos = { ...atuais };
                                     delete proximos["grupo"];
-                                    if (!pedeCargo) delete proximos["cargo"];
+                                    if (!pedeCargo) {
+                                      delete proximos["cargo"];
+                                      delete proximos["setor"];
+                                    }
                                     return proximos;
                                   });
                                 }}
@@ -826,9 +851,57 @@ export function InscricaoPage() {
                       </p>
                     </fieldset>
 
-                    {/* Quem é de uma das empresas do grupo informa o cargo */}
+                    {/* Quem é de uma das empresas do grupo informa setor e cargo */}
                     {empresasComCargo.includes(form.grupo) && (
-                      <div className="abrir mt-8">
+                      <fieldset className="abrir mt-8">
+                        <legend className={rotulo}>
+                          Qual é o seu setor{" "}
+                          <span className="text-destructive" aria-hidden="true">
+                            *
+                          </span>
+                          <span className="sr-only">(obrigatório)</span>
+                        </legend>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {setores.map((setor) => {
+                            const ativo = form.setor === setor;
+                            return (
+                              <label
+                                key={setor}
+                                className={`flex min-h-[44px] cursor-pointer items-center justify-center border px-4 text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-deep ${
+                                  ativo
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="setor"
+                                  value={setor}
+                                  checked={ativo}
+                                  onChange={() => {
+                                    setForm({ ...form, setor });
+                                    setErrors((atuais) => {
+                                      if (!atuais["setor"]) return atuais;
+                                      const proximos = { ...atuais };
+                                      delete proximos["setor"];
+                                      return proximos;
+                                    });
+                                  }}
+                                  className="sr-only"
+                                />
+                                {setor}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <p role="alert" className="mt-2 min-h-[1.25rem] text-sm text-destructive">
+                          {errors["setor"] ?? ""}
+                        </p>
+                      </fieldset>
+                    )}
+
+                    {empresasComCargo.includes(form.grupo) && (
+                      <div className="abrir mt-6">
                         <label htmlFor="cargo" className={rotulo}>
                           Qual é o seu cargo{" "}
                           <span className="text-destructive" aria-hidden="true">
