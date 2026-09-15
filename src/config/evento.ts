@@ -83,8 +83,9 @@ export const videoConvite = {
   coberturaMinima: 0.95,
 };
 
-// Caminhos relativos precisam respeitar a base do site (GitHub Pages publica
-// em /confraternize-2026/).
+// Caminhos relativos respeitam a base do site. Com o domínio próprio
+// (confragrupos.online) a base é a raiz; a função continua aqui para o caso
+// de o site voltar a ser publicado num subcaminho.
 export function urlDoAsset(caminho: string): string {
   if (!caminho) return "";
   if (/^(https?:)?\/\//.test(caminho) || caminho.startsWith("data:")) return caminho;

@@ -10,8 +10,8 @@ nenhuma dependência externa de edição.
 
 | O quê                                            | Onde                                                        |
 | ------------------------------------------------ | ----------------------------------------------------------- |
-| Site de inscrição (link para divulgar)           | https://solysprojetos.github.io/confraternize-2026/         |
-| Área restrita (lista de inscritos, requer login) | https://solysprojetos.github.io/confraternize-2026/#/admin  |
+| Site de inscrição (link para divulgar)           | https://confragrupos.online/                                |
+| Área restrita (lista de inscritos, requer login) | https://confragrupos.online/#/admin                         |
 | Espelho na Vercel                                | mesmo conteúdo, atualizado a cada push no `main`            |
 | Deploys                                          | https://github.com/solysprojetos/confraternize-2026/actions |
 | Banco de dados (Supabase, projeto próprio)       | https://supabase.com/dashboard/project/qozuvdhqhpzpreusvkkr |
