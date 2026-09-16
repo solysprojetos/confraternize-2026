@@ -329,7 +329,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
     <div className="sobre-escuro w-full">
       <div
         ref={containerRef}
-        className="moldura-convite quadro-convite @container relative w-full overflow-hidden rounded-lg border border-gold-deep/35 bg-navy-deep shadow-[0_22px_56px_-34px_color-mix(in_oklab,var(--navy-deep)_70%,transparent)]"
+        className="moldura-convite quadro-convite @container relative w-full overflow-hidden rounded-xl bg-navy-deep shadow-[0_18px_44px_-30px_color-mix(in_oklab,var(--navy-deep)_60%,transparent)] ring-1 ring-navy-deep/10"
       >
         <div>
           <div

@@ -87,6 +87,19 @@ export const videoConvite = {
   coberturaMinima: 0.95,
 };
 
+/**
+ * Vídeo da confraternização de 2025, ainda por produzir. Enquanto src estiver
+ * vazio a seção "Relembre nossa Confraternização de 2025" não aparece. Ela é
+ * complementar e fica depois da localização — nunca no lugar do convite.
+ */
+export const videoRetrospectiva = {
+  src: "" as string,
+  poster: "" as string,
+  proporcao: 16 / 9,
+};
+
+export const temVideoRetrospectiva = () => videoRetrospectiva.src.trim().length > 0;
+
 // Caminhos relativos respeitam a base do site. Com o domínio próprio
 // (confragrupos.online) a base é a raiz; a função continua aqui para o caso
 // de o site voltar a ser publicado num subcaminho.

@@ -294,6 +294,42 @@
   transform: scaleX(1);
 }
 
+/* Troca de texto da liberação: o novo texto entra em fade curto */
+@keyframes trocar-texto {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.trocar {
+  animation: trocar-texto 0.55s cubic-bezier(0.22, 0.68, 0.3, 1) both;
+}
+
+/* Botão de confirmação ganhando cor quando o convite termina */
+@keyframes liberar-botao {
+  0% {
+    transform: scale(0.97);
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--gold) 55%, transparent);
+  }
+  60% {
+    transform: scale(1.01);
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--gold) 0%, transparent);
+  }
+  100% {
+    transform: none;
+    box-shadow: 0 16px 36px -26px color-mix(in oklab, var(--navy-deep) 90%, transparent);
+  }
+}
+
+.liberar {
+  animation: liberar-botao 0.9s cubic-bezier(0.22, 0.68, 0.3, 1) both;
+}
+
 /* Abertura da confirmação depois do convite */
 @keyframes abrir-secao {
   from {
@@ -318,7 +354,9 @@
     transition: none;
   }
 
-  .abrir {
+  .abrir,
+  .trocar,
+  .liberar {
     animation: none;
   }
 
