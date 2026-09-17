@@ -1,0 +1,8 @@
+Arquivos do convite em vídeo.
+
+  convite-confraternizacao-2026.mp4   o convite publicado
+                                      vertical 1080x1920, 58,5 s, H.264+AAC
+
+Para trocar o vídeo, veja o README na seção "O vídeo do convite": além de
+colocar o arquivo aqui, é preciso apontar o caminho e a proporção em
+src/config/evento.ts e atualizar a duração em convite_config, no banco.
