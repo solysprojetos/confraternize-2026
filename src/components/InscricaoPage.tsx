@@ -63,6 +63,13 @@ const logos = [
   { label: "Solys Gestão Administrativa", png: solysPng, webp: solysWebp },
 ];
 
+/**
+ * A lista de opções é apresentada como "cargo". Quem escolhe esta opção
+ * escreve o nome por extenso; para as outras, o nome da opção vale como
+ * cargo — assim o banco sempre recebe os dois campos preenchidos.
+ */
+const opcaoOutro = "Outro";
+
 const schema = z
   .object({
     nome_completo: z.string().trim().min(3, "Informe seu nome completo").max(120),
@@ -84,14 +91,15 @@ const schema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["setor"],
-        message: "Selecione o seu setor",
+        message: "Selecione o seu cargo",
       });
     }
-    if (dados.cargo.trim().length < 2) {
+    // Só quem não achou o cargo na lista precisa escrever o nome
+    if (dados.setor === opcaoOutro && dados.cargo.trim().length < 2) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["cargo"],
-        message: "Informe o seu cargo",
+        message: "Escreva o seu cargo",
       });
     }
   });
@@ -384,7 +392,11 @@ export function InscricaoPage() {
     const id = crypto.randomUUID();
     const { error } = await registrarInscricao(convite.current?.sessao ?? null, {
       ...analise.data,
-      cargo: empresasComCargo.includes(analise.data.grupo) ? analise.data.cargo.trim() : "",
+      cargo: !empresasComCargo.includes(analise.data.grupo)
+        ? ""
+        : analise.data.setor === opcaoOutro
+          ? analise.data.cargo.trim()
+          : analise.data.setor,
       setor: empresasComCargo.includes(analise.data.grupo) ? analise.data.setor : "",
       id,
       comparecera,
@@ -905,12 +917,20 @@ export function InscricaoPage() {
                                 }}
                                 className="sr-only"
                               />
+                              {/* Bolinha de seleção: anel fino que se preenche
+                                  ao escolher */}
                               <span
-                                className={`h-px transition-all duration-300 ${
-                                  ativa ? "w-8 bg-gold-deep" : "w-3 bg-border"
+                                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border transition-colors duration-300 ${
+                                  ativa ? "border-navy-deep" : "border-muted-foreground/50"
                                 }`}
                                 aria-hidden="true"
-                              />
+                              >
+                                <span
+                                  className={`h-2.5 w-2.5 rounded-full bg-navy-deep transition-transform duration-300 ${
+                                    ativa ? "scale-100" : "scale-0"
+                                  }`}
+                                />
+                              </span>
                               <span
                                 className={`py-4 text-[14px] uppercase tracking-[0.06em] transition-colors ${
                                   ativa ? "text-foreground" : "text-muted-foreground"
@@ -927,11 +947,12 @@ export function InscricaoPage() {
                       </p>
                     </fieldset>
 
-                    {/* Quem é de uma das empresas do grupo informa setor e cargo */}
+                    {/* Quem é de uma das empresas do grupo escolhe o cargo na
+                        lista; quem não acha o seu escreve o nome logo abaixo */}
                     {empresasComCargo.includes(form.grupo) && (
                       <fieldset className="abrir mt-8">
                         <legend className={rotulo}>
-                          Qual é o seu setor{" "}
+                          Qual é o seu cargo{" "}
                           <span className="text-destructive" aria-hidden="true">
                             *
                           </span>
@@ -955,11 +976,16 @@ export function InscricaoPage() {
                                   value={setor}
                                   checked={ativo}
                                   onChange={() => {
-                                    setForm({ ...form, setor });
+                                    // Saindo de "Outro", o nome escrito não vale mais
+                                    setForm({
+                                      ...form,
+                                      setor,
+                                      cargo: setor === opcaoOutro ? form.cargo : "",
+                                    });
                                     setErrors((atuais) => {
-                                      if (!atuais["setor"]) return atuais;
                                       const proximos = { ...atuais };
                                       delete proximos["setor"];
+                                      if (setor !== opcaoOutro) delete proximos["cargo"];
                                       return proximos;
                                     });
                                   }}
@@ -976,10 +1002,10 @@ export function InscricaoPage() {
                       </fieldset>
                     )}
 
-                    {empresasComCargo.includes(form.grupo) && (
+                    {empresasComCargo.includes(form.grupo) && form.setor === opcaoOutro && (
                       <div className="abrir mt-6">
                         <label htmlFor="cargo" className={rotulo}>
-                          Qual é o seu cargo{" "}
+                          Escreva o seu cargo{" "}
                           <span className="text-destructive" aria-hidden="true">
                             *
                           </span>
@@ -992,6 +1018,7 @@ export function InscricaoPage() {
                           maxLength={120}
                           autoComplete="organization-title"
                           required
+                          autoFocus
                           placeholder="Ex.: Analista financeiro"
                           aria-invalid={Boolean(errors["cargo"])}
                           aria-describedby="erro-cargo"
@@ -1228,7 +1255,9 @@ export function InscricaoPage() {
         </div>
       </footer>
 
-      {liberado && !done && !botaoPrincipalVisivel && (
+      {/* A barra fixa some com o formulário aberto: a pessoa já está onde o
+          botão levaria, e ele ficava por cima dos campos. */}
+      {liberado && !done && !abriuFormulario && !botaoPrincipalVisivel && (
         <div className="abrir fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-md sm:hidden">
           <Button
             type="button"
