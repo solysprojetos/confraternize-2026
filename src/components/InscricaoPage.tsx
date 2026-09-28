@@ -477,7 +477,7 @@ export function InscricaoPage() {
     a.click();
   }
 
-  const rotulo = "block text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground";
+  const rotulo = "block text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/70";
   const campo =
     "mt-2.5 w-full border-0 border-b bg-transparent px-0 py-2.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/75 focus:border-gold-deep";
   const campoOk = "border-b-border";
@@ -799,6 +799,27 @@ export function InscricaoPage() {
                     <h2 className="mt-6 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground">
                       Podemos contar com você?
                     </h2>
+                    <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
+                      Preencha seus dados para confirmar. Ao enviar, o seu QR code de entrada
+                      aparece na tela e chega no e-mail informado.
+                    </p>
+                    <dl className="mt-8 hidden max-w-sm border-y border-border text-sm lg:block">
+                      <div className="flex justify-between gap-4 border-b border-border py-3">
+                        <dt className="text-muted-foreground">Data</dt>
+                        <dd className="text-right text-foreground">{evento.dataExtenso}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-border py-3">
+                        <dt className="text-muted-foreground">Início</dt>
+                        <dd className="text-right text-foreground">{evento.horario}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 py-3">
+                        <dt className="text-muted-foreground">Local</dt>
+                        <dd className="text-right text-foreground">{evento.bairro}</dd>
+                      </div>
+                    </dl>
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      Todos os campos são obrigatórios.
+                    </p>
                   </div>
 
                   <form onSubmit={handleSubmit} noValidate className="lg:col-span-8">
@@ -958,11 +979,7 @@ export function InscricaoPage() {
                     {empresasComCargo.includes(form.grupo) && (
                       <fieldset className="abrir mt-8">
                         <legend className={rotulo}>
-                          Qual é o seu cargo{" "}
-                          <span className="text-destructive" aria-hidden="true">
-                            *
-                          </span>
-                          <span className="sr-only">(obrigatório)</span>
+                          Qual é o seu cargo <span className="sr-only">(obrigatório)</span>
                         </legend>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {setores.map((setor) => {
@@ -1011,11 +1028,7 @@ export function InscricaoPage() {
                     {empresasComCargo.includes(form.grupo) && form.setor === opcaoOutro && (
                       <div className="abrir mt-6">
                         <label htmlFor="cargo" className={rotulo}>
-                          Escreva o seu cargo{" "}
-                          <span className="text-destructive" aria-hidden="true">
-                            *
-                          </span>
-                          <span className="sr-only">(obrigatório)</span>
+                          Escreva o seu cargo <span className="sr-only">(obrigatório)</span>
                         </label>
                         <input
                           id="cargo"
@@ -1067,7 +1080,7 @@ export function InscricaoPage() {
                         type="submit"
                         disabled={loading}
                         aria-busy={loading}
-                        className="flex min-h-[56px] items-center justify-center gap-3 border border-primary bg-primary px-9 text-[11px] font-semibold uppercase tracking-[0.26em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex min-h-[56px] w-full items-center sm:w-auto justify-center gap-3 border border-primary bg-primary px-9 text-[11px] font-semibold uppercase tracking-[0.26em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {loading && (
                           <span

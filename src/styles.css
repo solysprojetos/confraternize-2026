@@ -369,3 +369,14 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* O preenchimento automático do navegador pinta o campo de azul; no
+   formulário de confirmação o campo continua com o fundo do papel. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--background) inset;
+  caret-color: var(--foreground);
+  transition: background-color 9999s ease-out 0s;
+}
