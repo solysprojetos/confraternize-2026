@@ -91,37 +91,49 @@ function agendaUrl(): string {
 }
 
 /**
- * Estrutura comum dos e-mails: fundo branco como o do site, cartão com moldura dupla
- * dourada, bloco da data e QR code de entrada. Muda só o título e a abertura.
+ * Estrutura comum dos e-mails: fundo branco como o do site, cartão com moldura
+ * dupla dourada, bloco da data e QR code de entrada. Muda o título, a abertura
+ * e a ordem: no e-mail de confirmação o QR code vem logo depois da data, para
+ * aparecer na primeira tela do celular; nos lembretes a data vem com os botões.
  */
-function montarEmail(ins: Inscricao, selo: string, titulo: string, abertura: string): string {
+function montarEmail(
+  ins: Inscricao,
+  selo: string,
+  titulo: string,
+  abertura: string,
+  qrAntesDosBotoes: boolean,
+): string {
   const botao = (href: string, texto: string, fundo: string, cor: string, borda: string) =>
-    `<a href="${href}" style="display:inline-block;background:${fundo};color:${cor};border:1px solid ${borda};text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:13px 18px;margin:4px">${texto}</a>`;
-  return `
-<div style="background:#ffffff;padding:24px 12px">
-<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #c8a96b;padding:5px;color:#1a2233">
-<div style="border:1px solid #e3d5b5;padding:28px 22px;text-align:center">
-  <p style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#5d6574;margin:0">Grupo Support · SGroup · Solys</p>
-  <p style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#9a7736;margin:18px 0 0">${selo}</p>
-  <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:normal;font-size:34px;line-height:1.15;color:#0c1a30;margin:10px 0 8px">${titulo}</h1>
-  <p style="margin:0 0 22px;color:#4b5563;font-size:15px;line-height:1.5">${abertura}</p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #c8a96b;border-bottom:1px solid #c8a96b;margin:0 0 20px">
-    <tr><td style="padding:14px 0;font-size:15px;color:#0c1a30;text-align:center;line-height:1.6">
-      <strong>${EVENTO.dataExtenso}</strong><br>
-      Início às <strong>${EVENTO.horario}</strong><br>
-      <span style="color:#4b5563;font-size:14px">${EVENTO.endereco}</span>
-    </td></tr>
-  </table>
+    `<a href="${href}" style="display:inline-block;background:${fundo};color:${cor};border:1px solid ${borda};text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 16px;margin:4px">${texto}</a>`;
+  const botoes = `<div style="margin:0 0 4px">
   ${botao(EVENTO.mapa, "Como chegar", "#0c1a30", "#f3e6c8", "#0c1a30")}
   ${botao(agendaUrl(), "Salvar na agenda", "#ffffff", "#0c1a30", "#c8a96b")}
-  <p style="margin:26px 0 10px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9a7736">Seu QR code de entrada</p>
-  <img src="${qrUrl(ins.id)}" width="200" height="200" alt="QR code do convite" style="border:1px solid #e3d5b5" />
-  <p style="margin:10px 0 0;font-size:13px;color:#4b5563">Apresente na entrada — pode ser direto na tela do celular.</p>
-  <p style="margin:14px 0 0;font-size:12px;color:#6b7280">${ins.nome_completo} · ${NOME_GRUPO[ins.grupo] ?? ins.grupo}</p>
-  <p style="margin:4px 0 0;font-size:10px;color:#9ca3af">Código: ${ins.id}</p>
+</div>`;
+  const qr = `<div style="margin:0 0 20px">
+  <p style="margin:0 0 10px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9a7736">Seu QR code de entrada</p>
+  <img src="${qrUrl(ins.id)}" width="180" height="180" alt="QR code do convite" style="border:1px solid #e3d5b5" />
+  <p style="margin:8px 0 0;font-size:13px;color:#4b5563">Apresente na entrada, direto na tela do celular.</p>
+  <p style="margin:6px 0 0;font-size:12px;color:#6b7280">${ins.nome_completo} · ${NOME_GRUPO[ins.grupo] ?? ins.grupo}</p>
+</div>`;
+  return `
+<div style="background:#ffffff;padding:16px 8px">
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #c8a96b;padding:4px;color:#1a2233">
+<div style="border:1px solid #e3d5b5;padding:22px 16px;text-align:center">
+  <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#5d6574;margin:0">Grupo Support · SGroup · Solys</p>
+  <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9a7736;margin:14px 0 0">${selo}</p>
+  <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:normal;font-size:28px;line-height:1.15;color:#0c1a30;margin:8px 0 8px">${titulo}</h1>
+  <p style="margin:0 0 18px;color:#4b5563;font-size:15px;line-height:1.45">${abertura}</p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #c8a96b;border-bottom:1px solid #c8a96b;margin:0 0 18px">
+    <tr><td style="padding:12px 0;font-size:15px;color:#0c1a30;text-align:center;line-height:1.55">
+      <strong>${EVENTO.dataExtenso}</strong><br>
+      Início às <strong>${EVENTO.horario}</strong><br>
+      <span style="color:#4b5563;font-size:13px">${EVENTO.endereco}</span>
+    </td></tr>
+  </table>
+  ${qrAntesDosBotoes ? qr + botoes : botoes + '<div style="height:18px"></div>' + qr}
 </div>
 </div>
-<p style="font-family:Arial,Helvetica,sans-serif;text-align:center;font-size:11px;color:#9ca3af;margin:14px 0 0">Você recebe este e-mail porque confirmou presença em <a href="${EVENTO.site}" style="color:#9a7736">confragrupos.online</a>.</p>
+<p style="font-family:Arial,Helvetica,sans-serif;text-align:center;font-size:11px;color:#9ca3af;margin:12px 0 0">Você recebe este e-mail porque confirmou presença em <a href="${EVENTO.site}" style="color:#9a7736">confragrupos.online</a>.</p>
 </div>`;
 }
 
@@ -129,8 +141,9 @@ function montarHtml(ins: Inscricao): string {
   return montarEmail(
     ins,
     "Presença confirmada",
-    "Te esperamos na<br>Confraternização 2026",
-    `Obrigado, ${primeiroNome(ins)}! Sua presença está confirmada. Guarde este e-mail: o QR code abaixo é o seu convite de entrada.`,
+    "Te esperamos na Confraternização 2026",
+    `Obrigado, ${primeiroNome(ins)}! Sua presença está confirmada.`,
+    true,
   );
 }
 
@@ -158,7 +171,7 @@ function textoLembrete(
   return {
     assunto: `${falta} para a Confraternização 2026`,
     titulo: `${falta}!`,
-    frase: "Está chegando a nossa confraternização. Guarde a data e o seu QR code de entrada.",
+    frase: "Está chegando a nossa confraternização.",
   };
 }
 
@@ -169,6 +182,7 @@ function montarHtmlLembrete(ins: Inscricao, tipo: Lembrete, agora: Date): string
     "Confraternização 2026",
     t.titulo,
     `Olá, ${primeiroNome(ins)}. ${t.frase}`,
+    false,
   );
 }
 
