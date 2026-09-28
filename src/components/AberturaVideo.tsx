@@ -17,13 +17,14 @@ function deveMostrar(): boolean {
  * Vídeo de abertura em tela cheia. Toca assim que o site abre; ao terminar
  * (ou em "Pular") some com um esmaecimento e revela o convite.
  *
- * Navegadores não deixam vídeo começar sozinho com som: tenta com som e, se
- * for recusado, toca sem som e mostra "Ativar som".
+ * Navegadores não deixam vídeo começar sozinho com som. Tenta tocar com som;
+ * se o navegador recusar, mostra a capa com o botão "Assistir" — o toque da
+ * pessoa libera o som, e o vídeo começa já com áudio.
  */
 export function AberturaVideo() {
   const [visivel, setVisivel] = useState(deveMostrar);
   const [saindo, setSaindo] = useState(false);
-  const [mudo, setMudo] = useState(false);
+  const [aguardandoToque, setAguardandoToque] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
 
   function encerrar() {
@@ -51,15 +52,7 @@ export function AberturaVideo() {
     const v = video.current;
     if (!visivel || !v) return;
     v.muted = false;
-    v.play().catch(() => {
-      v.muted = true;
-      setMudo(true);
-      v.play().catch(() => {
-        // Nem sem som o navegador deixou tocar (economia de dados, por
-        // exemplo): segue direto para o site
-        encerrar();
-      });
-    });
+    v.play().catch(() => setAguardandoToque(true));
     // Só na montagem: encerrar muda de identidade a cada render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -76,6 +69,17 @@ export function AberturaVideo() {
   if (!visivel) return null;
 
   const poster = urlDoAsset(videoAbertura.poster);
+
+  function assistir() {
+    const v = video.current;
+    if (!v) return;
+    v.muted = false;
+    setAguardandoToque(false);
+    v.play().catch(() => {
+      // Nem com o toque o navegador deixou tocar: segue para o site
+      encerrar();
+    });
+  }
 
   return (
     <div
@@ -108,33 +112,27 @@ export function AberturaVideo() {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8">
-        {mudo ? (
-          <button
-            type="button"
-            onClick={() => {
-              const v = video.current;
-              if (!v) return;
-              v.muted = false;
-              setMudo(false);
-              void v.play();
-            }}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-white/15 px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white backdrop-blur transition-colors hover:bg-white/25"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
-              <path
-                d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+      {aguardandoToque && (
+        <button
+          type="button"
+          onClick={assistir}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/50 text-white"
+        >
+          <span className="flex h-24 w-24 items-center justify-center rounded-full bg-white/90 shadow-[0_0_0_12px_rgba(255,255,255,0.2)] transition-transform hover:scale-105">
+            <svg viewBox="0 0 24 24" className="ml-1.5 h-10 w-10 text-navy-deep" aria-hidden="true">
+              <path d="M7 4.5v15l12.5-7.5L7 4.5z" fill="currentColor" />
             </svg>
-            Ativar som
-          </button>
-        ) : (
-          <span />
-        )}
+          </span>
+          <span className="text-center">
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.35em] text-gold">
+              {videoAbertura.titulo}
+            </span>
+            <span className="mt-2 block text-sm text-white/85">Toque para assistir com som</span>
+          </span>
+        </button>
+      )}
+
+      <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-3 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8">
         <button
           type="button"
           onClick={encerrar}
