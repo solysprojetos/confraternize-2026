@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { AberturaVideo } from "@/components/AberturaVideo";
 import { ConvitePlayer, ConviteEmPreparacao } from "@/components/ConvitePlayer";
 import { Button } from "@/components/ui/button";
 import {
@@ -487,6 +488,8 @@ export function InscricaoPage() {
     <main
       className={`relative min-h-screen overflow-x-clip bg-background ${liberado && !done ? "pb-24 sm:pb-0" : ""}`}
     >
+      <AberturaVideo />
+
       {/* ================= O CONVITE ================= */}
       <section
         ref={secaoConvite}

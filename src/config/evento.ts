@@ -93,6 +93,17 @@ export const videoRetrospectiva = {
 
 export const temVideoRetrospectiva = () => videoRetrospectiva.src.trim().length > 0;
 
+/**
+ * Vídeo de abertura: toca em tela cheia assim que o site abre e depois
+ * some, revelando o convite. Aparece uma vez por sessão do navegador (quem
+ * recarrega a página não vê de novo). Deixe src vazio para desligar.
+ */
+export const videoAbertura = {
+  src: "convite/abertura-retrospectiva-2025.mp4" as string,
+  poster: "convite/abertura-capa.jpg" as string,
+  titulo: "Retrospectiva 2025",
+};
+
 // Caminhos relativos respeitam a base do site. Com o domínio próprio
 // (confragrupos.online) a base é a raiz; a função continua aqui para o caso
 // de o site voltar a ser publicado num subcaminho.
