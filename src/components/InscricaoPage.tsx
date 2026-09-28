@@ -1053,40 +1053,6 @@ export function InscricaoPage() {
                       </div>
                     )}
 
-                    {aceitaResposta && (
-                      <fieldset className="mt-10">
-                        <legend className={rotulo}>Confirmarei presença</legend>
-                        <div className="mt-3 flex gap-3">
-                          {[
-                            { valor: "sim" as const, texto: "Sim, estarei lá" },
-                            { valor: "nao" as const, texto: "Não poderei ir" },
-                          ].map((opcao) => {
-                            const ativa = resposta === opcao.valor;
-                            return (
-                              <label
-                                key={opcao.valor}
-                                className={`flex min-h-[56px] flex-1 cursor-pointer items-center justify-center border px-4 text-center text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-deep ${
-                                  ativa
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-border text-muted-foreground hover:border-gold-deep hover:text-foreground"
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="presenca"
-                                  value={opcao.valor}
-                                  checked={ativa}
-                                  onChange={() => setResposta(opcao.valor)}
-                                  className="sr-only"
-                                />
-                                {opcao.texto}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </fieldset>
-                    )}
-
                     {errors["form"] && (
                       <p
                         className="mt-8 border-l-2 border-destructive/70 bg-destructive/5 px-4 py-3 text-sm text-destructive"
