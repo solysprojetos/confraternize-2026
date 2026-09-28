@@ -704,9 +704,15 @@ export function InscricaoPage() {
                           <p className="mt-3">Enviando o convite por e-mail...</p>
                         )}
                         {emailStatus === "ok" && (
-                          <p className="mt-3 text-foreground">
-                            Enviamos uma cópia para {form.email}.
-                          </p>
+                          <>
+                            <p className="mt-3 text-foreground">
+                              Enviamos uma cópia para {form.email}.
+                            </p>
+                            <p className="mt-1">
+                              Não chegou? Confira a caixa de spam ou de promoções e marque como “não
+                              é spam”, para receber também os lembretes perto da data.
+                            </p>
+                          </>
                         )}
                         {emailStatus === "erro" && (
                           <p className="mt-3">
