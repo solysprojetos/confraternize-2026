@@ -46,18 +46,10 @@ export const evento = {
  */
 export const setores = [
   "Administrativo",
-  "Financeiro",
-  "Comercial",
-  "Recursos Humanos",
-  "Operações",
-  "Tecnologia da Informação",
-  "Marketing",
-  "Jurídico",
-  "Logística",
-  "Atendimento",
-  "Diretoria",
+  "Administrativo Comercial",
   "Consultor",
-  "Outro",
+  "Gerente",
+  "Diretoria",
 ];
 
 export const videoConvite = {
