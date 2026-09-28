@@ -63,6 +63,40 @@ Enquanto elas não forem aplicadas, o site continua recebendo confirmações pel
 caminho antigo; respostas negativas, porém, só podem ser registradas depois da
 segunda migração.
 
+## E-mails: convite e lembretes
+
+Todos os e-mails saem pela função `enviar-convite`
+(`supabase/functions/enviar-convite/index.ts`), enviados pelo Brevo. A chave
+do Brevo fica na tabela privada `config` do banco.
+
+| E-mail              | Quando                                                 | Para quem                    |
+| ------------------- | ------------------------------------------------------ | ---------------------------- |
+| Convite com QR code | na hora da confirmação (e reenvio diário se falhar)    | quem confirmou presença      |
+| "Falta uma semana"  | 12/12, às 09h de Fortaleza                             | quem confirmou até a véspera |
+| "É amanhã!"         | 18/12, às 09h                                          | quem confirmou presença      |
+| "É hoje!"           | 19/12, só para quem confirmou depois do envio de 18/12 | quem confirmou presença      |
+
+- O agendamento é do próprio banco (pg_cron, job `lembretes-confra-2026`):
+  roda às 09h e às 14h de 12 a 19 de dezembro. A função decide pela data qual
+  lembrete vale e marca quem já recebeu (`lembrete_semana_enviado`,
+  `lembrete_vespera_enviado`), então ninguém recebe o mesmo lembrete duas vezes.
+- Quem respondeu que não vai não recebe convite nem lembrete.
+- Cota gratuita do Brevo: 300 e-mails por dia. Com mais confirmados que isso,
+  o que sobrar sai na rodada seguinte.
+- Para ver um lembrete de verdade antes de dezembro, sem marcar nada no banco,
+  chame a função com o id de uma inscrição confirmada (o e-mail vai só para o
+  endereço dessa inscrição):
+
+  ```sh
+  curl -X POST https://qozuvdhqhpzpreusvkkr.supabase.co/functions/v1/enviar-convite \
+    -H "content-type: application/json" \
+    -d '{"id": "<id da inscrição>", "teste": "semana"}'   # ou "vespera"
+  ```
+
+- O banco também faz a própria consulta diária (job `mantem-ativo-confra-2026`)
+  para não hibernar, sem depender do robô do GitHub, que o GitHub desliga
+  depois de 60 dias sem commits.
+
 ## O vídeo do convite
 
 O convite publicado é `public/convite/convite-confraternizacao-2026.mp4`:
