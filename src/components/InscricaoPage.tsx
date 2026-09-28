@@ -1115,15 +1115,6 @@ export function InscricaoPage() {
                             ? "Enviar confirmação"
                             : "Enviar resposta"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAbriuFormulario(false);
-                        }}
-                        className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                      >
-                        Voltar ao convite
-                      </button>
                     </div>
                   </form>
                 </div>
