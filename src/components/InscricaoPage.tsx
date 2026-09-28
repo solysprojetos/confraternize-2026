@@ -644,7 +644,7 @@ export function InscricaoPage() {
             <div
               ref={destinoConfirmacao}
               tabIndex={-1}
-              className="mx-auto w-full max-w-[1240px] px-6 py-16 outline-none sm:px-10 sm:py-24 lg:px-14"
+              className="mx-auto w-full max-w-[1240px] px-6 py-12 outline-none sm:px-10 sm:py-20 lg:px-14"
             >
               <div className="mx-auto max-w-2xl">
                 <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
@@ -654,16 +654,16 @@ export function InscricaoPage() {
                   className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
                   aria-hidden="true"
                 />
-                <h2 className="mt-6 font-display text-[clamp(1.9rem,5vw,2.9rem)] font-normal uppercase leading-[1.1] tracking-[0.015em] text-foreground">
+                <h2 className="mt-5 font-display text-[clamp(1.5rem,4vw,2rem)] font-normal uppercase leading-[1.1] tracking-[0.015em] text-foreground">
                   {confirmou ? "Presença confirmada." : "Obrigado por avisar."}
                 </h2>
-                <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
                   {confirmou
                     ? "Estamos felizes em contar com você neste momento especial."
                     : "Sentiremos sua falta. Sua resposta foi registrada com a organização."}
                 </p>
 
-                <dl className="mt-12 border-t border-border">
+                <dl className="mt-8 border-t border-border">
                   {[
                     { rotulo: "Nome", valor: form.nome_completo },
                     { rotulo: "Empresa", valor: nomeDaEmpresa },
@@ -677,20 +677,18 @@ export function InscricaoPage() {
                   ].map((linha) => (
                     <div
                       key={linha.rotulo}
-                      className="flex flex-wrap gap-x-10 gap-y-1 border-b border-border py-4"
+                      className="flex gap-4 border-b border-border py-2.5 sm:gap-10"
                     >
-                      <dt className="w-20 shrink-0 pt-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                      <dt className="w-16 shrink-0 pt-0.5 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                         {linha.rotulo}
                       </dt>
-                      <dd className="flex-1 text-[15px] leading-relaxed text-foreground">
-                        {linha.valor}
-                      </dd>
+                      <dd className="flex-1 text-sm leading-snug text-foreground">{linha.valor}</dd>
                     </div>
                   ))}
                 </dl>
 
                 {confirmou && qrUrl && (
-                  <div className="mt-12">
+                  <div className="mt-8">
                     <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
                       <img
                         src={qrUrl}
