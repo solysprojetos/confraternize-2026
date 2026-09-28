@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { urlDoAsset, videoAbertura } from "@/config/evento";
 
 const CHAVE_VISTA = "confra2026:abertura-vista";
+/** Tempo máximo da abertura depois que o vídeo começa (o vídeo tem ~20 s). */
+const LIMITE_MS = 30_000;
 
 /** Mostra a abertura só na primeira visita da sessão, e só se houver vídeo. */
 function deveMostrar(): boolean {
@@ -14,8 +16,9 @@ function deveMostrar(): boolean {
 }
 
 /**
- * Vídeo de abertura em tela cheia. Toca assim que o site abre; ao terminar
- * (ou em "Pular") some com um esmaecimento e revela o convite.
+ * Vídeo de abertura em tela cheia. Toca assim que o site abre e, ao terminar,
+ * some com um esmaecimento e revela o convite. Não tem "Pular": só sai antes
+ * do fim se o vídeo não carregar.
  *
  * Navegadores não deixam vídeo começar sozinho com som. Tenta tocar com som;
  * se o navegador recusar, mostra a capa com o botão "Assistir" — o toque da
@@ -26,6 +29,14 @@ export function AberturaVideo() {
   const [saindo, setSaindo] = useState(false);
   const [aguardandoToque, setAguardandoToque] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
+  const limite = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (limite.current !== null) window.clearTimeout(limite.current);
+    },
+    [],
+  );
 
   function encerrar() {
     if (saindo) return;
@@ -56,15 +67,6 @@ export function AberturaVideo() {
     // Só na montagem: encerrar muda de identidade a cada render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!visivel) return;
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") encerrar();
-    };
-    window.addEventListener("keydown", aoTeclar);
-    return () => window.removeEventListener("keydown", aoTeclar);
-  });
 
   if (!visivel) return null;
 
@@ -107,10 +109,15 @@ export function AberturaVideo() {
         preload="auto"
         onEnded={encerrar}
         onError={encerrar}
+        onPlaying={() => {
+          // Sem "Pular", uma conexão que trava no meio prenderia a pessoa:
+          // passado o tempo do vídeo com folga, a abertura sai de qualquer jeito
+          if (limite.current === null) {
+            limite.current = window.setTimeout(encerrar, LIMITE_MS);
+          }
+        }}
         className="relative mx-auto h-full w-full object-cover sm:w-auto sm:max-w-full sm:object-contain"
       />
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
 
       {aguardandoToque && (
         <button
@@ -131,17 +138,6 @@ export function AberturaVideo() {
           </span>
         </button>
       )}
-
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-3 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8">
-        <button
-          type="button"
-          onClick={encerrar}
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/40 px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-white/10"
-        >
-          Pular
-          <span aria-hidden="true">›</span>
-        </button>
-      </div>
     </div>
   );
 }
