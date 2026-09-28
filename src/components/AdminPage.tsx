@@ -18,8 +18,6 @@ type Inscricao = {
   lembrete_vespera_enviado?: boolean | null;
 };
 
-type FiltroPresenca = "todas" | "confirmadas" | "nao_irao";
-
 /** Quem não respondeu "não" conta como presença confirmada. */
 const vaiComparecer = (i: Inscricao) => i.comparecera !== false;
 
@@ -62,20 +60,6 @@ function diasParaOEvento(): number {
   return Math.max(0, Math.floor(ms / 86400000));
 }
 
-function Presenca({ i }: { i: Inscricao }) {
-  return vaiComparecer(i) ? (
-    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden />
-      Confirmada
-    </span>
-  ) : (
-    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" aria-hidden />
-      Não irá
-    </span>
-  );
-}
-
 function StatusEmail({ i }: { i: Inscricao }) {
   if (!vaiComparecer(i)) return <span className="text-muted-foreground">—</span>;
   return i.convite_enviado ? (
@@ -98,8 +82,9 @@ export function AdminPage() {
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   const [listError, setListError] = useState("");
   const [filtro, setFiltro] = useState<"todos" | Inscricao["grupo"]>("todos");
-  const [presenca, setPresenca] = useState<FiltroPresenca>("todas");
+  const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
+  const [sorteado, setSorteado] = useState<Inscricao | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -149,7 +134,6 @@ export function AdminPage() {
     return {
       total: inscricoes.length,
       confirmadas: confirmadas.length,
-      naoIrao: inscricoes.length - confirmadas.length,
       emailsEnviados: confirmadas.filter((i) => i.convite_enviado).length,
       lembreteSemana: confirmadas.filter((i) => i.lembrete_semana_enviado).length,
       lembreteVespera: confirmadas.filter((i) => i.lembrete_vespera_enviado).length,
@@ -170,35 +154,49 @@ export function AdminPage() {
   }, [inscricoes]);
   const maiorEmpresa = Math.max(1, ...Object.values(porEmpresa));
 
-  const visiveis = useMemo(() => {
+  // Confirmados, filtrados por empresa e busca (sem o setor)
+  const filtradas = useMemo(() => {
     const termo = normalizar(busca.trim());
     return inscricoes.filter((i) => {
+      if (!vaiComparecer(i)) return false;
       if (filtro !== "todos" && i.grupo !== filtro) return false;
-      if (presenca === "confirmadas" && !vaiComparecer(i)) return false;
-      if (presenca === "nao_irao" && vaiComparecer(i)) return false;
       if (!termo) return true;
       return normalizar(`${i.nome_completo} ${i.email} ${i.telefone} ${i.cargo ?? ""}`).includes(
         termo,
       );
     });
-  }, [inscricoes, filtro, presenca, busca]);
+  }, [inscricoes, filtro, busca]);
 
-  // Quantas pessoas por setor, dentro do que está filtrado na tela
+  // Quantas pessoas por setor dentro da empresa/busca da tela. Não depende do
+  // setor escolhido, para os outros setores continuarem clicáveis.
   const porSetor = useMemo(() => {
     const conta = new Map<string, number>();
-    for (const i of visiveis) {
+    for (const i of filtradas) {
       if (!i.setor) continue;
       conta.set(i.setor, (conta.get(i.setor) ?? 0) + 1);
     }
     return [...conta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
-  }, [visiveis]);
+  }, [filtradas]);
 
-  const temFiltro = filtro !== "todos" || presenca !== "todas" || busca.trim() !== "";
+  const visiveis = useMemo(
+    () => (setorFiltro ? filtradas.filter((i) => i.setor === setorFiltro) : filtradas),
+    [filtradas, setorFiltro],
+  );
+
+  const temFiltro = filtro !== "todos" || setorFiltro !== null || busca.trim() !== "";
 
   function limparFiltros() {
     setFiltro("todos");
-    setPresenca("todas");
+    setSetorFiltro(null);
     setBusca("");
+  }
+
+  /** Sorteia um nome entre as pessoas que estão na lista agora (com os filtros). */
+  function sortear() {
+    if (visiveis.length === 0) return;
+    const aleatorio = new Uint32Array(1);
+    crypto.getRandomValues(aleatorio);
+    setSorteado(visiveis[(aleatorio[0] ?? 0) % visiveis.length] ?? null);
   }
 
   function exportarCsv() {
@@ -210,7 +208,6 @@ export function AdminPage() {
         "Grupo",
         "Setor",
         "Cargo",
-        "Presença",
         "Convite por e-mail",
         "Data da resposta",
       ],
@@ -221,8 +218,7 @@ export function AdminPage() {
         NOME_GRUPO[i.grupo],
         i.setor ?? "",
         i.cargo ?? "",
-        vaiComparecer(i) ? "Confirmada" : "Não irá",
-        !vaiComparecer(i) ? "" : i.convite_enviado ? "Enviado" : "Na fila",
+        i.convite_enviado ? "Enviado" : "Na fila",
         new Date(i.created_at).toLocaleString("pt-BR"),
       ]),
     ];
@@ -347,18 +343,12 @@ export function AdminPage() {
         </header>
 
         {/* ============ Números principais ============ */}
-        <section className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="col-span-2 rounded-2xl bg-primary p-5 text-primary-foreground lg:col-span-1">
+        <section className="mt-8 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
             <p className="text-sm text-primary-foreground/70">Presenças confirmadas</p>
             <p className="mt-1 font-display text-6xl leading-none">{resumo.confirmadas}</p>
             <p className="mt-2 text-xs text-primary-foreground/60">
-              de {resumo.total} {resumo.total === 1 ? "resposta" : "respostas"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Não irão</p>
-            <p className="mt-1 font-display text-5xl leading-none text-foreground">
-              {resumo.naoIrao}
+              {resumo.confirmadas === 1 ? "pessoa confirmada" : "pessoas confirmadas"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
@@ -373,7 +363,7 @@ export function AdminPage() {
                 : "todos enviados"}
             </p>
           </div>
-          <div className="col-span-2 rounded-2xl border border-border bg-card p-5 lg:col-span-1">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Lembretes automáticos</p>
             <ul className="mt-2 space-y-1 text-sm text-foreground">
               {(
@@ -438,27 +428,47 @@ export function AdminPage() {
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-            <p className="text-sm font-medium text-foreground">
-              Por setor
-              {filtro !== "todos" && (
-                <span className="font-normal text-muted-foreground"> · {NOME_GRUPO[filtro]}</span>
-              )}
-            </p>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-medium text-foreground">
+                Por setor
+                {filtro !== "todos" && (
+                  <span className="font-normal text-muted-foreground"> · {NOME_GRUPO[filtro]}</span>
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground">Clique para ver quem está</p>
+            </div>
             {porSetor.length === 0 ? (
               <p className="mt-4 text-sm text-muted-foreground">
                 Nenhum setor informado{temFiltro ? " neste filtro" : " ainda"}.
               </p>
             ) : (
               <ul className="mt-4 flex flex-wrap gap-2">
-                {porSetor.map(([setor, quantos]) => (
-                  <li
-                    key={setor}
-                    className="flex items-baseline gap-2 rounded-lg border border-border px-3 py-1.5"
-                  >
-                    <span className="font-semibold tabular-nums text-foreground">{quantos}</span>
-                    <span className="text-sm text-muted-foreground">{setor}</span>
-                  </li>
-                ))}
+                {porSetor.map(([setor, quantos]) => {
+                  const ativo = setorFiltro === setor;
+                  return (
+                    <li key={setor}>
+                      <button
+                        type="button"
+                        onClick={() => setSetorFiltro(ativo ? null : setor)}
+                        aria-pressed={ativo}
+                        className={`flex items-baseline gap-2 rounded-lg border px-3 py-1.5 transition-colors ${
+                          ativo
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:border-gold-deep hover:bg-accent/60"
+                        }`}
+                      >
+                        <span
+                          className={`font-semibold tabular-nums ${ativo ? "" : "text-foreground"}`}
+                        >
+                          {quantos}
+                        </span>
+                        <span className={`text-sm ${ativo ? "" : "text-muted-foreground"}`}>
+                          {setor}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -476,35 +486,17 @@ export function AdminPage() {
                 aria-label="Buscar inscrição"
                 className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 sm:w-72"
               />
-              <div
-                role="group"
-                aria-label="Filtrar por presença"
-                className="inline-flex h-10 rounded-lg border border-border bg-card p-1"
-              >
-                {(
-                  [
-                    ["todas", "Todas"],
-                    ["confirmadas", "Confirmadas"],
-                    ["nao_irao", "Não irão"],
-                  ] as const
-                ).map(([valor, rotulo]) => (
-                  <button
-                    key={valor}
-                    type="button"
-                    onClick={() => setPresenca(valor)}
-                    aria-pressed={presenca === valor}
-                    className={`flex-1 rounded-md px-3 text-sm transition-colors sm:flex-none ${
-                      presenca === valor
-                        ? "bg-primary font-medium text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {rotulo}
-                  </button>
-                ))}
-              </div>
             </div>
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={sortear}
+                disabled={visiveis.length === 0}
+                className={`${botaoSecundario} flex-1 disabled:opacity-50 lg:flex-none`}
+                title="Sorteia um nome entre as pessoas da lista abaixo"
+              >
+                Sortear
+              </button>
               <button
                 type="button"
                 onClick={carregar}
@@ -518,7 +510,7 @@ export function AdminPage() {
                 onClick={exportarCsv}
                 className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 lg:flex-none"
               >
-                Exportar planilha
+                Exportar
               </button>
             </div>
           </div>
@@ -526,8 +518,9 @@ export function AdminPage() {
           <p className="mt-4 text-sm text-muted-foreground">
             {temFiltro ? (
               <>
-                Mostrando {visiveis.length} de {inscricoes.length}
-                {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`} ·{" "}
+                Mostrando {visiveis.length} de {resumo.confirmadas}
+                {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`}
+                {setorFiltro && ` · ${setorFiltro}`} ·{" "}
                 <button
                   type="button"
                   onClick={limparFiltros}
@@ -537,7 +530,7 @@ export function AdminPage() {
                 </button>
               </>
             ) : (
-              `${inscricoes.length} ${inscricoes.length === 1 ? "inscrição" : "inscrições"}`
+              `${resumo.confirmadas} ${resumo.confirmadas === 1 ? "confirmado" : "confirmados"}`
             )}
             {atualizadoEm && (
               <span className="text-muted-foreground/70">
@@ -550,9 +543,51 @@ export function AdminPage() {
 
           {listError && <p className="mt-3 text-sm text-destructive">{listError}</p>}
 
+          {sorteado && (
+            <div
+              role="status"
+              className="mt-3 flex flex-col gap-4 rounded-2xl bg-primary p-5 text-primary-foreground sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
+                  Sorteado
+                  {setorFiltro || filtro !== "todos"
+                    ? ` · ${[filtro !== "todos" ? NOME_GRUPO[filtro] : null, setorFiltro]
+                        .filter(Boolean)
+                        .join(" · ")}`
+                    : ""}
+                </p>
+                <p className="mt-1 font-display text-4xl leading-tight">{sorteado.nome_completo}</p>
+                <p className="text-sm text-primary-foreground/70">
+                  {NOME_GRUPO[sorteado.grupo]}
+                  {sorteado.setor ? ` · ${sorteado.setor}` : ""}
+                  {sorteado.cargo && sorteado.cargo !== sorteado.setor
+                    ? ` · ${sorteado.cargo}`
+                    : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={sortear}
+                  className="inline-flex h-10 items-center rounded-lg bg-gold px-4 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
+                >
+                  Sortear de novo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSorteado(null)}
+                  className="inline-flex h-10 items-center rounded-lg border border-primary-foreground/30 px-4 text-sm text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          )}
+
           {visiveis.length === 0 ? (
             <div className="mt-3 rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-              {inscricoes.length === 0
+              {resumo.confirmadas === 0
                 ? "Nenhuma inscrição ainda."
                 : "Nenhuma inscrição encontrada com esses filtros."}
             </div>
@@ -566,7 +601,6 @@ export function AdminPage() {
                       <th className="px-4 py-3 font-medium">Convidado</th>
                       <th className="px-4 py-3 font-medium">Empresa</th>
                       <th className="px-4 py-3 font-medium">Telefone</th>
-                      <th className="px-4 py-3 font-medium">Presença</th>
                       <th className="px-4 py-3 font-medium">E-mail</th>
                       <th className="px-4 py-3 text-right font-medium">Resposta</th>
                     </tr>
@@ -606,9 +640,6 @@ export function AdminPage() {
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            <Presenca i={i} />
-                          </td>
-                          <td className="px-4 py-3">
                             <StatusEmail i={i} />
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-muted-foreground">
@@ -635,7 +666,6 @@ export function AdminPage() {
                             {i.setor ? ` · ${i.setor}` : ""}
                           </p>
                         </div>
-                        <Presenca i={i} />
                       </div>
                       <div className="mt-3 space-y-1 text-sm">
                         <p className="truncate text-muted-foreground">{i.email}</p>

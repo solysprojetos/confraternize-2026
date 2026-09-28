@@ -56,6 +56,7 @@ export const setores = [
   "Logística",
   "Atendimento",
   "Diretoria",
+  "Consultor",
   "Outro",
 ];
 
