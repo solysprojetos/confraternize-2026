@@ -541,7 +541,7 @@ export function InscricaoPage() {
 
           {/* Abertura: o título é o maior elemento da página; a data vem
               logo abaixo, em segundo plano; hora e local fecham o bloco. */}
-          <div className="mx-auto max-w-4xl pb-14 pt-12 text-center sm:pb-20 sm:pt-20">
+          <div className="mx-auto max-w-4xl pb-9 pt-8 text-center sm:pb-20 sm:pt-20">
             <h1
               className="revelar font-display text-[clamp(2.35rem,8.4vw,5.4rem)] font-normal uppercase leading-[0.98] tracking-[0.01em] text-foreground"
               style={{ "--atraso": "80ms" } as React.CSSProperties}
@@ -550,17 +550,17 @@ export function InscricaoPage() {
             </h1>
 
             <p
-              className="revelar mt-9 font-display text-[clamp(1.35rem,4.2vw,2.15rem)] font-normal uppercase leading-none tracking-[0.06em] text-foreground sm:mt-11"
+              className="revelar mt-6 font-display text-[clamp(1.35rem,4.2vw,2.15rem)] font-normal uppercase leading-none tracking-[0.06em] text-foreground sm:mt-11"
               style={{ "--atraso": "200ms" } as React.CSSProperties}
             >
               19 de dezembro
             </p>
             <span
-              className="filete mx-auto mt-7 block h-px w-10 bg-gold-deep/50"
+              className="filete mx-auto mt-5 block h-px w-10 bg-gold-deep/50 sm:mt-7"
               aria-hidden="true"
             />
             <p
-              className="revelar mx-auto mt-7 text-[11px] uppercase leading-[2] tracking-[0.2em] text-muted-foreground sm:text-[12px]"
+              className="revelar mx-auto mt-5 sm:mt-7 text-[11px] uppercase leading-[2] tracking-[0.2em] text-muted-foreground sm:text-[12px]"
               style={{ "--atraso": "300ms" } as React.CSSProperties}
             >
               <span className="block whitespace-nowrap">Sábado · {evento.horario}</span>
@@ -571,7 +571,7 @@ export function InscricaoPage() {
           {/* Convite em vídeo. Sem cartão em volta: o quadro do vídeo é a
               única peça, apoiado só pelo espaço e por um filete dourado. */}
           <div
-            className="revelar mx-auto w-full max-w-[68rem] border-t border-border pt-12 sm:pt-16"
+            className="revelar mx-auto w-full max-w-[68rem] border-t border-border pt-8 sm:pt-16"
             style={{ "--atraso": "80ms" } as React.CSSProperties}
           >
             <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
@@ -583,7 +583,7 @@ export function InscricaoPage() {
 
             {/* O convite foi gravado na vertical: no celular ele toma quase
                 toda a largura; no computador, a largura de um cartão. */}
-            <div className="mx-auto mt-9 w-full max-w-[27rem] sm:mt-12">
+            <div className="mx-auto mt-6 w-full max-w-[19rem] sm:mt-12 sm:max-w-[27rem]">
               {temVideo ? (
                 <ConvitePlayer
                   key={tentativa}
@@ -601,7 +601,7 @@ export function InscricaoPage() {
           {/* Liberação da confirmação: o texto troca quando o convite
               termina e o botão passa de apagado a marinho com uma animação
               curta. */}
-          <div className="mx-auto w-full max-w-[940px] pb-16 pt-10 text-center sm:pb-24 sm:pt-12">
+          <div className="mx-auto w-full max-w-[940px] pb-10 pt-7 text-center sm:pb-24 sm:pt-12">
             <p
               key={done ? "feito" : liberado ? "liberado" : "aguardando"}
               className={`trocar mx-auto max-w-md text-[12px] font-medium uppercase leading-[1.8] tracking-[0.16em] sm:text-[13px] ${
@@ -624,7 +624,7 @@ export function InscricaoPage() {
               aria-hidden="true"
             />
 
-            <div className="mt-8 flex justify-center">
+            <div className="mt-6 flex justify-center sm:mt-8">
               <Button
                 ref={botaoPrincipal}
                 type="button"
@@ -662,7 +662,7 @@ export function InscricaoPage() {
 
       {/* ================= COMO FUNCIONA ================= */}
       <section className="textura-papel textura-papel--clara relative border-t border-border">
-        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
+        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:px-10 sm:py-20 lg:px-14">
           <div className="revelar text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
               Como funciona
@@ -671,7 +671,7 @@ export function InscricaoPage() {
               Sua entrada em quatro passos
             </h2>
           </div>
-          <ol className="mx-auto mt-10 grid max-w-4xl gap-x-12 gap-y-9 sm:mt-14 sm:grid-cols-2">
+          <ol className="mx-auto mt-7 grid max-w-4xl gap-x-12 gap-y-6 sm:mt-14 sm:grid-cols-2 sm:gap-y-9">
             {passos.map((passo, i) => (
               <li
                 key={passo.titulo}
@@ -684,13 +684,13 @@ export function InscricaoPage() {
                 <h3 className="mt-1.5 text-[17px] font-semibold leading-snug text-navy-deep">
                   {passo.titulo}
                 </h3>
-                <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+                <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">
                   {passo.texto}
                 </p>
               </li>
             ))}
           </ol>
-          <p className="revelar mx-auto mt-12 max-w-xl text-center text-[13px] leading-relaxed text-muted-foreground">
+          <p className="revelar mx-auto mt-8 max-w-xl text-center text-[13px] leading-relaxed text-muted-foreground">
             Não vai poder ir? Assista ao vídeo e responda “não poderei comparecer” no formulário —
             assim a organização já sabe.
           </p>
@@ -844,8 +844,8 @@ export function InscricaoPage() {
         ) : (
           abriuFormulario && (
             <section className="abrir textura-papel textura-papel--clara relative border-b border-border">
-              <div className="mx-auto w-full max-w-[1240px] px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
-                <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+              <div className="mx-auto w-full max-w-[1240px] px-6 py-10 sm:px-10 sm:py-24 lg:px-14">
+                <div className="grid gap-7 sm:gap-10 lg:grid-cols-12 lg:gap-16">
                   <div className="lg:col-span-4">
                     <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
                       Confirmação de presença
@@ -854,7 +854,7 @@ export function InscricaoPage() {
                       className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
                       aria-hidden="true"
                     />
-                    <h2 className="mt-6 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground">
+                    <h2 className="mt-4 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground sm:mt-6">
                       Podemos contar com você?
                     </h2>
                     <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
@@ -881,7 +881,7 @@ export function InscricaoPage() {
                   </div>
 
                   <form onSubmit={handleSubmit} noValidate className="lg:col-span-8">
-                    <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                    <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2 sm:gap-y-8">
                       <div className="sm:col-span-2">
                         <label htmlFor="nome" className={rotulo}>
                           Nome completo
@@ -1163,7 +1163,7 @@ export function InscricaoPage() {
 
       {/* ================= CONTAGEM ================= */}
       <section className="sobre-escuro textura-papel relative bg-navy-deep text-primary-foreground">
-        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
+        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:px-10 sm:py-24 lg:px-14">
           <div className="revelar text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold">
               Contagem regressiva
@@ -1172,7 +1172,7 @@ export function InscricaoPage() {
               Nosso encontro está chegando
             </h2>
           </div>
-          <div className="mt-12 sm:mt-16">
+          <div className="mt-7 sm:mt-16">
             <ContagemRegressiva />
           </div>
         </div>
@@ -1180,7 +1180,7 @@ export function InscricaoPage() {
 
       {/* ================= LOCALIZAÇÃO ================= */}
       <section className="textura-papel textura-papel--clara relative border-t border-border">
-        <div className="relative mx-auto grid w-full max-w-[1240px] gap-8 px-6 py-14 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch lg:gap-12 lg:px-14">
+        <div className="relative mx-auto grid w-full max-w-[1240px] gap-6 px-6 py-10 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch lg:gap-12 lg:px-14">
           <div className="revelar flex min-w-0 flex-col justify-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
               Local do evento
@@ -1188,36 +1188,39 @@ export function InscricaoPage() {
             <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.25rem)] font-normal uppercase leading-tight tracking-[0.015em] text-foreground">
               Maraponga, Fortaleza
             </h2>
-            <span className="filete mt-6 block h-px w-10 bg-gold-deep/50" aria-hidden="true" />
-            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+            <span
+              className="filete mt-4 block h-px w-10 bg-gold-deep/50 sm:mt-6"
+              aria-hidden="true"
+            />
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
               {evento.endereco}
             </p>
             {/* Os dois botões são iguais: mesmo tamanho, mesma borda, mesmo
                 peso. No celular cada um toma a largura toda. */}
-            <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-9 lg:grid-cols-1 xl:grid-cols-2">
               {[
-                { texto: "Abrir no Google Maps", href: evento.mapa },
-                { texto: "Abrir no Waze", href: evento.waze },
+                { texto: "Google Maps", href: evento.mapa },
+                { texto: "Waze", href: evento.waze },
               ].map((destino) => (
                 <a
                   key={destino.texto}
                   href={destino.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-[4px] border border-navy-deep px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-deep transition-colors duration-300 hover:bg-navy-deep hover:text-primary-foreground"
+                  className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[4px] border border-navy-deep px-3 sm:min-h-[56px] sm:px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-deep transition-colors duration-300 hover:bg-navy-deep hover:text-primary-foreground"
                 >
                   {destino.texto} <ArrowUpRight aria-hidden="true" className="size-4" />
                 </a>
               ))}
             </div>
           </div>
-          <div className="revelar min-h-[320px] overflow-hidden rounded-[4px] border border-border bg-card sm:min-h-[390px]">
+          <div className="revelar min-h-[240px] overflow-hidden rounded-[4px] border border-border bg-card sm:min-h-[390px]">
             <iframe
               title="Mapa do local da Confraternização 2026"
               src={evento.mapaEmbed}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="h-full min-h-[320px] w-full border-0 sm:min-h-[390px]"
+              className="h-full min-h-[240px] w-full border-0 sm:min-h-[390px]"
             />
           </div>
         </div>
@@ -1253,28 +1256,28 @@ export function InscricaoPage() {
 
       {/* ================= ENCERRAMENTO ================= */}
       <footer className="border-t border-border bg-card">
-        <div className="mx-auto w-full max-w-[1240px] px-6 py-20 text-center sm:px-10 sm:py-28 lg:px-14">
+        <div className="mx-auto w-full max-w-[1240px] px-6 py-12 text-center sm:px-10 sm:py-28 lg:px-14">
           <p className="revelar mx-auto max-w-3xl font-display text-[clamp(1.5rem,4.6vw,2.7rem)] font-normal uppercase leading-[1.15] tracking-[0.015em] text-foreground">
             Esperamos você na Confraternização 2026
           </p>
           <p
-            className="revelar mt-6 font-display text-[clamp(1.1rem,3vw,1.5rem)] uppercase tracking-[0.08em] text-gold-texto"
+            className="revelar mt-4 font-display text-[clamp(1.1rem,3vw,1.5rem)] uppercase tracking-[0.08em] text-gold-texto"
             style={{ "--atraso": "100ms" } as React.CSSProperties}
           >
             19 de dezembro
           </p>
           <span
-            className="filete mx-auto mt-8 block h-px w-10 bg-gold-deep/50"
+            className="filete mx-auto mt-6 block h-px w-10 bg-gold-deep/50 sm:mt-8"
             aria-hidden="true"
           />
           <p
-            className="revelar mx-auto mt-8 max-w-xl text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]"
+            className="revelar mx-auto mt-6 max-w-xl text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]"
             style={{ "--atraso": "200ms" } as React.CSSProperties}
           >
             Um momento para celebrar nossas conquistas, fortalecer conexões e reconhecer quem faz
             parte desta história.
           </p>
-          <ul className="mx-auto mt-16 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:mt-20 sm:gap-10">
+          <ul className="mx-auto mt-10 grid max-w-[35rem] grid-cols-3 items-center gap-4 sm:mt-20 sm:gap-10">
             {logos.map((logo) => (
               <li key={logo.label} className="flex min-w-0 items-center justify-center">
                 <Logo
