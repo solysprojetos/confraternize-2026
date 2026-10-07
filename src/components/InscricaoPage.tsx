@@ -575,10 +575,10 @@ export function InscricaoPage() {
             style={{ "--atraso": "80ms" } as React.CSSProperties}
           >
             <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
-              Retrospectiva 2025
+              Relembre
             </p>
-            <h2 className="mx-auto mt-4 max-w-2xl text-center font-display text-[clamp(1.5rem,4.4vw,2.5rem)] font-normal uppercase leading-[1.12] tracking-[0.015em] text-foreground">
-              Em breve, 2026
+            <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-[clamp(2.1rem,7vw,3.6rem)] font-normal uppercase leading-[1] tracking-[0.01em] text-foreground">
+              Retrospectiva <span className="italic text-gold-texto">2025</span>
             </h2>
 
             {/* O convite foi gravado na vertical: no celular ele toma quase
