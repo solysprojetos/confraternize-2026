@@ -194,26 +194,23 @@ function ContagemRegressiva() {
   );
 }
 
-/** Passos de "Como funciona". */
+/**
+ * Como funciona a confirmação, mostrado no topo do formulário. Não inclui
+ * "assistir ao vídeo": quem chega ao formulário já assistiu, e a frase
+ * abaixo do vídeo explica essa parte.
+ */
 const passos = [
   {
-    titulo: "Assista ao vídeo",
-    texto:
-      "A Retrospectiva 2025 tem 21 segundos. Ao terminar, o botão “Confirmar minha presença” é liberado.",
-  },
-  {
     titulo: "Preencha seus dados",
-    texto:
-      "Nome, telefone, e-mail e empresa. Quem é do grupo informa também cargo e setor. Leva menos de um minuto.",
+    texto: "Nome, telefone, e-mail e empresa. Leva menos de um minuto.",
   },
   {
     titulo: "Receba seu ingresso",
-    texto:
-      "O QR code aparece na tela na hora e também chega no seu e-mail. Dá para baixar, mandar no WhatsApp e salvar no calendário.",
+    texto: "O QR code aparece na tela na hora e também chega no seu e-mail.",
   },
   {
     titulo: "Apresente na entrada",
-    texto: `${evento.dataExtenso}, às ${evento.horario}. É só mostrar o QR code ou o código do ingresso.`,
+    texto: `${evento.dataExtenso}, às ${evento.horario}. Mostre o QR code ou o código do ingresso.`,
   },
 ];
 
@@ -660,39 +657,6 @@ export function InscricaoPage() {
         </div>
       </section>
 
-      {/* ================= COMO FUNCIONA ================= */}
-      <section className="textura-papel textura-papel--clara relative border-t border-border">
-        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:px-10 sm:py-20 lg:px-14">
-          <div className="revelar text-center">
-            <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
-              Como funciona
-            </p>
-            <h2 className="mt-4 font-display text-[clamp(1.7rem,4vw,2.6rem)] font-normal uppercase leading-tight tracking-[0.015em] text-foreground">
-              Sua entrada em quatro passos
-            </h2>
-          </div>
-          <ol className="mx-auto mt-7 grid max-w-4xl gap-x-12 gap-y-6 sm:mt-14 sm:grid-cols-2 sm:gap-y-9">
-            {passos.map((passo, i) => (
-              <li
-                key={passo.titulo}
-                className="revelar border-l-2 border-gold-deep/60 pl-5"
-                style={{ "--atraso": `${i * 80}ms` } as React.CSSProperties}
-              >
-                <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-gold-texto">
-                  Passo {i + 1}
-                </p>
-                <h3 className="mt-1.5 text-[17px] font-semibold leading-snug text-navy-deep">
-                  {passo.titulo}
-                </h3>
-                <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">
-                  {passo.texto}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* ================= CONFIRMAÇÃO ================= */}
       <div ref={secaoConfirmacao}>
         {done ? (
@@ -853,10 +817,21 @@ export function InscricaoPage() {
                     <h2 className="mt-4 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground sm:mt-6">
                       Podemos contar com você?
                     </h2>
-                    <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
-                      Preencha seus dados para confirmar. Ao enviar, o seu QR code de entrada
-                      aparece na tela e chega no e-mail informado.
-                    </p>
+                    <ol className="mt-6 max-w-sm space-y-4">
+                      {passos.map((passo, i) => (
+                        <li key={passo.titulo} className="border-l-2 border-gold-deep/60 pl-4">
+                          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-gold-texto">
+                            Passo {i + 1}
+                          </p>
+                          <p className="mt-1 text-[15px] font-semibold leading-snug text-navy-deep">
+                            {passo.titulo}
+                          </p>
+                          <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted-foreground">
+                            {passo.texto}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
                     <dl className="mt-8 hidden max-w-sm border-y border-border text-sm lg:block">
                       <div className="flex justify-between gap-4 border-b border-border py-3">
                         <dt className="text-muted-foreground">Data</dt>
@@ -871,7 +846,7 @@ export function InscricaoPage() {
                         <dd className="text-right text-foreground">{evento.bairro}</dd>
                       </div>
                     </dl>
-                    <p className="mt-4 text-xs text-muted-foreground">
+                    <p className="mt-5 text-xs text-muted-foreground">
                       Todos os campos são obrigatórios.
                     </p>
                   </div>
