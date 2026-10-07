@@ -194,34 +194,26 @@ function ContagemRegressiva() {
   );
 }
 
-/** Passos de "Como funciona": cada um com a sua cor, dentro da paleta. */
+/** Passos de "Como funciona". */
 const passos = [
   {
     titulo: "Assista ao vídeo",
     texto:
       "A Retrospectiva 2025 tem 21 segundos. Ao terminar, o botão “Confirmar minha presença” é liberado.",
-    cor: "text-gold-texto",
-    borda: "border-gold-deep/60",
   },
   {
     titulo: "Preencha seus dados",
     texto:
       "Nome, telefone, e-mail e empresa. Quem é do grupo informa também cargo e setor. Leva menos de um minuto.",
-    cor: "text-vinho",
-    borda: "border-vinho/40",
   },
   {
     titulo: "Receba seu ingresso",
     texto:
       "O QR code aparece na tela na hora e também chega no seu e-mail. Dá para baixar, mandar no WhatsApp e salvar no calendário.",
-    cor: "text-petroleo",
-    borda: "border-petroleo/45",
   },
   {
     titulo: "Apresente na entrada",
     texto: `${evento.dataExtenso}, às ${evento.horario}. É só mostrar o QR code ou o código do ingresso.`,
-    cor: "text-navy",
-    borda: "border-navy/40",
   },
 ];
 
@@ -683,13 +675,13 @@ export function InscricaoPage() {
             {passos.map((passo, i) => (
               <li
                 key={passo.titulo}
-                className={`revelar border-l-2 pl-5 ${passo.borda}`}
+                className="revelar border-l-2 border-gold-deep/60 pl-5"
                 style={{ "--atraso": `${i * 80}ms` } as React.CSSProperties}
               >
-                <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
+                <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-gold-texto">
                   Passo {i + 1}
                 </p>
-                <h3 className={`mt-1.5 text-[17px] font-semibold leading-snug ${passo.cor}`}>
+                <h3 className="mt-1.5 text-[17px] font-semibold leading-snug text-navy-deep">
                   {passo.titulo}
                 </h3>
                 <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">

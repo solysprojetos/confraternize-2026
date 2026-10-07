@@ -97,8 +97,6 @@
   --color-gold-deep: var(--gold-deep);
   --color-gold-texto: var(--gold-texto);
   --color-gold-soft: var(--gold-soft);
-  --color-vinho: var(--vinho);
-  --color-petroleo: var(--petroleo);
   --color-surface: var(--surface);
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
@@ -131,10 +129,6 @@
   /* Dourado escurecido só para textos pequenos sobre fundo claro (WCAG AA) */
   --gold-texto: oklch(0.47 0.082 72);
   --gold-soft: oklch(0.872 0.038 86);
-  /* Cores de apoio dos passos de "Como funciona", ao lado do marinho e do
-     dourado. Escuras o bastante para títulos sobre fundo claro (WCAG AA). */
-  --vinho: oklch(0.47 0.16 358);
-  --petroleo: oklch(0.45 0.075 205);
   --destructive: oklch(0.55 0.2 27.5);
   --destructive-foreground: oklch(0.99 0.002 250);
   --border: oklch(0.929 0.013 255.508);
