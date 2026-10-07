@@ -690,10 +690,6 @@ export function InscricaoPage() {
               </li>
             ))}
           </ol>
-          <p className="revelar mx-auto mt-8 max-w-xl text-center text-[13px] leading-relaxed text-muted-foreground">
-            Não vai poder ir? Assista ao vídeo e responda “não poderei comparecer” no formulário —
-            assim a organização já sabe.
-          </p>
         </div>
       </section>
 
