@@ -406,9 +406,9 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 aria-label={
                   tocando
                     ? controlesVisiveis
-                      ? "Pausar o convite"
-                      : "Mostrar os controles do convite"
-                    : "Reproduzir o convite"
+                      ? "Pausar o vídeo"
+                      : "Mostrar os controles do vídeo"
+                    : "Reproduzir o vídeo"
                 }
               >
                 {!tocando && (
@@ -430,7 +430,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
             {erro && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-navy-deep/95 px-6 text-center text-white">
                 <p className="max-w-xs text-sm leading-relaxed sm:text-base">
-                  Não foi possível carregar o vídeo do convite.
+                  Não foi possível carregar o vídeo.
                 </p>
                 <button
                   type="button"
@@ -447,7 +447,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                 role="status"
                 className="pointer-events-none absolute inset-x-4 bottom-28 mx-auto max-w-xs rounded-md border border-white/20 bg-navy-deep/95 px-4 py-2 text-center text-xs text-white"
               >
-                Você pode rever trechos, mas não adiantar o convite.
+                Você pode rever trechos, mas não adiantar o vídeo.
               </p>
             )}
 
@@ -473,7 +473,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
                     />
                   </span>
                   <label className="sr-only" htmlFor="barra-convite">
-                    Posição do convite
+                    Posição do vídeo
                   </label>
                   <input
                     id="barra-convite"
@@ -562,7 +562,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
         {fimSemCobertura && !concluido && (
           <div role="status" className="mt-3">
             <p className="text-sm leading-relaxed text-white/75">
-              Faltaram alguns trechos do convite.
+              Faltaram alguns trechos do vídeo.
             </p>
             <button
               type="button"
@@ -572,7 +572,7 @@ export function ConvitePlayer({ onTrechosAssistidos, onConcluir, onDuracao, conc
               }}
               className="mt-3 flex min-h-[44px] items-center justify-center border border-gold/60 px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-navy-deep"
             >
-              Ver o convite de novo
+              Ver o vídeo de novo
             </button>
           </div>
         )}

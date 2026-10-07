@@ -194,6 +194,37 @@ function ContagemRegressiva() {
   );
 }
 
+/** Passos de "Como funciona": cada um com a sua cor, dentro da paleta. */
+const passos = [
+  {
+    titulo: "Assista ao vídeo",
+    texto:
+      "A Retrospectiva 2025 tem 21 segundos. Ao terminar, o botão “Confirmar minha presença” é liberado.",
+    cor: "text-gold-texto",
+    borda: "border-gold-deep/60",
+  },
+  {
+    titulo: "Preencha seus dados",
+    texto:
+      "Nome, telefone, e-mail e empresa. Quem é do grupo informa também cargo e setor. Leva menos de um minuto.",
+    cor: "text-vinho",
+    borda: "border-vinho/40",
+  },
+  {
+    titulo: "Receba seu ingresso",
+    texto:
+      "O QR code aparece na tela na hora e também chega no seu e-mail. Dá para baixar, mandar no WhatsApp e salvar no calendário.",
+    cor: "text-petroleo",
+    borda: "border-petroleo/45",
+  },
+  {
+    titulo: "Apresente na entrada",
+    texto: `${evento.dataExtenso}, às ${evento.horario}. É só mostrar o QR code ou o código do ingresso.`,
+    cor: "text-navy",
+    borda: "border-navy/40",
+  },
+];
+
 export function InscricaoPage() {
   const [form, setForm] = useState({
     nome_completo: "",
@@ -409,15 +440,15 @@ export function InscricaoPage() {
         reiniciarConvite();
         setErrors({
           form: jaUsada
-            ? "Este convite já registrou uma resposta. Para responder por outra pessoa, assista ao convite novamente."
-            : "Precisamos confirmar que o convite foi assistido até o fim. Reproduza o vídeo novamente.",
+            ? "Esta sessão já registrou uma resposta. Para responder por outra pessoa, assista ao vídeo novamente."
+            : "Precisamos confirmar que o vídeo foi assistido até o fim. Reproduza o vídeo novamente.",
         });
         return;
       }
       setErrors({
         form:
           error.code === "23505"
-            ? "Este e-mail já respondeu ao convite."
+            ? "Este e-mail já foi usado em uma resposta."
             : error.code === "SEM_COLUNA_RESPOSTA"
               ? "Não conseguimos registrar sua resposta agora. Avise a organização por outro caminho."
               : "Não foi possível registrar sua resposta agora. Tente novamente.",
@@ -457,13 +488,13 @@ export function InscricaoPage() {
       `Início às ${evento.horario}`,
       `Local: ${evento.endereco}`,
       "",
-      `Código do convite: ${inscricaoId}`,
+      `Código do ingresso: ${inscricaoId}`,
       "Apresente o QR code na entrada.",
     ].join("\n");
   }
 
   function enviarEmail() {
-    const assunto = "Convite — Confraternização 2026";
+    const assunto = "Ingresso — Confraternização 2026";
     window.location.href = `mailto:${encodeURIComponent(form.email)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(textoConvite())}`;
   }
 
@@ -474,7 +505,7 @@ export function InscricaoPage() {
   function baixarQr() {
     const a = document.createElement("a");
     a.href = qrUrl;
-    a.download = `convite-confraternizacao-2026-${(form.nome_completo.split(" ")[0] ?? "convidado").toLowerCase()}.png`;
+    a.download = `ingresso-confraternizacao-2026-${(form.nome_completo.split(" ")[0] ?? "convidado").toLowerCase()}.png`;
     a.click();
   }
 
@@ -519,11 +550,8 @@ export function InscricaoPage() {
           {/* Abertura: o título é o maior elemento da página; a data vem
               logo abaixo, em segundo plano; hora e local fecham o bloco. */}
           <div className="mx-auto max-w-4xl pb-14 pt-12 text-center sm:pb-20 sm:pt-20">
-            <p className="revelar text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
-              Convite oficial
-            </p>
             <h1
-              className="revelar mt-7 font-display text-[clamp(2.35rem,8.4vw,5.4rem)] font-normal uppercase leading-[0.98] tracking-[0.01em] text-foreground"
+              className="revelar font-display text-[clamp(2.35rem,8.4vw,5.4rem)] font-normal uppercase leading-[0.98] tracking-[0.01em] text-foreground"
               style={{ "--atraso": "80ms" } as React.CSSProperties}
             >
               Confraternização <span className="italic text-gold-texto">2026</span>
@@ -612,7 +640,7 @@ export function InscricaoPage() {
                 aria-label={
                   liberado
                     ? undefined
-                    : "Confirmar minha presença. Disponível depois de assistir ao convite."
+                    : "Confirmar minha presença. Disponível depois de assistir ao vídeo."
                 }
                 onClick={() => {
                   if (!liberado) return;
@@ -637,6 +665,43 @@ export function InscricaoPage() {
               </p>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* ================= COMO FUNCIONA ================= */}
+      <section className="textura-papel textura-papel--clara relative border-t border-border">
+        <div className="relative mx-auto w-full max-w-[1100px] px-6 py-14 sm:px-10 sm:py-20 lg:px-14">
+          <div className="revelar text-center">
+            <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
+              Como funciona
+            </p>
+            <h2 className="mt-4 font-display text-[clamp(1.7rem,4vw,2.6rem)] font-normal uppercase leading-tight tracking-[0.015em] text-foreground">
+              Sua entrada em quatro passos
+            </h2>
+          </div>
+          <ol className="mx-auto mt-10 grid max-w-4xl gap-x-12 gap-y-9 sm:mt-14 sm:grid-cols-2">
+            {passos.map((passo, i) => (
+              <li
+                key={passo.titulo}
+                className={`revelar border-l-2 pl-5 ${passo.borda}`}
+                style={{ "--atraso": `${i * 80}ms` } as React.CSSProperties}
+              >
+                <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
+                  Passo {i + 1}
+                </p>
+                <h3 className={`mt-1.5 text-[17px] font-semibold leading-snug ${passo.cor}`}>
+                  {passo.titulo}
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+                  {passo.texto}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <p className="revelar mx-auto mt-12 max-w-xl text-center text-[13px] leading-relaxed text-muted-foreground">
+            Não vai poder ir? Assista ao vídeo e responda “não poderei comparecer” no formulário —
+            assim a organização já sabe.
+          </p>
         </div>
       </section>
 
@@ -695,14 +760,14 @@ export function InscricaoPage() {
                     <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
                       <img
                         src={qrUrl}
-                        alt="QR code do convite"
+                        alt="QR code do ingresso"
                         className="h-36 w-36 border border-border bg-white p-2"
                       />
                       <div className="text-[13px] leading-relaxed text-muted-foreground">
-                        <p className="text-foreground">Este é o seu convite.</p>
+                        <p className="text-foreground">Este é o seu ingresso.</p>
                         <p className="mt-1">Salve a imagem e apresente o código na entrada.</p>
                         {emailStatus === "enviando" && (
-                          <p className="mt-3">Enviando o convite por e-mail...</p>
+                          <p className="mt-3">Enviando o ingresso por e-mail...</p>
                         )}
                         {emailStatus === "ok" && (
                           <>
@@ -729,7 +794,7 @@ export function InscricaoPage() {
                         onClick={baixarQr}
                         className="min-h-[52px] border border-primary bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-foreground transition-colors hover:bg-navy"
                       >
-                        Baixar convite
+                        Baixar ingresso
                       </button>
                       <a
                         href={linkCalendario()}
@@ -835,7 +900,7 @@ export function InscricaoPage() {
                           value={form.nome_completo}
                           maxLength={120}
                           autoComplete="name"
-                          placeholder="Como você quer ser chamado no convite"
+                          placeholder="Como você quer ser chamado no ingresso"
                           aria-invalid={Boolean(errors["nome_completo"])}
                           aria-describedby="erro-nome"
                           onChange={(e) => setForm({ ...form, nome_completo: e.target.value })}
