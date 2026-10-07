@@ -99,12 +99,15 @@ do Brevo fica na tabela privada `config` do banco.
 
 ## O vídeo do convite
 
-O convite publicado é `public/convite/convite-confraternizacao-2026.mp4`:
-vertical (1080x1920), 58,5 s, H.264 + AAC, com o índice no começo do arquivo
-para começar a tocar sem baixar tudo. O `<video>` usa `preload="metadata"`,
-então os 30 MB só descem quando a pessoa aperta play.
+O site abre com o convite gravado pelo casal em tela cheia
+(`public/convite/abertura-convite-2026.mp4`, 58,5 s, configurado em
+`videoAbertura`). Depois, na página, vem o vídeo que libera a inscrição:
+`public/convite/retrospectiva-em-breve-2026.mp4`, a Retrospectiva 2025 /
+"Em breve 2026" — vertical (720x1280), 21,6 s, H.264 + AAC, com o índice no
+começo do arquivo para começar a tocar sem baixar tudo. O `<video>` usa
+`preload="metadata"`, então os 8 MB só descem quando a pessoa aperta play.
 
-O banco guarda a duração real (58 s) em `convite_config`. É ela que o
+O banco guarda a duração real do vídeo que libera (21 s) em `convite_config`. É ela que o
 servidor exige, então não adianta chamar a função à mão dizendo que o vídeo
 é curto.
 
@@ -118,7 +121,7 @@ servidor exige, então não adianta chamar a função à mão dizendo que o víd
 3. Cadastre a nova duração no banco, em segundos:
 
    ```sql
-   update public.convite_config set duracao_minima_segundos = 58;
+   update public.convite_config set duracao_minima_segundos = 21;
    ```
 
 Os dados do evento (nome, chamada, data, horário, endereço e link do mapa)

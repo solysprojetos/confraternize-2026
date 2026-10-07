@@ -555,10 +555,10 @@ export function InscricaoPage() {
             style={{ "--atraso": "80ms" } as React.CSSProperties}
           >
             <p className="text-center text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
-              Convite em vídeo
+              Retrospectiva 2025
             </p>
             <h2 className="mx-auto mt-4 max-w-2xl text-center font-display text-[clamp(1.5rem,4.4vw,2.5rem)] font-normal uppercase leading-[1.12] tracking-[0.015em] text-foreground">
-              Uma mensagem especial para você
+              Em breve, 2026
             </h2>
 
             {/* O convite foi gravado na vertical: no celular ele toma quase

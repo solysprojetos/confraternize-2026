@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { urlDoAsset, videoAbertura } from "@/config/evento";
 
 const CHAVE_VISTA = "confra2026:abertura-vista";
-/** Tempo máximo da abertura depois que o vídeo começa (o vídeo tem ~20 s). */
-const LIMITE_MS = 30_000;
+/** Tempo máximo da abertura depois que o vídeo começa: a duração com folga. */
+const LIMITE_MS = (videoAbertura.duracao + 15) * 1000;
 
 /** Mostra a abertura só na primeira visita da sessão, e só se houver vídeo. */
 function deveMostrar(): boolean {

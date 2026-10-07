@@ -57,14 +57,15 @@ export const videoConvite = {
   // página mostra a capa de convite em preparação e a inscrição permanece
   // indisponível.
   // Ex.: src: "convite/convite-confraternizacao-2026.mp4"
-  src: "convite/convite-confraternizacao-2026.mp4" as string,
+  // Hoje é a Retrospectiva 2025 / "Em breve 2026" (21,6 s), que vem depois
+  // do convite do casal, tocado como abertura.
+  src: "convite/retrospectiva-em-breve-2026.mp4" as string,
 
-  // Capa: o primeiro quadro do próprio vídeo, para o convite aparecer como
-  // é — sem tela de abertura na frente dele.
-  poster: "convite/capa-convite.jpg" as string,
+  // Capa: um quadro do próprio vídeo.
+  poster: "convite/capa-retrospectiva.jpg" as string,
 
-  // Proporção do vídeo cadastrado (largura / altura). O convite foi
-  // gravado na vertical (1080x1920), como as pessoas assistem no celular.
+  // Proporção do vídeo cadastrado (largura / altura). Vertical (720x1280),
+  // como as pessoas assistem no celular.
   proporcao: 9 / 16,
 
   // Legendas (WebVTT). Deixe src vazio para esconder o botão de legendas.
@@ -95,13 +96,16 @@ export const temVideoRetrospectiva = () => videoRetrospectiva.src.trim().length 
 
 /**
  * Vídeo de abertura: toca em tela cheia assim que o site abre e depois
- * some, revelando o convite. Aparece uma vez por sessão do navegador (quem
+ * some, revelando a página. Hoje é o convite gravado pelo casal (58,5 s);
+ * o vídeo que libera a inscrição vem depois, na página (videoConvite). Aparece uma vez por sessão do navegador (quem
  * recarrega a página não vê de novo). Deixe src vazio para desligar.
  */
 export const videoAbertura = {
-  src: "convite/abertura-retrospectiva-2025.mp4" as string,
-  poster: "convite/abertura-capa.jpg" as string,
-  titulo: "Retrospectiva 2025",
+  src: "convite/abertura-convite-2026.mp4" as string,
+  poster: "convite/capa-convite.jpg" as string,
+  titulo: "Convite 2026",
+  /** Duração do vídeo em segundos, para a abertura não prender ninguém se a conexão travar. */
+  duracao: 59,
 };
 
 // Caminhos relativos respeitam a base do site. Com o domínio próprio
