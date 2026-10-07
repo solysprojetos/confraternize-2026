@@ -806,7 +806,7 @@ export function InscricaoPage() {
             <section className="abrir textura-papel textura-papel--clara relative border-b border-border">
               <div className="mx-auto w-full max-w-[1240px] px-6 py-10 sm:px-10 sm:py-24 lg:px-14">
                 <div className="grid gap-7 sm:gap-10 lg:grid-cols-12 lg:gap-16">
-                  <div className="lg:col-span-4">
+                  <div className="@container lg:col-span-4">
                     <p className="text-[10px] font-medium uppercase tracking-[0.42em] text-gold-texto">
                       Confirmação de presença
                     </p>
@@ -814,7 +814,10 @@ export function InscricaoPage() {
                       className="filete mt-5 block h-px w-full max-w-[140px] bg-gold-deep/40"
                       aria-hidden="true"
                     />
-                    <h2 className="mt-4 font-display text-[clamp(1.8rem,4.4vw,2.6rem)] font-normal leading-[1.1] text-foreground sm:mt-6">
+                    {/* O tamanho acompanha a largura da coluna (cqw) para a pergunta
+                        caber sempre numa linha, no celular e na coluna estreita
+                        do computador. */}
+                    <h2 className="mt-4 font-display text-[min(2.4rem,10.6cqw)] font-normal leading-[1.1] text-foreground sm:mt-6">
                       Podemos contar com você?
                     </h2>
                     <ol className="mt-6 max-w-sm space-y-4">
@@ -1135,11 +1138,11 @@ export function InscricaoPage() {
       {/* ================= CONTAGEM ================= */}
       <section className="sobre-escuro textura-papel relative bg-navy-deep text-primary-foreground">
         <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:px-10 sm:py-24 lg:px-14">
-          <div className="revelar text-center">
+          <div className="revelar text-center @container">
             <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold">
               Contagem regressiva
             </p>
-            <h2 className="mt-4 font-display text-[clamp(1.7rem,4vw,2.6rem)] font-normal uppercase leading-tight tracking-[0.015em]">
+            <h2 className="mt-4 font-display text-[min(2.6rem,7.4cqw)] font-normal uppercase leading-tight tracking-[0.015em]">
               Nosso encontro está chegando
             </h2>
           </div>
@@ -1152,11 +1155,11 @@ export function InscricaoPage() {
       {/* ================= LOCALIZAÇÃO ================= */}
       <section className="textura-papel textura-papel--clara relative border-t border-border">
         <div className="relative mx-auto grid w-full max-w-[1240px] gap-6 px-6 py-10 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch lg:gap-12 lg:px-14">
-          <div className="revelar flex min-w-0 flex-col justify-center">
+          <div className="revelar flex min-w-0 flex-col justify-center @container">
             <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
               Local do evento
             </p>
-            <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.25rem)] font-normal uppercase leading-tight tracking-[0.015em] text-foreground">
+            <h2 className="mt-4 font-display text-[min(3.25rem,10.5cqw)] font-normal uppercase leading-tight tracking-[0.015em] text-foreground">
               Maraponga, Fortaleza
             </h2>
             <span
