@@ -44,12 +44,7 @@ export const evento = {
  *   UPDATE public.convite_setores SET ativo = false WHERE nome = 'Marketing';
  * Um nome que exista aqui e não lá aparece na lista e é recusado no envio.
  */
-export const setores = [
-  "Administrativo",
-  "Consultor",
-  "Gerente",
-  "Diretoria",
-];
+export const setores = ["Administrativo"];
 
 export const videoConvite = {
   // Arquivo do vídeo (MP4 H.264 recomendado). Enquanto estiver vazio, a
