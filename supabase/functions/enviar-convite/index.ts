@@ -5,20 +5,24 @@
 //   { lembretes: true }                     -> envia o lembrete do dia, se houver (ver abaixo)
 //   { id: "<uuid>", teste: "semana" | "vespera" }
 //                                           -> prévia de um lembrete para essa inscrição,
-//                                              sem marcar nada no banco
+//                                              sem marcar nada no banco (só para o admin logado)
 // Lembretes, pela data em Fortaleza:
 //   12 a 17/12 -> "falta uma semana", para quem confirmou até a véspera do envio
 //   18 e 19/12 (até o início) -> "é amanhã" / "é hoje"
 // Fora dessas datas o modo lembretes não faz nada, e cada pessoa recebe cada
 // lembrete uma vez só — pode ser chamado quantas vezes for preciso.
 // A chave do Brevo vem da tabela privada public.config (fallback: env).
-// Autenticação própria: só envia para o e-mail gravado em inscrições reais.
+// Autenticação própria: só envia para o e-mail gravado em inscrições reais, e o
+// convite de cada inscrição sai uma vez só — chamar de novo com o mesmo id não
+// reenvia (evita usar o id do QR code para lotar a caixa de alguém).
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const EMAIL_ADMIN = "solysprojetos@gmail.com";
 
 const NOME_GRUPO: Record<string, string> = {
   grupo_support: "Grupo Support",
@@ -196,7 +200,7 @@ async function enviarBrevo(
     method: "POST",
     headers: { "api-key": apiKey, "content-type": "application/json" },
     body: JSON.stringify({
-      sender: { name: "Confraternização 2026", email: "solysprojetos@gmail.com" },
+      sender: { name: "Confraternização 2026", email: EMAIL_ADMIN },
       to: [{ email: ins.email, name: ins.nome_completo }],
       subject: assunto,
       htmlContent: html,
@@ -314,6 +318,10 @@ Deno.serve(async (req) => {
     if (error || !ins) throw new Error("inscrição não encontrada");
 
     if (body.teste === "semana" || body.teste === "vespera") {
+      // Prévias só para o admin logado no painel
+      const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const { data: usuario } = await supabase.auth.getUser(token);
+      if (usuario?.user?.email !== EMAIL_ADMIN) throw new Error("não autorizado");
       // A prévia simula o dia do envio real, para o texto sair igual
       const agora = new Date(
         body.teste === "semana" ? "2026-12-12T09:00:00-03:00" : "2026-12-18T09:00:00-03:00",
@@ -328,13 +336,28 @@ Deno.serve(async (req) => {
       return responder({ ok: true, teste: body.teste });
     }
 
-    await enviarBrevo(
-      apiKey,
-      ins as Inscricao,
-      "Presença confirmada - seu convite da Confraternização 2026",
-      montarHtml(ins as Inscricao),
-    );
-    await supabase.from("inscricoes").update({ convite_enviado: true }).eq("id", id);
+    // Reserva o envio antes de mandar: só uma chamada por inscrição passa daqui
+    const { data: reservada, error: erroReserva } = await supabase
+      .from("inscricoes")
+      .update({ convite_enviado: true })
+      .eq("id", id)
+      .eq("convite_enviado", false)
+      .select("id");
+    if (erroReserva) throw erroReserva;
+    if (!reservada?.length) return responder({ ok: true, jaEnviado: true });
+
+    try {
+      await enviarBrevo(
+        apiKey,
+        ins as Inscricao,
+        "Presença confirmada - seu convite da Confraternização 2026",
+        montarHtml(ins as Inscricao),
+      );
+    } catch (e) {
+      // Volta para a fila: o robô diário ({ pendentes: true }) tenta de novo
+      await supabase.from("inscricoes").update({ convite_enviado: false }).eq("id", id);
+      throw e;
+    }
 
     return responder({ ok: true });
   } catch (e) {
