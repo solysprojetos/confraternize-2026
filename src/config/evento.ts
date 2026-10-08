@@ -46,7 +46,6 @@ export const evento = {
  */
 export const setores = [
   "Administrativo",
-  "Administrativo Comercial",
   "Consultor",
   "Gerente",
   "Diretoria",
