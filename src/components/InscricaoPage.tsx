@@ -449,9 +449,7 @@ export function InscricaoPage() {
     // A sessão do convite é de uso único: depois de aceita, não serve de novo
     limparEstado();
     if (comparecera) {
-      // A biblioteca do QR code só é baixada quando há presença confirmada
-      const { default: QRCode } = await import("qrcode");
-      setQrUrl(await QRCode.toDataURL(`CONFRA2026:${id}`, { width: 480, margin: 2 }));
+      // O e-mail sai antes de tudo: se algo abaixo falhar, o convite já foi pedido
       setEmailStatus("enviando");
       supabase.functions
         .invoke("enviar-convite", { body: { id } })
@@ -460,6 +458,17 @@ export function InscricaoPage() {
           setEmailStatus(ok ? "ok" : "erro");
         })
         .catch(() => setEmailStatus("erro"));
+      // A biblioteca do QR code só é baixada quando há presença confirmada.
+      // Se o site foi atualizado com a página aberta, o arquivo antigo some e o
+      // download falha: usa a mesma imagem de QR code do e-mail.
+      try {
+        const { default: QRCode } = await import("qrcode");
+        setQrUrl(await QRCode.toDataURL(`CONFRA2026:${id}`, { width: 480, margin: 2 }));
+      } catch {
+        setQrUrl(
+          `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=${encodeURIComponent(`CONFRA2026:${id}`)}`,
+        );
+      }
     }
     setDone(true);
   }
