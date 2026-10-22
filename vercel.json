@@ -8,29 +8,5 @@
       "gh-pages": false,
       "claude/analise-processo-completo-23nzht": false
     }
-  },
-  "redirects": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "solys.online"
-        }
-      ],
-      "destination": "/acompanhamento.html",
-      "permanent": false
-    },
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.solys.online"
-        }
-      ],
-      "destination": "/acompanhamento.html",
-      "permanent": false
-    }
-  ]
+  }
 }
