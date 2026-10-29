@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { evento } from "@/config/evento";
+import { CoordenadoresAba } from "@/components/CoordenadoresAba";
 
-type Inscricao = {
+export type Inscricao = {
   id: string;
   nome_completo: string;
   telefone: string;
@@ -16,6 +17,8 @@ type Inscricao = {
   convite_enviado?: boolean | null;
   lembrete_semana_enviado?: boolean | null;
   lembrete_vespera_enviado?: boolean | null;
+  /** Só existe depois da migração 20261029120000_coordenadores. */
+  coordenador_id?: string | null;
 };
 
 /** Quem não respondeu "não" conta como presença confirmada. */
@@ -85,6 +88,7 @@ export function AdminPage() {
   const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [sorteado, setSorteado] = useState<Inscricao | null>(null);
+  const [aba, setAba] = useState<"inscricoes" | "coordenadores">("inscricoes");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -153,6 +157,14 @@ export function AdminPage() {
     return conta;
   }, [inscricoes]);
   const maiorEmpresa = Math.max(1, ...Object.values(porEmpresa));
+
+  const confirmadas = useMemo(() => inscricoes.filter(vaiComparecer), [inscricoes]);
+
+  function transferido(inscricaoId: string, coordenadorId: string | null) {
+    setInscricoes((atual) =>
+      atual.map((i) => (i.id === inscricaoId ? { ...i, coordenador_id: coordenadorId } : i)),
+    );
+  }
 
   // Confirmados, filtrados por empresa e busca (sem o setor)
   const filtradas = useMemo(() => {
@@ -342,358 +354,409 @@ export function AdminPage() {
           </div>
         </header>
 
-        {/* ============ Números principais ============ */}
-        <section className="mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
-            <p className="text-sm text-primary-foreground/70">Presenças confirmadas</p>
-            <p className="mt-1 font-display text-6xl leading-none">{resumo.confirmadas}</p>
-            <p className="mt-2 text-xs text-primary-foreground/60">
-              {resumo.confirmadas === 1 ? "pessoa confirmada" : "pessoas confirmadas"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Convites por e-mail</p>
-            <p className="mt-1 font-display text-5xl leading-none text-foreground">
-              {resumo.emailsEnviados}
-              <span className="text-2xl text-muted-foreground">/{resumo.confirmadas}</span>
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {resumo.confirmadas - resumo.emailsEnviados > 0
-                ? `${resumo.confirmadas - resumo.emailsEnviados} na fila de reenvio`
-                : "todos enviados"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Lembretes automáticos</p>
-            <ul className="mt-2 space-y-1 text-sm text-foreground">
-              {(
-                [
-                  ["12/12", "Uma semana antes", resumo.lembreteSemana],
-                  ["18/12", "Véspera", resumo.lembreteVespera],
-                ] as const
-              ).map(([dia, texto, enviados]) => (
-                <li key={dia} className="flex items-baseline justify-between gap-3">
-                  <span>
-                    {dia} · {texto}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {enviados > 0 ? `${enviados} enviados` : "agendado"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-xs text-muted-foreground">Por e-mail, a quem confirmou.</p>
-          </div>
-        </section>
+        {/* ============ Abas ============ */}
+        <nav
+          className="mt-8 flex gap-1 border-b border-border"
+          aria-label="Seções da área restrita"
+        >
+          {(
+            [
+              ["inscricoes", "Inscrições"],
+              ["coordenadores", "Coordenadores"],
+            ] as const
+          ).map(([chave, rotulo]) => {
+            const ativa = aba === chave;
+            return (
+              <button
+                key={chave}
+                type="button"
+                onClick={() => setAba(chave)}
+                aria-current={ativa ? "page" : undefined}
+                className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  ativa
+                    ? "border-gold-deep text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {rotulo}
+              </button>
+            );
+          })}
+        </nav>
 
-        {/* ============ Por empresa e por setor ============ */}
-        <section className="mt-3 grid gap-3 lg:grid-cols-5">
-          <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-3">
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-medium text-foreground">Confirmados por empresa</p>
-              <p className="text-xs text-muted-foreground">Clique para filtrar</p>
-            </div>
-            <ul className="mt-4 space-y-1">
-              {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => {
-                const ativo = filtro === g;
-                return (
-                  <li key={g}>
+        {aba === "coordenadores" ? (
+          <CoordenadoresAba
+            inscricoes={confirmadas}
+            nomeGrupo={NOME_GRUPO}
+            onTransferido={transferido}
+          />
+        ) : (
+          <>
+            {/* ============ Números principais ============ */}
+            <section className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
+                <p className="text-sm text-primary-foreground/70">Presenças confirmadas</p>
+                <p className="mt-1 font-display text-6xl leading-none">{resumo.confirmadas}</p>
+                <p className="mt-2 text-xs text-primary-foreground/60">
+                  {resumo.confirmadas === 1 ? "pessoa confirmada" : "pessoas confirmadas"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-sm text-muted-foreground">Convites por e-mail</p>
+                <p className="mt-1 font-display text-5xl leading-none text-foreground">
+                  {resumo.emailsEnviados}
+                  <span className="text-2xl text-muted-foreground">/{resumo.confirmadas}</span>
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {resumo.confirmadas - resumo.emailsEnviados > 0
+                    ? `${resumo.confirmadas - resumo.emailsEnviados} na fila de reenvio`
+                    : "todos enviados"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-sm text-muted-foreground">Lembretes automáticos</p>
+                <ul className="mt-2 space-y-1 text-sm text-foreground">
+                  {(
+                    [
+                      ["12/12", "Uma semana antes", resumo.lembreteSemana],
+                      ["18/12", "Véspera", resumo.lembreteVespera],
+                    ] as const
+                  ).map(([dia, texto, enviados]) => (
+                    <li key={dia} className="flex items-baseline justify-between gap-3">
+                      <span>
+                        {dia} · {texto}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {enviados > 0 ? `${enviados} enviados` : "agendado"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs text-muted-foreground">Por e-mail, a quem confirmou.</p>
+              </div>
+            </section>
+
+            {/* ============ Por empresa e por setor ============ */}
+            <section className="mt-3 grid gap-3 lg:grid-cols-5">
+              <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-3">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-medium text-foreground">Confirmados por empresa</p>
+                  <p className="text-xs text-muted-foreground">Clique para filtrar</p>
+                </div>
+                <ul className="mt-4 space-y-1">
+                  {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => {
+                    const ativo = filtro === g;
+                    return (
+                      <li key={g}>
+                        <button
+                          type="button"
+                          onClick={() => setFiltro(ativo ? "todos" : g)}
+                          aria-pressed={ativo}
+                          className={`grid w-full grid-cols-[minmax(0,1fr)_4.5rem_2rem] sm:grid-cols-[13rem_1fr_2.5rem] items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors ${
+                            ativo ? "bg-accent" : "hover:bg-accent/60"
+                          }`}
+                        >
+                          <span
+                            className={`truncate text-sm ${ativo ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                          >
+                            {NOME_GRUPO[g]}
+                          </span>
+                          <span className="h-2 overflow-hidden rounded-full bg-muted">
+                            <span
+                              className="block h-full rounded-full bg-gold"
+                              style={{ width: `${(porEmpresa[g] / maiorEmpresa) * 100}%` }}
+                            />
+                          </span>
+                          <span className="text-right text-sm font-semibold tabular-nums text-foreground">
+                            {porEmpresa[g]}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-sm font-medium text-foreground">
+                    Por setor
+                    {filtro !== "todos" && (
+                      <span className="font-normal text-muted-foreground">
+                        {" "}
+                        · {NOME_GRUPO[filtro]}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Clique para ver quem está</p>
+                </div>
+                {porSetor.length === 0 ? (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Nenhum setor informado{temFiltro ? " neste filtro" : " ainda"}.
+                  </p>
+                ) : (
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {porSetor.map(([setor, quantos]) => {
+                      const ativo = setorFiltro === setor;
+                      return (
+                        <li key={setor}>
+                          <button
+                            type="button"
+                            onClick={() => setSetorFiltro(ativo ? null : setor)}
+                            aria-pressed={ativo}
+                            className={`flex items-baseline gap-2 rounded-lg border px-3 py-1.5 transition-colors ${
+                              ativo
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border hover:border-gold-deep hover:bg-accent/60"
+                            }`}
+                          >
+                            <span
+                              className={`font-semibold tabular-nums ${ativo ? "" : "text-foreground"}`}
+                            >
+                              {quantos}
+                            </span>
+                            <span className={`text-sm ${ativo ? "" : "text-muted-foreground"}`}>
+                              {setor}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </section>
+
+            {/* ============ Lista ============ */}
+            <section className="mt-8">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <input
+                    type="search"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    placeholder="Buscar nome, e-mail ou telefone"
+                    aria-label="Buscar inscrição"
+                    className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 sm:w-72"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={sortear}
+                    disabled={visiveis.length === 0}
+                    className={`${botaoSecundario} flex-1 disabled:opacity-50 lg:flex-none`}
+                    title="Sorteia um nome entre as pessoas da lista abaixo"
+                  >
+                    Sortear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={carregar}
+                    disabled={carregando}
+                    className={`${botaoSecundario} flex-1 disabled:opacity-60 lg:flex-none`}
+                  >
+                    {carregando ? "Atualizando..." : "Atualizar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportarCsv}
+                    className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 lg:flex-none"
+                  >
+                    Exportar
+                  </button>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-muted-foreground">
+                {temFiltro ? (
+                  <>
+                    Mostrando {visiveis.length} de {resumo.confirmadas}
+                    {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`}
+                    {setorFiltro && ` · ${setorFiltro}`} ·{" "}
                     <button
                       type="button"
-                      onClick={() => setFiltro(ativo ? "todos" : g)}
-                      aria-pressed={ativo}
-                      className={`grid w-full grid-cols-[minmax(0,1fr)_4.5rem_2rem] sm:grid-cols-[13rem_1fr_2.5rem] items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors ${
-                        ativo ? "bg-accent" : "hover:bg-accent/60"
-                      }`}
+                      onClick={limparFiltros}
+                      className="text-foreground underline underline-offset-2"
                     >
-                      <span
-                        className={`truncate text-sm ${ativo ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                      >
-                        {NOME_GRUPO[g]}
-                      </span>
-                      <span className="h-2 overflow-hidden rounded-full bg-muted">
-                        <span
-                          className="block h-full rounded-full bg-gold"
-                          style={{ width: `${(porEmpresa[g] / maiorEmpresa) * 100}%` }}
-                        />
-                      </span>
-                      <span className="text-right text-sm font-semibold tabular-nums text-foreground">
-                        {porEmpresa[g]}
-                      </span>
+                      limpar filtros
                     </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-foreground">
-                Por setor
-                {filtro !== "todos" && (
-                  <span className="font-normal text-muted-foreground"> · {NOME_GRUPO[filtro]}</span>
+                  </>
+                ) : (
+                  `${resumo.confirmadas} ${resumo.confirmadas === 1 ? "confirmado" : "confirmados"}`
+                )}
+                {atualizadoEm && (
+                  <span className="text-muted-foreground/70">
+                    {" "}
+                    · atualizado às{" "}
+                    {atualizadoEm.toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
                 )}
               </p>
-              <p className="text-xs text-muted-foreground">Clique para ver quem está</p>
-            </div>
-            {porSetor.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">
-                Nenhum setor informado{temFiltro ? " neste filtro" : " ainda"}.
-              </p>
-            ) : (
-              <ul className="mt-4 flex flex-wrap gap-2">
-                {porSetor.map(([setor, quantos]) => {
-                  const ativo = setorFiltro === setor;
-                  return (
-                    <li key={setor}>
-                      <button
-                        type="button"
-                        onClick={() => setSetorFiltro(ativo ? null : setor)}
-                        aria-pressed={ativo}
-                        className={`flex items-baseline gap-2 rounded-lg border px-3 py-1.5 transition-colors ${
-                          ativo
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border hover:border-gold-deep hover:bg-accent/60"
-                        }`}
-                      >
-                        <span
-                          className={`font-semibold tabular-nums ${ativo ? "" : "text-foreground"}`}
-                        >
-                          {quantos}
-                        </span>
-                        <span className={`text-sm ${ativo ? "" : "text-muted-foreground"}`}>
-                          {setor}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </section>
 
-        {/* ============ Lista ============ */}
-        <section className="mt-8">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="search"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar nome, e-mail ou telefone"
-                aria-label="Buscar inscrição"
-                className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 sm:w-72"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={sortear}
-                disabled={visiveis.length === 0}
-                className={`${botaoSecundario} flex-1 disabled:opacity-50 lg:flex-none`}
-                title="Sorteia um nome entre as pessoas da lista abaixo"
-              >
-                Sortear
-              </button>
-              <button
-                type="button"
-                onClick={carregar}
-                disabled={carregando}
-                className={`${botaoSecundario} flex-1 disabled:opacity-60 lg:flex-none`}
-              >
-                {carregando ? "Atualizando..." : "Atualizar"}
-              </button>
-              <button
-                type="button"
-                onClick={exportarCsv}
-                className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 lg:flex-none"
-              >
-                Exportar
-              </button>
-            </div>
-          </div>
+              {listError && <p className="mt-3 text-sm text-destructive">{listError}</p>}
 
-          <p className="mt-4 text-sm text-muted-foreground">
-            {temFiltro ? (
-              <>
-                Mostrando {visiveis.length} de {resumo.confirmadas}
-                {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`}
-                {setorFiltro && ` · ${setorFiltro}`} ·{" "}
-                <button
-                  type="button"
-                  onClick={limparFiltros}
-                  className="text-foreground underline underline-offset-2"
+              {sorteado && (
+                <div
+                  role="status"
+                  className="mt-3 flex flex-col gap-4 rounded-2xl bg-primary p-5 text-primary-foreground sm:flex-row sm:items-center sm:justify-between"
                 >
-                  limpar filtros
-                </button>
-              </>
-            ) : (
-              `${resumo.confirmadas} ${resumo.confirmadas === 1 ? "confirmado" : "confirmados"}`
-            )}
-            {atualizadoEm && (
-              <span className="text-muted-foreground/70">
-                {" "}
-                · atualizado às{" "}
-                {atualizadoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            )}
-          </p>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
+                      Sorteado
+                      {setorFiltro || filtro !== "todos"
+                        ? ` · ${[filtro !== "todos" ? NOME_GRUPO[filtro] : null, setorFiltro]
+                            .filter(Boolean)
+                            .join(" · ")}`
+                        : ""}
+                    </p>
+                    <p className="mt-1 font-display text-4xl leading-tight">
+                      {sorteado.nome_completo}
+                    </p>
+                    <p className="text-sm text-primary-foreground/70">
+                      {NOME_GRUPO[sorteado.grupo]}
+                      {sorteado.setor ? ` · ${sorteado.setor}` : ""}
+                      {sorteado.cargo && sorteado.cargo !== sorteado.setor
+                        ? ` · ${sorteado.cargo}`
+                        : ""}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={sortear}
+                      className="inline-flex h-10 items-center rounded-lg bg-gold px-4 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
+                    >
+                      Sortear de novo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSorteado(null)}
+                      className="inline-flex h-10 items-center rounded-lg border border-primary-foreground/30 px-4 text-sm text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+              )}
 
-          {listError && <p className="mt-3 text-sm text-destructive">{listError}</p>}
+              {visiveis.length === 0 ? (
+                <div className="mt-3 rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
+                  {resumo.confirmadas === 0
+                    ? "Nenhuma inscrição ainda."
+                    : "Nenhuma inscrição encontrada com esses filtros."}
+                </div>
+              ) : (
+                <>
+                  {/* Computador: tabela */}
+                  <div className="mt-3 hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-muted/50">
+                        <tr className="text-xs uppercase tracking-wider text-muted-foreground">
+                          <th className="px-4 py-3 font-medium">Convidado</th>
+                          <th className="px-4 py-3 font-medium">Empresa</th>
+                          <th className="px-4 py-3 font-medium">Telefone</th>
+                          <th className="px-4 py-3 font-medium">E-mail</th>
+                          <th className="px-4 py-3 text-right font-medium">Resposta</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {visiveis.map((i) => {
+                          const whats = linkWhatsApp(i.telefone);
+                          return (
+                            <tr
+                              key={i.id}
+                              className="align-top transition-colors hover:bg-muted/30"
+                            >
+                              <td className="px-4 py-3">
+                                <p className="font-medium text-foreground">{i.nome_completo}</p>
+                                <p className="text-muted-foreground">{i.email}</p>
+                              </td>
+                              <td className="px-4 py-3">
+                                <p className="text-foreground">{NOME_GRUPO[i.grupo]}</p>
+                                {(i.setor || i.cargo) && (
+                                  <p className="text-muted-foreground">
+                                    {[i.setor, i.cargo && i.cargo !== i.setor ? i.cargo : null]
+                                      .filter(Boolean)
+                                      .join(" · ")}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3">
+                                {whats ? (
+                                  <a
+                                    href={whats}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+                                    title="Abrir no WhatsApp"
+                                  >
+                                    {i.telefone}
+                                  </a>
+                                ) : (
+                                  <span className="text-foreground">{i.telefone}</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <StatusEmail i={i} />
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-muted-foreground">
+                                {dataCurta(i.created_at)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
 
-          {sorteado && (
-            <div
-              role="status"
-              className="mt-3 flex flex-col gap-4 rounded-2xl bg-primary p-5 text-primary-foreground sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
-                  Sorteado
-                  {setorFiltro || filtro !== "todos"
-                    ? ` · ${[filtro !== "todos" ? NOME_GRUPO[filtro] : null, setorFiltro]
-                        .filter(Boolean)
-                        .join(" · ")}`
-                    : ""}
-                </p>
-                <p className="mt-1 font-display text-4xl leading-tight">{sorteado.nome_completo}</p>
-                <p className="text-sm text-primary-foreground/70">
-                  {NOME_GRUPO[sorteado.grupo]}
-                  {sorteado.setor ? ` · ${sorteado.setor}` : ""}
-                  {sorteado.cargo && sorteado.cargo !== sorteado.setor
-                    ? ` · ${sorteado.cargo}`
-                    : ""}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={sortear}
-                  className="inline-flex h-10 items-center rounded-lg bg-gold px-4 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
-                >
-                  Sortear de novo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSorteado(null)}
-                  className="inline-flex h-10 items-center rounded-lg border border-primary-foreground/30 px-4 text-sm text-primary-foreground transition-colors hover:bg-primary-foreground/10"
-                >
-                  Fechar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {visiveis.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-              {resumo.confirmadas === 0
-                ? "Nenhuma inscrição ainda."
-                : "Nenhuma inscrição encontrada com esses filtros."}
-            </div>
-          ) : (
-            <>
-              {/* Computador: tabela */}
-              <div className="mt-3 hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50">
-                    <tr className="text-xs uppercase tracking-wider text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Convidado</th>
-                      <th className="px-4 py-3 font-medium">Empresa</th>
-                      <th className="px-4 py-3 font-medium">Telefone</th>
-                      <th className="px-4 py-3 font-medium">E-mail</th>
-                      <th className="px-4 py-3 text-right font-medium">Resposta</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
+                  {/* Celular: cartões */}
+                  <ul className="mt-3 space-y-2 md:hidden">
                     {visiveis.map((i) => {
                       const whats = linkWhatsApp(i.telefone);
                       return (
-                        <tr key={i.id} className="align-top transition-colors hover:bg-muted/30">
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-foreground">{i.nome_completo}</p>
-                            <p className="text-muted-foreground">{i.email}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-foreground">{NOME_GRUPO[i.grupo]}</p>
-                            {(i.setor || i.cargo) && (
-                              <p className="text-muted-foreground">
-                                {[i.setor, i.cargo && i.cargo !== i.setor ? i.cargo : null]
-                                  .filter(Boolean)
-                                  .join(" · ")}
+                        <li key={i.id} className="rounded-2xl border border-border bg-card p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground">{i.nome_completo}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {NOME_GRUPO[i.grupo]}
+                                {i.setor ? ` · ${i.setor}` : ""}
                               </p>
-                            )}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
-                            {whats ? (
-                              <a
-                                href={whats}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
-                                title="Abrir no WhatsApp"
-                              >
-                                {i.telefone}
-                              </a>
-                            ) : (
-                              <span className="text-foreground">{i.telefone}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <StatusEmail i={i} />
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-muted-foreground">
-                            {dataCurta(i.created_at)}
-                          </td>
-                        </tr>
+                            </div>
+                          </div>
+                          <div className="mt-3 space-y-1 text-sm">
+                            <p className="truncate text-muted-foreground">{i.email}</p>
+                            <p className="flex items-center justify-between gap-3">
+                              {whats ? (
+                                <a
+                                  href={whats}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-foreground underline decoration-border underline-offset-4"
+                                >
+                                  {i.telefone}
+                                </a>
+                              ) : (
+                                <span className="text-foreground">{i.telefone}</span>
+                              )}
+                              <span className="tabular-nums text-muted-foreground">
+                                {dataCurta(i.created_at)}
+                              </span>
+                            </p>
+                          </div>
+                        </li>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Celular: cartões */}
-              <ul className="mt-3 space-y-2 md:hidden">
-                {visiveis.map((i) => {
-                  const whats = linkWhatsApp(i.telefone);
-                  return (
-                    <li key={i.id} className="rounded-2xl border border-border bg-card p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground">{i.nome_completo}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {NOME_GRUPO[i.grupo]}
-                            {i.setor ? ` · ${i.setor}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 space-y-1 text-sm">
-                        <p className="truncate text-muted-foreground">{i.email}</p>
-                        <p className="flex items-center justify-between gap-3">
-                          {whats ? (
-                            <a
-                              href={whats}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-foreground underline decoration-border underline-offset-4"
-                            >
-                              {i.telefone}
-                            </a>
-                          ) : (
-                            <span className="text-foreground">{i.telefone}</span>
-                          )}
-                          <span className="tabular-nums text-muted-foreground">
-                            {dataCurta(i.created_at)}
-                          </span>
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </section>
+                  </ul>
+                </>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

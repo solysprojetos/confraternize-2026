@@ -1,0 +1,335 @@
+import { useEffect, useMemo, useState } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import type { Inscricao } from "@/components/AdminPage";
+
+type Grupo = Inscricao["grupo"];
+
+type Coordenador = {
+  id: string;
+  nome: string;
+  grupo: Grupo;
+  created_at: string;
+};
+
+// A tabela coordenadores e a função de transferência vivem na migração
+// 20261029120000_coordenadores.sql e ainda não constam no arquivo de tipos
+// gerado pelo Supabase — daí o cliente sem tipagem.
+const db = supabase as unknown as SupabaseClient;
+
+const botaoSecundario =
+  "inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent";
+
+const SEM_COORDENADOR = "";
+
+export function CoordenadoresAba({
+  inscricoes,
+  nomeGrupo,
+  onTransferido,
+}: {
+  /** Só as pessoas com presença confirmada. */
+  inscricoes: Inscricao[];
+  nomeGrupo: Record<Grupo, string>;
+  onTransferido: (inscricaoId: string, coordenadorId: string | null) => void;
+}) {
+  const [coordenadores, setCoordenadores] = useState<Coordenador[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [filtro, setFiltro] = useState<"todos" | Grupo>("todos");
+  const [novoNome, setNovoNome] = useState<Partial<Record<Grupo, string>>>({});
+  const [salvando, setSalvando] = useState<string | null>(null);
+
+  const grupos = Object.keys(nomeGrupo) as Grupo[];
+
+  async function carregar() {
+    setErro("");
+    setCarregando(true);
+    const { data, error } = await db
+      .from("coordenadores")
+      .select("*")
+      .order("created_at", { ascending: true });
+    setCarregando(false);
+    if (error) {
+      setErro("Não foi possível carregar os coordenadores.");
+      return;
+    }
+    setCoordenadores((data ?? []) as Coordenador[]);
+  }
+
+  useEffect(() => {
+    carregar();
+  }, []);
+
+  const porId = useMemo(() => new Map(coordenadores.map((c) => [c.id, c])), [coordenadores]);
+
+  /** Pessoas de cada coordenador; quem aponta para um coordenador apagado fica sem. */
+  const pessoasDe = useMemo(() => {
+    const mapa = new Map<string, Inscricao[]>();
+    for (const i of inscricoes) {
+      const chave = i.coordenador_id && porId.has(i.coordenador_id) ? i.coordenador_id : null;
+      if (!chave) continue;
+      mapa.set(chave, [...(mapa.get(chave) ?? []), i]);
+    }
+    return mapa;
+  }, [inscricoes, porId]);
+
+  async function adicionar(grupo: Grupo) {
+    const nome = (novoNome[grupo] ?? "").trim();
+    if (nome.length < 2) return;
+    setErro("");
+    setSalvando(`novo-${grupo}`);
+    const { data, error } = await db
+      .from("coordenadores")
+      .insert({ nome, grupo })
+      .select()
+      .single();
+    setSalvando(null);
+    if (error) {
+      setErro("Não foi possível adicionar o coordenador.");
+      return;
+    }
+    setCoordenadores((atual) => [...atual, data as Coordenador]);
+    setNovoNome((atual) => ({ ...atual, [grupo]: "" }));
+  }
+
+  async function remover(c: Coordenador) {
+    const quantos = pessoasDe.get(c.id)?.length ?? 0;
+    const aviso =
+      quantos > 0
+        ? `Remover ${c.nome}? ${quantos} ${quantos === 1 ? "pessoa fica" : "pessoas ficam"} sem coordenador.`
+        : `Remover ${c.nome}?`;
+    if (!window.confirm(aviso)) return;
+    setErro("");
+    setSalvando(c.id);
+    const { error } = await db.from("coordenadores").delete().eq("id", c.id);
+    setSalvando(null);
+    if (error) {
+      setErro("Não foi possível remover o coordenador.");
+      return;
+    }
+    setCoordenadores((atual) => atual.filter((x) => x.id !== c.id));
+    // O banco já soltou as pessoas (ON DELETE SET NULL); a tela acompanha
+    for (const i of pessoasDe.get(c.id) ?? []) onTransferido(i.id, null);
+  }
+
+  async function transferir(i: Inscricao, destino: string) {
+    const coordenadorId = destino === SEM_COORDENADOR ? null : destino;
+    if ((i.coordenador_id ?? null) === coordenadorId) return;
+    setErro("");
+    setSalvando(i.id);
+    const { error } = await db.rpc("admin_transferir_coordenador", {
+      p_inscricao: i.id,
+      p_coordenador: coordenadorId,
+    });
+    setSalvando(null);
+    if (error) {
+      setErro(`Não foi possível transferir ${i.nome_completo}.`);
+      return;
+    }
+    onTransferido(i.id, coordenadorId);
+  }
+
+  function seletorTransferencia(i: Inscricao) {
+    // Coordenadores da própria empresa primeiro, depois os demais
+    const ordem = [i.grupo, ...grupos.filter((g) => g !== i.grupo)];
+    const atual = i.coordenador_id && porId.has(i.coordenador_id) ? i.coordenador_id : "";
+    return (
+      <select
+        value={atual}
+        disabled={salvando === i.id}
+        onChange={(e) => transferir(i, e.target.value)}
+        aria-label={`Transferir ${i.nome_completo} para outro coordenador`}
+        className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-60 sm:w-56"
+      >
+        <option value={SEM_COORDENADOR}>Sem coordenador</option>
+        {ordem.map((g) => {
+          const doGrupo = coordenadores.filter((c) => c.grupo === g);
+          if (doGrupo.length === 0) return null;
+          return (
+            <optgroup key={g} label={nomeGrupo[g]}>
+              {doGrupo.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </optgroup>
+          );
+        })}
+      </select>
+    );
+  }
+
+  function listaPessoas(pessoas: Inscricao[], vazio: string) {
+    if (pessoas.length === 0) {
+      return <p className="px-1 py-3 text-sm text-muted-foreground">{vazio}</p>;
+    }
+    return (
+      <ul className="divide-y divide-border">
+        {pessoas.map((i) => {
+          const coord = i.coordenador_id ? porId.get(i.coordenador_id) : undefined;
+          return (
+            <li
+              key={i.id}
+              className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{i.nome_completo}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {[
+                    coord && coord.grupo !== i.grupo ? nomeGrupo[i.grupo] : null,
+                    i.setor,
+                    i.cargo && i.cargo !== i.setor ? i.cargo : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || i.telefone}
+                </p>
+              </div>
+              {seletorTransferencia(i)}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  const gruposVisiveis = filtro === "todos" ? grupos : [filtro];
+
+  return (
+    <section className="mt-8">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(["todos", ...grupos] as const).map((g) => {
+            const ativo = filtro === g;
+            return (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setFiltro(g)}
+                aria-pressed={ativo}
+                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                  ativo
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-gold-deep hover:bg-accent/60"
+                }`}
+              >
+                {g === "todos" ? "Todas as empresas" : nomeGrupo[g]}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={carregar}
+          disabled={carregando}
+          className={`${botaoSecundario} disabled:opacity-60`}
+        >
+          {carregando ? "Atualizando..." : "Atualizar coordenadores"}
+        </button>
+      </div>
+
+      <p className="mt-4 text-sm text-muted-foreground">
+        Cadastre os coordenadores de cada empresa e use o seletor ao lado de cada pessoa para
+        transferi-la de coordenador.
+      </p>
+
+      {erro && <p className="mt-3 text-sm text-destructive">{erro}</p>}
+
+      <div className="mt-4 space-y-4">
+        {gruposVisiveis.map((g) => {
+          const pessoasDoGrupo = inscricoes.filter((i) => i.grupo === g);
+          const coordsDoGrupo = coordenadores.filter((c) => c.grupo === g);
+          const semCoordenador = pessoasDoGrupo.filter(
+            (i) => !i.coordenador_id || !porId.has(i.coordenador_id),
+          );
+          const nome = novoNome[g] ?? "";
+          return (
+            <div key={g} className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-display text-2xl uppercase leading-none text-foreground">
+                    {nomeGrupo[g]}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {coordsDoGrupo.length}{" "}
+                    {coordsDoGrupo.length === 1 ? "coordenador" : "coordenadores"} ·{" "}
+                    {pessoasDoGrupo.length} {pessoasDoGrupo.length === 1 ? "pessoa" : "pessoas"}
+                  </p>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    adicionar(g);
+                  }}
+                  className="flex gap-2"
+                >
+                  <input
+                    type="text"
+                    value={nome}
+                    onChange={(e) => setNovoNome((atual) => ({ ...atual, [g]: e.target.value }))}
+                    placeholder="Nome do coordenador"
+                    aria-label={`Novo coordenador de ${nomeGrupo[g]}`}
+                    maxLength={120}
+                    className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 sm:w-56"
+                  />
+                  <button
+                    type="submit"
+                    disabled={nome.trim().length < 2 || salvando === `novo-${g}`}
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    Adicionar
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                {coordsDoGrupo.map((c) => {
+                  const pessoas = pessoasDe.get(c.id) ?? [];
+                  return (
+                    <div key={c.id} className="rounded-xl border border-border p-4">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-sm font-semibold text-foreground">
+                          {c.nome}{" "}
+                          <span className="font-normal tabular-nums text-muted-foreground">
+                            · {pessoas.length}
+                          </span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => remover(c)}
+                          disabled={salvando === c.id}
+                          className="text-xs text-muted-foreground underline underline-offset-2 hover:text-destructive disabled:opacity-50"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      {listaPessoas(pessoas, "Ninguém com este coordenador ainda.")}
+                    </div>
+                  );
+                })}
+
+                <div
+                  className={`rounded-xl border border-dashed border-border bg-muted/30 p-4 ${
+                    coordsDoGrupo.length % 2 === 0 ? "lg:col-span-2" : ""
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    Sem coordenador{" "}
+                    <span className="font-normal tabular-nums text-muted-foreground">
+                      · {semCoordenador.length}
+                    </span>
+                  </p>
+                  {listaPessoas(
+                    semCoordenador,
+                    pessoasDoGrupo.length === 0
+                      ? "Nenhuma presença confirmada nesta empresa."
+                      : "Todos já têm coordenador.",
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
