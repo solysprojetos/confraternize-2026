@@ -22,6 +22,8 @@ const botaoSecundario =
 
 const SEM_COORDENADOR = "";
 
+const normalizar = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+
 export function CoordenadoresAba({
   inscricoes,
   nomeGrupo,
@@ -73,11 +75,9 @@ export function CoordenadoresAba({
     return mapa;
   }, [inscricoes, porId]);
 
-  async function adicionar(grupo: Grupo) {
-    const nome = (novoNome[grupo] ?? "").trim();
-    if (nome.length < 2) return;
+  async function criarCoordenador(nome: string, grupo: Grupo, chave: string) {
     setErro("");
-    setSalvando(`novo-${grupo}`);
+    setSalvando(chave);
     const { data, error } = await db
       .from("coordenadores")
       .insert({ nome, grupo })
@@ -86,11 +86,32 @@ export function CoordenadoresAba({
     setSalvando(null);
     if (error) {
       setErro("Não foi possível adicionar o coordenador.");
-      return;
+      return null;
     }
-    setCoordenadores((atual) => [...atual, data as Coordenador]);
-    setNovoNome((atual) => ({ ...atual, [grupo]: "" }));
+    const novo = data as Coordenador;
+    setCoordenadores((atual) => [...atual, novo]);
+    return novo;
   }
+
+  async function adicionar(grupo: Grupo) {
+    const nome = (novoNome[grupo] ?? "").trim();
+    if (nome.length < 2) return;
+    if (await criarCoordenador(nome, grupo, `novo-${grupo}`)) {
+      setNovoNome((atual) => ({ ...atual, [grupo]: "" }));
+    }
+  }
+
+  /** Transforma uma pessoa confirmada em coordenador da empresa dela. */
+  async function tornarCoordenador(i: Inscricao) {
+    const novo = await criarCoordenador(i.nome_completo.trim(), i.grupo, `coord-${i.id}`);
+    // A própria pessoa passa a ficar sob a sua coordenação
+    if (novo) await transferir(i, novo.id);
+  }
+
+  const ehCoordenador = (i: Inscricao) =>
+    coordenadores.some(
+      (c) => c.grupo === i.grupo && normalizar(c.nome) === normalizar(i.nome_completo),
+    );
 
   async function remover(c: Coordenador) {
     const quantos = pessoasDe.get(c.id)?.length ?? 0;
@@ -133,6 +154,13 @@ export function CoordenadoresAba({
     // Coordenadores da própria empresa primeiro, depois os demais
     const ordem = [i.grupo, ...grupos.filter((g) => g !== i.grupo)];
     const atual = i.coordenador_id && porId.has(i.coordenador_id) ? i.coordenador_id : "";
+    if (coordenadores.length === 0) {
+      return (
+        <span className="text-xs text-muted-foreground">
+          Cadastre um coordenador para transferir
+        </span>
+      );
+    }
     return (
       <select
         value={atual}
@@ -141,7 +169,9 @@ export function CoordenadoresAba({
         aria-label={`Transferir ${i.nome_completo} para outro coordenador`}
         className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-60 sm:w-56"
       >
-        <option value={SEM_COORDENADOR}>Sem coordenador</option>
+        <option value={SEM_COORDENADOR}>
+          {atual ? "Tirar do coordenador" : "Transferir para…"}
+        </option>
         {ordem.map((g) => {
           const doGrupo = coordenadores.filter((c) => c.grupo === g);
           if (doGrupo.length === 0) return null;
@@ -184,7 +214,20 @@ export function CoordenadoresAba({
                     .join(" · ") || i.telefone}
                 </p>
               </div>
-              {seletorTransferencia(i)}
+              <div className="flex shrink-0 items-center gap-2">
+                {!ehCoordenador(i) && (
+                  <button
+                    type="button"
+                    onClick={() => tornarCoordenador(i)}
+                    disabled={salvando === `coord-${i.id}`}
+                    title="Cadastra esta pessoa como coordenador da empresa dela"
+                    className="inline-flex h-9 shrink-0 items-center rounded-lg border border-border px-3 text-xs font-medium text-foreground transition-colors hover:border-gold-deep hover:bg-accent/60 disabled:opacity-50"
+                  >
+                    Tornar coordenador
+                  </button>
+                )}
+                {seletorTransferencia(i)}
+              </div>
             </li>
           );
         })}
@@ -228,8 +271,8 @@ export function CoordenadoresAba({
       </div>
 
       <p className="mt-4 text-sm text-muted-foreground">
-        Cadastre os coordenadores de cada empresa e use o seletor ao lado de cada pessoa para
-        transferi-la de coordenador.
+        Cadastre os coordenadores de cada empresa (digitando o nome ou com “Tornar coordenador” ao
+        lado da pessoa) e use “Transferir para…” para mudar cada pessoa de coordenador.
       </p>
 
       {erro && <p className="mt-3 text-sm text-destructive">{erro}</p>}
