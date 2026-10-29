@@ -431,6 +431,9 @@ export function AdminPage() {
             inscricoes={confirmadas}
             nomeGrupo={NOME_GRUPO}
             onTransferido={transferido}
+            onSetorAlterado={(id, setor) =>
+              setInscricoes((atual) => atual.map((i) => (i.id === id ? { ...i, setor } : i)))
+            }
           />
         ) : (
           <>
