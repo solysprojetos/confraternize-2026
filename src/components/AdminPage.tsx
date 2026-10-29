@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { evento } from "@/config/evento";
 import { CoordenadoresAba } from "@/components/CoordenadoresAba";
@@ -159,6 +160,47 @@ export function AdminPage() {
   const maiorEmpresa = Math.max(1, ...Object.values(porEmpresa));
 
   const confirmadas = useMemo(() => inscricoes.filter(vaiComparecer), [inscricoes]);
+
+  const [transferindo, setTransferindo] = useState<string | null>(null);
+
+  /** Muda a pessoa de empresa (ex.: de Convidados para SGroup Nacional). */
+  async function transferirEmpresa(i: Inscricao, grupo: Inscricao["grupo"]) {
+    if (grupo === i.grupo) return;
+    if (!window.confirm(`Transferir ${i.nome_completo} para ${NOME_GRUPO[grupo]}?`)) return;
+    setListError("");
+    setTransferindo(i.id);
+    // A função vive na migração 20261029130000_transferir_empresa.sql e ainda
+    // não consta no arquivo de tipos gerado pelo Supabase.
+    const { error } = await (supabase as unknown as SupabaseClient).rpc("admin_transferir_grupo", {
+      p_inscricao: i.id,
+      p_grupo: grupo,
+    });
+    setTransferindo(null);
+    if (error) {
+      setListError(`Não foi possível transferir ${i.nome_completo}.`);
+      return;
+    }
+    setInscricoes((atual) => atual.map((x) => (x.id === i.id ? { ...x, grupo } : x)));
+  }
+
+  function seletorEmpresa(i: Inscricao) {
+    return (
+      <select
+        value={i.grupo}
+        disabled={transferindo === i.id}
+        onChange={(e) => transferirEmpresa(i, e.target.value as Inscricao["grupo"])}
+        aria-label={`Transferir ${i.nome_completo} para outra empresa`}
+        title="Transferir para outra empresa"
+        className="-ml-1 max-w-full cursor-pointer rounded-md border border-border bg-card px-1 py-0.5 text-sm text-foreground outline-none transition-colors hover:border-gold-deep focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-60"
+      >
+        {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => (
+          <option key={g} value={g}>
+            {NOME_GRUPO[g]}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   function transferido(inscricaoId: string, coordenadorId: string | null) {
     setInscricoes((atual) =>
@@ -657,7 +699,7 @@ export function AdminPage() {
                       <thead className="bg-muted/50">
                         <tr className="text-xs uppercase tracking-wider text-muted-foreground">
                           <th className="px-4 py-3 font-medium">Convidado</th>
-                          <th className="px-4 py-3 font-medium">Empresa</th>
+                          <th className="px-4 py-3 font-medium">Empresa · transferir</th>
                           <th className="px-4 py-3 font-medium">Telefone</th>
                           <th className="px-4 py-3 font-medium">E-mail</th>
                           <th className="px-4 py-3 text-right font-medium">Resposta</th>
@@ -676,7 +718,7 @@ export function AdminPage() {
                                 <p className="text-muted-foreground">{i.email}</p>
                               </td>
                               <td className="px-4 py-3">
-                                <p className="text-foreground">{NOME_GRUPO[i.grupo]}</p>
+                                {seletorEmpresa(i)}
                                 {(i.setor || i.cargo) && (
                                   <p className="text-muted-foreground">
                                     {[i.setor, i.cargo && i.cargo !== i.setor ? i.cargo : null]
@@ -722,10 +764,10 @@ export function AdminPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="font-medium text-foreground">{i.nome_completo}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {NOME_GRUPO[i.grupo]}
-                                {i.setor ? ` · ${i.setor}` : ""}
-                              </p>
+                              {seletorEmpresa(i)}
+                              {i.setor && (
+                                <p className="text-sm text-muted-foreground">{i.setor}</p>
+                              )}
                             </div>
                           </div>
                           <div className="mt-3 space-y-1 text-sm">
