@@ -9,6 +9,7 @@ import {
   evento,
   setores,
   temVideoConvite,
+  inscricoesEncerradas,
   temVideoRetrospectiva,
   urlDoAsset,
   videoRetrospectiva,
@@ -250,6 +251,8 @@ export function InscricaoPage() {
   // com os dois visíveis, a pessoa via o mesmo botão duas vezes.
   const [botaoPrincipalVisivel, setBotaoPrincipalVisivel] = useState(true);
   const temVideo = temVideoConvite();
+  // Encerradas para quem ainda não respondeu nesta visita
+  const encerradas = inscricoesEncerradas && !done;
 
   useEffect(() => {
     const alvo = botaoPrincipal.current;
@@ -607,62 +610,75 @@ export function InscricaoPage() {
           {/* Liberação da confirmação: o texto troca quando o convite
               termina e o botão passa de apagado a marinho com uma animação
               curta. */}
-          <div className="mx-auto w-full max-w-[940px] pb-10 pt-7 text-center sm:pb-24 sm:pt-12">
-            <p
-              key={done ? "feito" : liberado ? "liberado" : "aguardando"}
-              className={`trocar mx-auto max-w-md text-[12px] font-medium uppercase leading-[1.8] tracking-[0.16em] sm:text-[13px] ${
-                liberado ? "text-foreground" : "text-muted-foreground"
-              }`}
-              aria-live="polite"
-            >
-              {done
-                ? confirmou
-                  ? "Sua presença está confirmada"
-                  : "Sua resposta foi registrada"
-                : liberado
-                  ? "Sua confirmação de presença está liberada"
-                  : "Assista ao vídeo para liberar sua confirmação de presença"}
-            </p>
-            <span
-              className={`mx-auto mt-6 block h-px transition-all duration-700 ease-out ${
-                liberado ? "w-14 bg-gold-deep/60" : "w-6 bg-border"
-              }`}
-              aria-hidden="true"
-            />
-
-            <div className="mt-6 flex justify-center sm:mt-8">
-              <Button
-                ref={botaoPrincipal}
-                type="button"
-                aria-disabled={!liberado}
-                aria-label={
-                  liberado
-                    ? undefined
-                    : "Confirmar minha presença. Disponível depois de assistir ao vídeo."
-                }
-                onClick={() => {
-                  if (!liberado) return;
-                  if (done) irAte(destinoConfirmacao.current);
-                  else abrirConfirmacao();
-                }}
-                className={`min-h-[62px] w-full max-w-[24rem] rounded-[4px] px-10 py-5 text-[12px] font-semibold uppercase tracking-[0.22em] transition-[background-color,border-color,color,box-shadow,transform] duration-300 ease-out active:scale-[0.99] ${
-                  done
-                    ? "border border-border bg-card text-foreground hover:border-gold-deep"
-                    : liberado
-                      ? "liberar border border-navy-deep bg-navy-deep text-primary-foreground shadow-[0_16px_36px_-26px_color-mix(in_oklab,var(--navy-deep)_90%,transparent)] hover:-translate-y-px hover:bg-navy hover:shadow-[0_20px_40px_-24px_color-mix(in_oklab,var(--navy-deep)_90%,transparent)]"
-                      : "cursor-not-allowed border border-border bg-transparent text-muted-foreground"
-                }`}
-              >
-                {done ? "Ver minha resposta" : "Confirmar minha presença"}
-              </Button>
-            </div>
-
-            {errors["form"] && !abriuFormulario && (
-              <p className="mt-6 text-center text-sm text-destructive" role="alert">
-                {errors["form"]}
+          {encerradas ? (
+            <div className="mx-auto w-full max-w-[940px] pb-10 pt-7 text-center sm:pb-24 sm:pt-12">
+              <p className="text-[10px] font-medium uppercase tracking-[0.36em] text-gold-texto">
+                Inscrições encerradas
               </p>
-            )}
-          </div>
+              <span className="mx-auto mt-5 block h-px w-14 bg-gold-deep/60" aria-hidden="true" />
+              <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                As vagas para a Confraternização 2026 foram preenchidas e as confirmações de
+                presença estão encerradas. Obrigado a todos que responderam!
+              </p>
+            </div>
+          ) : (
+            <div className="mx-auto w-full max-w-[940px] pb-10 pt-7 text-center sm:pb-24 sm:pt-12">
+              <p
+                key={done ? "feito" : liberado ? "liberado" : "aguardando"}
+                className={`trocar mx-auto max-w-md text-[12px] font-medium uppercase leading-[1.8] tracking-[0.16em] sm:text-[13px] ${
+                  liberado ? "text-foreground" : "text-muted-foreground"
+                }`}
+                aria-live="polite"
+              >
+                {done
+                  ? confirmou
+                    ? "Sua presença está confirmada"
+                    : "Sua resposta foi registrada"
+                  : liberado
+                    ? "Sua confirmação de presença está liberada"
+                    : "Assista ao vídeo para liberar sua confirmação de presença"}
+              </p>
+              <span
+                className={`mx-auto mt-6 block h-px transition-all duration-700 ease-out ${
+                  liberado ? "w-14 bg-gold-deep/60" : "w-6 bg-border"
+                }`}
+                aria-hidden="true"
+              />
+
+              <div className="mt-6 flex justify-center sm:mt-8">
+                <Button
+                  ref={botaoPrincipal}
+                  type="button"
+                  aria-disabled={!liberado}
+                  aria-label={
+                    liberado
+                      ? undefined
+                      : "Confirmar minha presença. Disponível depois de assistir ao vídeo."
+                  }
+                  onClick={() => {
+                    if (!liberado) return;
+                    if (done) irAte(destinoConfirmacao.current);
+                    else abrirConfirmacao();
+                  }}
+                  className={`min-h-[62px] w-full max-w-[24rem] rounded-[4px] px-10 py-5 text-[12px] font-semibold uppercase tracking-[0.22em] transition-[background-color,border-color,color,box-shadow,transform] duration-300 ease-out active:scale-[0.99] ${
+                    done
+                      ? "border border-border bg-card text-foreground hover:border-gold-deep"
+                      : liberado
+                        ? "liberar border border-navy-deep bg-navy-deep text-primary-foreground shadow-[0_16px_36px_-26px_color-mix(in_oklab,var(--navy-deep)_90%,transparent)] hover:-translate-y-px hover:bg-navy hover:shadow-[0_20px_40px_-24px_color-mix(in_oklab,var(--navy-deep)_90%,transparent)]"
+                        : "cursor-not-allowed border border-border bg-transparent text-muted-foreground"
+                  }`}
+                >
+                  {done ? "Ver minha resposta" : "Confirmar minha presença"}
+                </Button>
+              </div>
+
+              {errors["form"] && !abriuFormulario && (
+                <p className="mt-6 text-center text-sm text-destructive" role="alert">
+                  {errors["form"]}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1277,7 +1293,7 @@ export function InscricaoPage() {
 
       {/* A barra fixa some com o formulário aberto: a pessoa já está onde o
           botão levaria, e ele ficava por cima dos campos. */}
-      {liberado && !done && !abriuFormulario && !botaoPrincipalVisivel && (
+      {liberado && !encerradas && !done && !abriuFormulario && !botaoPrincipalVisivel && (
         <div className="abrir fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-md sm:hidden">
           <Button
             type="button"

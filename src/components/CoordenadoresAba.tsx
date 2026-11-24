@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { setores } from "@/config/evento";
 import type { Inscricao } from "@/components/AdminPage";
 
 type Grupo = Inscricao["grupo"];
@@ -29,22 +28,23 @@ const SEM_COORDENADOR = "";
 /** Valor do filtro por coordenador que mostra só quem não tem nenhum. */
 const FILTRO_SEM = "sem";
 
-/** Quem não tem setor (convidados, parceiros, cadastros antigos) entra em "Outros". */
-const OUTROS = "Outros";
+/** Quem não tem setor (convidados, parceiros, cadastros antigos). */
+const OUTROS = "Sem setor";
 
 const normalizar = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
-
-const setorDe = (i: Inscricao) => (i.setor && setores.includes(i.setor) ? i.setor : OUTROS);
 
 export function CoordenadoresAba({
   inscricoes,
   nomeGrupo,
+  setores,
   onTransferido,
   onSetorAlterado,
 }: {
   /** Só as pessoas com presença confirmada. */
   inscricoes: Inscricao[];
   nomeGrupo: Record<Grupo, string>;
+  /** Setores ativos, na ordem do cadastro. */
+  setores: string[];
   onTransferido: (inscricaoId: string, coordenadorId: string | null) => void;
   onSetorAlterado: (inscricaoId: string, setor: string | null) => void;
 }) {
@@ -57,6 +57,7 @@ export function CoordenadoresAba({
   /** Coordenador escolhido no filtro de cada empresa (ou "" para ver todos). */
   const [coordFiltro, setCoordFiltro] = useState<Partial<Record<Grupo, string>>>({});
 
+  const setorDe = (i: Inscricao) => (i.setor && setores.includes(i.setor) ? i.setor : OUTROS);
   const grupos = Object.keys(nomeGrupo) as Grupo[];
   const colunas = [...setores, OUTROS];
 
@@ -271,7 +272,7 @@ export function CoordenadoresAba({
   const gruposVisiveis = filtro === "todos" ? grupos : [filtro];
 
   return (
-    <section className="mt-8">
+    <section>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {(["todos", ...grupos] as const).map((g) => {
@@ -324,10 +325,13 @@ export function CoordenadoresAba({
                 : pessoasDoGrupo.filter((i) => coordenadorDe(i) === coordAtivo);
           const semCoordenador = pessoasDoGrupo.filter((i) => !coordenadorDe(i)).length;
           return (
-            <div key={g} className="rounded-2xl border border-border bg-card p-5">
+            <div
+              key={g}
+              className="rounded-xl border border-border bg-card p-5 shadow-[0_1px_2px_rgb(15_23_42/0.04)]"
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-display text-2xl uppercase leading-none text-foreground">
+                  <p className="text-base font-semibold tracking-tight text-foreground">
                     {nomeGrupo[g]}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -451,7 +455,7 @@ export function CoordenadoresAba({
                     const total = pessoasDoGrupo.filter((i) => setorDe(i) === s).length;
                     if (total === 0) return null;
                     return (
-                      <details key={s} open className="rounded-xl border border-border px-4">
+                      <details key={s} open className="rounded-lg border border-border px-4">
                         <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 py-3">
                           <span className="text-sm font-semibold text-foreground">
                             {s}{" "}

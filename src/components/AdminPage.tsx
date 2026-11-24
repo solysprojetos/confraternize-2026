@@ -1,76 +1,71 @@
 import { useEffect, useMemo, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  ClipboardList,
+  Hourglass,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PartyPopper,
+  RefreshCw,
+  UserCog,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { evento } from "@/config/evento";
+import { evento, setores as setoresPadrao } from "@/config/evento";
 import { CoordenadoresAba } from "@/components/CoordenadoresAba";
+import { VisaoGeral } from "@/components/admin/VisaoGeral";
+import { ListaInscricoes } from "@/components/admin/ListaInscricoes";
+import { SetoresAba } from "@/components/admin/SetoresAba";
+import { Sorteio } from "@/components/admin/Sorteio";
+import {
+  botao,
+  db,
+  ehReserva,
+  naListaPrincipal,
+  NOME_GRUPO,
+  vaiComparecer,
+  type Grupo,
+  type Inscricao,
+} from "@/components/admin/comum";
 
-export type Inscricao = {
-  id: string;
-  nome_completo: string;
-  telefone: string;
-  email: string;
-  grupo: "sgroup" | "solys" | "grupo_support" | "parceiros" | "convidados";
-  created_at: string;
-  /** Só existe depois da migração 20260914120000_resposta_do_convite. */
-  comparecera?: boolean | null;
-  cargo?: string | null;
-  setor?: string | null;
-  convite_enviado?: boolean | null;
-  lembrete_semana_enviado?: boolean | null;
-  lembrete_vespera_enviado?: boolean | null;
-  /** Só existe depois da migração 20261029120000_coordenadores. */
-  coordenador_id?: string | null;
+export type { Inscricao } from "@/components/admin/comum";
+
+type Secao = "visao" | "principal" | "reserva" | "setores" | "coordenadores" | "sorteio";
+
+const SECOES: Record<Secao, { titulo: string; descricao: string }> = {
+  visao: {
+    titulo: "Visão geral",
+    descricao: "Os números da confraternização em um só lugar.",
+  },
+  principal: {
+    titulo: "Lista principal",
+    descricao: "Presenças confirmadas, por ordem de inscrição.",
+  },
+  reserva: {
+    titulo: "Cadastro reserva",
+    descricao: "Quem se inscreveu depois do fechamento da lista principal.",
+  },
+  setores: {
+    titulo: "Setores",
+    descricao: "Crie, renomeie ou remova setores e mude as pessoas de setor.",
+  },
+  coordenadores: {
+    titulo: "Coordenadores",
+    descricao: "Coordenadores de cada empresa e as pessoas sob cada um.",
+  },
+  sorteio: {
+    titulo: "Sorteio",
+    descricao: "Sorteie nomes entre as pessoas confirmadas.",
+  },
 };
 
-/** Quem não respondeu "não" conta como presença confirmada. */
-const vaiComparecer = (i: Inscricao) => i.comparecera !== false;
-
-const NOME_GRUPO: Record<Inscricao["grupo"], string> = {
-  grupo_support: "Grupo Support",
-  sgroup: "SGroup Nacional",
-  solys: "Solys Gestão Administrativa",
-  parceiros: "Parceiros",
-  convidados: "Convidados",
-};
-
-const field =
-  "w-full rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40";
-
-const botaoSecundario =
-  "inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent";
-
-/** Tira acentos e caixa para a busca achar "joao" em "João". */
-const normalizar = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-
-/** Link do WhatsApp para o telefone digitado no formulário (DDD + número). */
-function linkWhatsApp(telefone: string): string | null {
-  const digitos = telefone.replace(/\D/g, "");
-  if (digitos.length < 10) return null;
-  return `https://wa.me/${digitos.length <= 11 ? "55" + digitos : digitos}`;
-}
-
-function dataCurta(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+const campoLogin =
+  "w-full rounded-lg border border-border bg-card px-3.5 py-2.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/30";
 
 function diasParaOEvento(): number {
   const ms = new Date(evento.inicioIso).getTime() - Date.now();
-  // Arredonda para baixo, como a contagem regressiva do site
   return Math.max(0, Math.floor(ms / 86400000));
-}
-
-function StatusEmail({ i }: { i: Inscricao }) {
-  if (!vaiComparecer(i)) return <span className="text-muted-foreground">—</span>;
-  return i.convite_enviado ? (
-    <span className="text-foreground">Enviado</span>
-  ) : (
-    <span className="text-amber-700">Na fila</span>
-  );
 }
 
 export function AdminPage() {
@@ -82,14 +77,15 @@ export function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
+  const [setores, setSetores] = useState<string[]>(setoresPadrao);
   const [carregando, setCarregando] = useState(false);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
-  const [listError, setListError] = useState("");
-  const [filtro, setFiltro] = useState<"todos" | Inscricao["grupo"]>("todos");
-  const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
-  const [busca, setBusca] = useState("");
-  const [sorteado, setSorteado] = useState<Inscricao | null>(null);
-  const [aba, setAba] = useState<"inscricoes" | "coordenadores">("inscricoes");
+  const [erro, setErro] = useState("");
+  const [secao, setSecao] = useState<Secao>("visao");
+  const [menuAberto, setMenuAberto] = useState(false);
+  /** Empresa que a lista deve abrir filtrada (vinda de um clique na visão geral). */
+  const [empresaInicial, setEmpresaInicial] = useState<Grupo | null>(null);
+  const [ocupado, setOcupado] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -102,16 +98,28 @@ export function AdminPage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  async function carregarSetores() {
+    const { data, error } = await db
+      .from("convite_setores")
+      .select("nome, ordem")
+      .eq("ativo", true)
+      .order("ordem", { ascending: true });
+    // Sem a migração dos setores (ou sem linhas), vale a lista do site
+    if (!error && data && data.length > 0) {
+      setSetores((data as { nome: string }[]).map((s) => s.nome));
+    }
+  }
+
   async function carregar() {
-    setListError("");
+    setErro("");
     setCarregando(true);
-    const { data, error } = await supabase
-      .from("inscricoes")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data, error }] = await Promise.all([
+      supabase.from("inscricoes").select("*").order("created_at", { ascending: true }),
+      carregarSetores(),
+    ]);
     setCarregando(false);
     if (error) {
-      setListError("Não foi possível carregar as inscrições.");
+      setErro("Não foi possível carregar as inscrições.");
       return;
     }
     setInscricoes((data ?? []) as Inscricao[]);
@@ -120,6 +128,7 @@ export function AdminPage() {
 
   useEffect(() => {
     if (sessionEmail) carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionEmail]);
 
   async function handleLogin(e: React.FormEvent) {
@@ -134,675 +143,378 @@ export function AdminPage() {
     if (error) setLoginError("E-mail ou senha incorretos.");
   }
 
-  const resumo = useMemo(() => {
-    const confirmadas = inscricoes.filter(vaiComparecer);
-    return {
-      total: inscricoes.length,
-      confirmadas: confirmadas.length,
-      emailsEnviados: confirmadas.filter((i) => i.convite_enviado).length,
-      lembreteSemana: confirmadas.filter((i) => i.lembrete_semana_enviado).length,
-      lembreteVespera: confirmadas.filter((i) => i.lembrete_vespera_enviado).length,
-    };
+  /** Posição de cada pessoa na ordem de inscrição (1 = primeira). */
+  const posicao = useMemo(() => {
+    const ordenadas = [...inscricoes].sort(
+      (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+    );
+    return new Map(ordenadas.map((i, n) => [i.id, n + 1]));
   }, [inscricoes]);
 
-  // Confirmados por empresa: é o número que importa para o buffet
-  const porEmpresa = useMemo(() => {
-    const conta: Record<Inscricao["grupo"], number> = {
-      grupo_support: 0,
-      sgroup: 0,
-      solys: 0,
-      parceiros: 0,
-      convidados: 0,
-    };
-    for (const i of inscricoes) if (vaiComparecer(i)) conta[i.grupo] += 1;
-    return conta;
-  }, [inscricoes]);
-  const maiorEmpresa = Math.max(1, ...Object.values(porEmpresa));
-
-  const confirmadas = useMemo(() => inscricoes.filter(vaiComparecer), [inscricoes]);
-
-  const [transferindo, setTransferindo] = useState<string | null>(null);
-
-  /** Muda a pessoa de empresa (ex.: de Convidados para SGroup Nacional). */
-  async function transferirEmpresa(i: Inscricao, grupo: Inscricao["grupo"]) {
-    if (grupo === i.grupo) return;
-    if (!window.confirm(`Transferir ${i.nome_completo} para ${NOME_GRUPO[grupo]}?`)) return;
-    setListError("");
-    setTransferindo(i.id);
-    // A função vive na migração 20261029130000_transferir_empresa.sql e ainda
-    // não consta no arquivo de tipos gerado pelo Supabase.
-    const { error } = await (supabase as unknown as SupabaseClient).rpc("admin_transferir_grupo", {
-      p_inscricao: i.id,
-      p_grupo: grupo,
-    });
-    setTransferindo(null);
-    if (error) {
-      setListError(`Não foi possível transferir ${i.nome_completo}.`);
-      return;
-    }
-    setInscricoes((atual) => atual.map((x) => (x.id === i.id ? { ...x, grupo } : x)));
-  }
-
-  function seletorEmpresa(i: Inscricao) {
-    return (
-      <select
-        value={i.grupo}
-        disabled={transferindo === i.id}
-        onChange={(e) => transferirEmpresa(i, e.target.value as Inscricao["grupo"])}
-        aria-label={`Transferir ${i.nome_completo} para outra empresa`}
-        title="Transferir para outra empresa"
-        className="-ml-1 max-w-full cursor-pointer rounded-md border border-border bg-card px-1 py-0.5 text-sm text-foreground outline-none transition-colors hover:border-gold-deep focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-60"
-      >
-        {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => (
-          <option key={g} value={g}>
-            {NOME_GRUPO[g]}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  function transferido(inscricaoId: string, coordenadorId: string | null) {
-    setInscricoes((atual) =>
-      atual.map((i) => (i.id === inscricaoId ? { ...i, coordenador_id: coordenadorId } : i)),
-    );
-  }
-
-  // Confirmados, filtrados por empresa e busca (sem o setor)
-  const filtradas = useMemo(() => {
-    const termo = normalizar(busca.trim());
-    return inscricoes.filter((i) => {
-      if (!vaiComparecer(i)) return false;
-      if (filtro !== "todos" && i.grupo !== filtro) return false;
-      if (!termo) return true;
-      return normalizar(`${i.nome_completo} ${i.email} ${i.telefone} ${i.cargo ?? ""}`).includes(
-        termo,
-      );
-    });
-  }, [inscricoes, filtro, busca]);
-
-  // Quantas pessoas por setor dentro da empresa/busca da tela. Não depende do
-  // setor escolhido, para os outros setores continuarem clicáveis.
-  const porSetor = useMemo(() => {
-    const conta = new Map<string, number>();
-    for (const i of filtradas) {
-      if (!i.setor) continue;
-      conta.set(i.setor, (conta.get(i.setor) ?? 0) + 1);
-    }
-    return [...conta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
-  }, [filtradas]);
-
-  const visiveis = useMemo(
-    () => (setorFiltro ? filtradas.filter((i) => i.setor === setorFiltro) : filtradas),
-    [filtradas, setorFiltro],
+  const principal = useMemo(() => inscricoes.filter(naListaPrincipal), [inscricoes]);
+  const reserva = useMemo(
+    () => inscricoes.filter((i) => vaiComparecer(i) && ehReserva(i)),
+    [inscricoes],
   );
 
-  const temFiltro = filtro !== "todos" || setorFiltro !== null || busca.trim() !== "";
-
-  function limparFiltros() {
-    setFiltro("todos");
-    setSetorFiltro(null);
-    setBusca("");
+  function alterar(id: string, mudanca: Partial<Inscricao>) {
+    setInscricoes((atual) => atual.map((i) => (i.id === id ? { ...i, ...mudanca } : i)));
   }
 
-  /** Sorteia um nome entre as pessoas que estão na lista agora (com os filtros). */
-  function sortear() {
-    if (visiveis.length === 0) return;
-    const aleatorio = new Uint32Array(1);
-    crypto.getRandomValues(aleatorio);
-    setSorteado(visiveis[(aleatorio[0] ?? 0) % visiveis.length] ?? null);
+  /** Chama uma função do banco para uma pessoa e reflete o resultado na tela. */
+  async function executar(
+    i: Inscricao,
+    funcao: string,
+    parametros: Record<string, unknown>,
+    mudanca: Partial<Inscricao>,
+    falha: string,
+  ) {
+    setErro("");
+    setOcupado(i.id);
+    const { error } = await db.rpc(funcao, { p_inscricao: i.id, ...parametros });
+    setOcupado(null);
+    if (error) {
+      setErro(`${falha} ${i.nome_completo}.`);
+      return;
+    }
+    alterar(i.id, mudanca);
   }
 
-  function exportarCsv() {
-    const linhas = [
-      [
-        "Nome completo",
-        "Telefone",
-        "E-mail",
-        "Grupo",
-        "Setor",
-        "Cargo",
-        "Convite por e-mail",
-        "Data da resposta",
-      ],
-      ...visiveis.map((i) => [
-        i.nome_completo,
-        i.telefone,
-        i.email,
-        NOME_GRUPO[i.grupo],
-        i.setor ?? "",
-        i.cargo ?? "",
-        i.convite_enviado ? "Enviado" : "Na fila",
-        new Date(i.created_at).toLocaleString("pt-BR"),
-      ]),
-    ];
-    const csv = linhas
-      .map((l) => l.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(";"))
-      .join("\r\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "inscricoes-confraternizacao-2026.csv";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
+  const acoes = {
+    ocupado,
+    transferirEmpresa(i: Inscricao, grupo: Grupo) {
+      if (grupo === i.grupo) return;
+      if (!window.confirm(`Transferir ${i.nome_completo} para ${NOME_GRUPO[grupo]}?`)) return;
+      void executar(
+        i,
+        "admin_transferir_grupo",
+        { p_grupo: grupo },
+        { grupo },
+        "Não foi possível transferir",
+      );
+    },
+    mudarSetor(i: Inscricao, setor: string | null) {
+      if ((i.setor ?? null) === setor) return;
+      void executar(
+        i,
+        "admin_transferir_setor",
+        { p_setor: setor },
+        { setor },
+        "Não foi possível mudar o setor de",
+      );
+    },
+    moverReserva(i: Inscricao) {
+      const paraReserva = !ehReserva(i);
+      const destino = paraReserva ? "o cadastro reserva" : "a lista principal";
+      if (!window.confirm(`Mover ${i.nome_completo} para ${destino}?`)) return;
+      void executar(
+        i,
+        "admin_definir_reserva",
+        { p_reserva: paraReserva },
+        { cadastro_reserva: paraReserva },
+        "Não foi possível mover",
+      );
+    },
+  };
 
   if (checking) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Carregando...</p>
+      <main className="painel-admin flex min-h-screen items-center justify-center bg-surface">
+        <p className="text-sm text-muted-foreground">Carregando...</p>
       </main>
     );
   }
 
   if (!sessionEmail) {
     return (
-      <main className="min-h-screen bg-background">
-        <div className="relative mx-auto w-full max-w-md px-5 py-20">
-          <header className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-texto">
-              Área restrita
-            </p>
-            <h1 className="mt-3 font-display text-4xl uppercase leading-none text-foreground">
-              Confraternização <span className="normal-case italic text-gold-texto">2026</span>
+      <main className="painel-admin grid min-h-screen bg-surface lg:grid-cols-[1fr_1.1fr]">
+        <aside className="hidden flex-col justify-between bg-navy-deep p-12 text-primary-foreground lg:flex">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
+            Painel da organização
+          </p>
+          <div>
+            <h1 className="font-display text-6xl uppercase leading-[0.95]">
+              Confraternização <span className="normal-case italic text-gold">2026</span>
             </h1>
-            <p className="mt-3 text-base text-muted-foreground">Entre para ver as inscrições.</p>
-          </header>
-          <form
-            onSubmit={handleLogin}
-            className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm"
-          >
-            <div>
-              <label
-                htmlFor="admin-email"
-                className="mb-2 block text-sm font-medium text-foreground"
+            <p className="mt-5 text-sm text-primary-foreground/70">
+              {evento.dataExtenso} · {evento.horario}
+            </p>
+          </div>
+          <p className="text-xs text-primary-foreground/50">Acesso restrito à organização.</p>
+        </aside>
+        <div className="flex items-center justify-center px-5 py-16">
+          <div className="w-full max-w-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold-texto lg:hidden">
+              Confraternização 2026
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+              Entrar no painel
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Use o e-mail e a senha da organização.
+            </p>
+            <form onSubmit={handleLogin} className="mt-8 space-y-4">
+              <div>
+                <label
+                  htmlFor="admin-email"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  E-mail
+                </label>
+                <input
+                  id="admin-email"
+                  type="email"
+                  className={campoLogin}
+                  value={email}
+                  autoComplete="username"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="admin-senha"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  Senha
+                </label>
+                <input
+                  id="admin-senha"
+                  type="password"
+                  className={campoLogin}
+                  value={senha}
+                  autoComplete="current-password"
+                  onChange={(e) => setSenha(e.target.value)}
+                />
+              </div>
+              {loginError && <p className="text-sm text-destructive">{loginError}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-gold px-5 py-2.5 text-base font-semibold text-navy-deep transition-opacity hover:opacity-90 disabled:opacity-60"
               >
-                E-mail
-              </label>
-              <input
-                id="admin-email"
-                type="email"
-                className={field}
-                value={email}
-                autoComplete="username"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="admin-senha"
-                className="mb-2 block text-sm font-medium text-foreground"
-              >
-                Senha
-              </label>
-              <input
-                id="admin-senha"
-                type="password"
-                className={field}
-                value={senha}
-                autoComplete="current-password"
-                onChange={(e) => setSenha(e.target.value)}
-              />
-            </div>
-            {loginError && <p className="text-sm text-destructive">{loginError}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-primary px-5 py-3 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
+                {loading ? "Entrando..." : "Entrar"}
+              </button>
+            </form>
+          </div>
         </div>
       </main>
     );
   }
 
   const dias = diasParaOEvento();
+  const itens = [
+    { chave: "visao", rotulo: "Visão geral", icone: LayoutDashboard, numero: null },
+    {
+      chave: "principal",
+      rotulo: "Lista principal",
+      icone: ClipboardList,
+      numero: principal.length,
+    },
+    { chave: "reserva", rotulo: "Cadastro reserva", icone: Hourglass, numero: reserva.length },
+    { chave: "setores", rotulo: "Setores", icone: Layers, numero: setores.length },
+    { chave: "coordenadores", rotulo: "Coordenadores", icone: UserCog, numero: null },
+    { chave: "sorteio", rotulo: "Sorteio", icone: PartyPopper, numero: null },
+  ] as const;
+
+  function irPara(destino: Secao, empresa: Grupo | null = null) {
+    setEmpresaInicial(empresa);
+    setSecao(destino);
+    setMenuAberto(false);
+    window.scrollTo({ top: 0 });
+  }
+
+  const menu = (
+    <div className="flex h-full flex-col bg-navy-deep text-primary-foreground">
+      <div className="px-6 pb-6 pt-7">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">Painel</p>
+        <p className="mt-2 font-display text-[1.7rem] uppercase leading-none">
+          Confraternização <span className="normal-case italic text-gold">2026</span>
+        </p>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-3" aria-label="Seções do painel">
+        {itens.map(({ chave, rotulo, icone: Icone, numero }) => {
+          const ativa = secao === chave;
+          return (
+            <button
+              key={chave}
+              type="button"
+              onClick={() => irPara(chave)}
+              aria-current={ativa ? "page" : undefined}
+              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                ativa
+                  ? "bg-gold font-semibold text-navy-deep"
+                  : "text-primary-foreground/70 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <Icone
+                className={`size-[18px] shrink-0 ${ativa ? "text-navy-deep" : "text-primary-foreground/50 group-hover:text-primary-foreground/80"}`}
+                aria-hidden="true"
+              />
+              <span className="flex-1 truncate">{rotulo}</span>
+              {numero !== null && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${
+                    ativa ? "bg-navy-deep text-gold" : "bg-white/10 text-primary-foreground/80"
+                  }`}
+                >
+                  {numero}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="mx-3 mb-3 rounded-lg border border-white/10 bg-white/5 px-3.5 py-3">
+        <p className="flex items-center gap-2 text-xs font-medium text-white">
+          <span className="size-1.5 rounded-full bg-gold" aria-hidden="true" />
+          Inscrições encerradas
+        </p>
+        <p className="mt-1 text-xs text-primary-foreground/60">
+          {evento.diaCurto}/{evento.mesCurto} · {evento.horario}
+          {dias > 0 && ` · faltam ${dias} ${dias === 1 ? "dia" : "dias"}`}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] text-primary-foreground/50">Conectado como</p>
+          <p className="truncate text-xs text-primary-foreground/90">{sessionEmail}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => supabase.auth.signOut()}
+          title="Sair"
+          aria-label="Sair"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-primary-foreground/70 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <LogOut className="size-[18px]" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <main className="min-h-screen bg-muted/40">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* ============ Cabeçalho ============ */}
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-texto">
-              Área restrita · Inscrições
-            </p>
-            <h1 className="mt-2 font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
-              Confraternização <span className="normal-case italic text-gold-texto">2026</span>
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {evento.dataExtenso} · {evento.horario}
-              {dias > 0 && (
-                <>
-                  {" · "}
-                  <span className="text-foreground">
-                    faltam {dias} {dias === 1 ? "dia" : "dias"}
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <p className="hidden text-xs text-muted-foreground sm:block">{sessionEmail}</p>
+    <div className="painel-admin min-h-screen bg-surface text-foreground">
+      {/* Menu lateral fixo (computador) */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{menu}</aside>
+
+      {/* Menu lateral em gaveta (celular) */}
+      {menuAberto && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            onClick={() => setMenuAberto(false)}
+            className="absolute inset-0 bg-navy-deep/60"
+          />
+          <div className="relative h-full w-72 max-w-[85vw] shadow-2xl">
+            {menu}
             <button
               type="button"
-              onClick={() => supabase.auth.signOut()}
-              className={botaoSecundario}
+              onClick={() => setMenuAberto(false)}
+              aria-label="Fechar menu"
+              className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-lg text-primary-foreground/70 hover:bg-white/10 hover:text-white"
             >
-              Sair
+              <X className="size-5" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="lg:pl-64">
+        {/* Barra do topo */}
+        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-[1400px] items-center gap-3 px-4 py-3.5 sm:px-8">
+            <button
+              type="button"
+              onClick={() => setMenuAberto(true)}
+              aria-label="Abrir menu"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
+            >
+              <Menu className="size-5" aria-hidden="true" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                {SECOES[secao].titulo}
+              </h1>
+              <p className="hidden truncate text-sm text-muted-foreground sm:block">
+                {SECOES[secao].descricao}
+              </p>
+            </div>
+            {atualizadoEm && (
+              <p className="hidden text-xs text-muted-foreground md:block">
+                Atualizado às{" "}
+                {atualizadoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            )}
+            <button type="button" onClick={carregar} disabled={carregando} className={botao}>
+              <RefreshCw
+                className={`size-4 ${carregando ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              <span className="hidden sm:inline">Atualizar</span>
             </button>
           </div>
         </header>
 
-        {/* ============ Abas ============ */}
-        <nav
-          className="mt-8 flex gap-1 border-b border-border"
-          aria-label="Seções da área restrita"
-        >
-          {(
-            [
-              ["inscricoes", "Inscrições"],
-              ["coordenadores", "Coordenadores"],
-            ] as const
-          ).map(([chave, rotulo]) => {
-            const ativa = aba === chave;
-            return (
-              <button
-                key={chave}
-                type="button"
-                onClick={() => setAba(chave)}
-                aria-current={ativa ? "page" : undefined}
-                className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                  ativa
-                    ? "border-gold-deep text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {rotulo}
+        <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-8 sm:py-8">
+          {erro && (
+            <div
+              role="alert"
+              className="mb-5 flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+            >
+              <span>{erro}</span>
+              <button type="button" onClick={() => setErro("")} aria-label="Fechar aviso">
+                <X className="size-4" aria-hidden="true" />
               </button>
-            );
-          })}
-        </nav>
+            </div>
+          )}
 
-        {aba === "coordenadores" ? (
-          <CoordenadoresAba
-            inscricoes={confirmadas}
-            nomeGrupo={NOME_GRUPO}
-            onTransferido={transferido}
-            onSetorAlterado={(id, setor) =>
-              setInscricoes((atual) => atual.map((i) => (i.id === id ? { ...i, setor } : i)))
-            }
-          />
-        ) : (
-          <>
-            {/* ============ Números principais ============ */}
-            <section className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
-                <p className="text-sm text-primary-foreground/70">Presenças confirmadas</p>
-                <p className="mt-1 font-display text-6xl leading-none">{resumo.confirmadas}</p>
-                <p className="mt-2 text-xs text-primary-foreground/60">
-                  {resumo.confirmadas === 1 ? "pessoa confirmada" : "pessoas confirmadas"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-sm text-muted-foreground">Convites por e-mail</p>
-                <p className="mt-1 font-display text-5xl leading-none text-foreground">
-                  {resumo.emailsEnviados}
-                  <span className="text-2xl text-muted-foreground">/{resumo.confirmadas}</span>
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {resumo.confirmadas - resumo.emailsEnviados > 0
-                    ? `${resumo.confirmadas - resumo.emailsEnviados} na fila de reenvio`
-                    : "todos enviados"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-sm text-muted-foreground">Lembretes automáticos</p>
-                <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {(
-                    [
-                      ["12/12", "Uma semana antes", resumo.lembreteSemana],
-                      ["18/12", "Véspera", resumo.lembreteVespera],
-                    ] as const
-                  ).map(([dia, texto, enviados]) => (
-                    <li key={dia} className="flex items-baseline justify-between gap-3">
-                      <span>
-                        {dia} · {texto}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {enviados > 0 ? `${enviados} enviados` : "agendado"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-xs text-muted-foreground">Por e-mail, a quem confirmou.</p>
-              </div>
-            </section>
-
-            {/* ============ Por empresa e por setor ============ */}
-            <section className="mt-3 grid gap-3 lg:grid-cols-5">
-              <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-3">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-sm font-medium text-foreground">Confirmados por empresa</p>
-                  <p className="text-xs text-muted-foreground">Clique para filtrar</p>
-                </div>
-                <ul className="mt-4 space-y-1">
-                  {(Object.keys(NOME_GRUPO) as Inscricao["grupo"][]).map((g) => {
-                    const ativo = filtro === g;
-                    return (
-                      <li key={g}>
-                        <button
-                          type="button"
-                          onClick={() => setFiltro(ativo ? "todos" : g)}
-                          aria-pressed={ativo}
-                          className={`grid w-full grid-cols-[minmax(0,1fr)_4.5rem_2rem] sm:grid-cols-[13rem_1fr_2.5rem] items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors ${
-                            ativo ? "bg-accent" : "hover:bg-accent/60"
-                          }`}
-                        >
-                          <span
-                            className={`truncate text-sm ${ativo ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                          >
-                            {NOME_GRUPO[g]}
-                          </span>
-                          <span className="h-2 overflow-hidden rounded-full bg-muted">
-                            <span
-                              className="block h-full rounded-full bg-gold"
-                              style={{ width: `${(porEmpresa[g] / maiorEmpresa) * 100}%` }}
-                            />
-                          </span>
-                          <span className="text-right text-sm font-semibold tabular-nums text-foreground">
-                            {porEmpresa[g]}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-sm font-medium text-foreground">
-                    Por setor
-                    {filtro !== "todos" && (
-                      <span className="font-normal text-muted-foreground">
-                        {" "}
-                        · {NOME_GRUPO[filtro]}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Clique para ver quem está</p>
-                </div>
-                {porSetor.length === 0 ? (
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Nenhum setor informado{temFiltro ? " neste filtro" : " ainda"}.
-                  </p>
-                ) : (
-                  <ul className="mt-4 flex flex-wrap gap-2">
-                    {porSetor.map(([setor, quantos]) => {
-                      const ativo = setorFiltro === setor;
-                      return (
-                        <li key={setor}>
-                          <button
-                            type="button"
-                            onClick={() => setSetorFiltro(ativo ? null : setor)}
-                            aria-pressed={ativo}
-                            className={`flex items-baseline gap-2 rounded-lg border px-3 py-1.5 transition-colors ${
-                              ativo
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border hover:border-gold-deep hover:bg-accent/60"
-                            }`}
-                          >
-                            <span
-                              className={`font-semibold tabular-nums ${ativo ? "" : "text-foreground"}`}
-                            >
-                              {quantos}
-                            </span>
-                            <span className={`text-sm ${ativo ? "" : "text-muted-foreground"}`}>
-                              {setor}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </section>
-
-            {/* ============ Lista ============ */}
-            <section className="mt-8">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <input
-                    type="search"
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    placeholder="Buscar nome, e-mail ou telefone"
-                    aria-label="Buscar inscrição"
-                    className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 sm:w-72"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={sortear}
-                    disabled={visiveis.length === 0}
-                    className={`${botaoSecundario} flex-1 disabled:opacity-50 lg:flex-none`}
-                    title="Sorteia um nome entre as pessoas da lista abaixo"
-                  >
-                    Sortear
-                  </button>
-                  <button
-                    type="button"
-                    onClick={carregar}
-                    disabled={carregando}
-                    className={`${botaoSecundario} flex-1 disabled:opacity-60 lg:flex-none`}
-                  >
-                    {carregando ? "Atualizando..." : "Atualizar"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={exportarCsv}
-                    className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 lg:flex-none"
-                  >
-                    Exportar
-                  </button>
-                </div>
-              </div>
-
-              <p className="mt-4 text-sm text-muted-foreground">
-                {temFiltro ? (
-                  <>
-                    Mostrando {visiveis.length} de {resumo.confirmadas}
-                    {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`}
-                    {setorFiltro && ` · ${setorFiltro}`} ·{" "}
-                    <button
-                      type="button"
-                      onClick={limparFiltros}
-                      className="text-foreground underline underline-offset-2"
-                    >
-                      limpar filtros
-                    </button>
-                  </>
-                ) : (
-                  `${resumo.confirmadas} ${resumo.confirmadas === 1 ? "confirmado" : "confirmados"}`
-                )}
-                {atualizadoEm && (
-                  <span className="text-muted-foreground/70">
-                    {" "}
-                    · atualizado às{" "}
-                    {atualizadoEm.toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                )}
-              </p>
-
-              {listError && <p className="mt-3 text-sm text-destructive">{listError}</p>}
-
-              {sorteado && (
-                <div
-                  role="status"
-                  className="mt-3 flex flex-col gap-4 rounded-2xl bg-primary p-5 text-primary-foreground sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
-                      Sorteado
-                      {setorFiltro || filtro !== "todos"
-                        ? ` · ${[filtro !== "todos" ? NOME_GRUPO[filtro] : null, setorFiltro]
-                            .filter(Boolean)
-                            .join(" · ")}`
-                        : ""}
-                    </p>
-                    <p className="mt-1 font-display text-4xl leading-tight">
-                      {sorteado.nome_completo}
-                    </p>
-                    <p className="text-sm text-primary-foreground/70">
-                      {NOME_GRUPO[sorteado.grupo]}
-                      {sorteado.setor ? ` · ${sorteado.setor}` : ""}
-                      {sorteado.cargo && sorteado.cargo !== sorteado.setor
-                        ? ` · ${sorteado.cargo}`
-                        : ""}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={sortear}
-                      className="inline-flex h-10 items-center rounded-lg bg-gold px-4 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
-                    >
-                      Sortear de novo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSorteado(null)}
-                      className="inline-flex h-10 items-center rounded-lg border border-primary-foreground/30 px-4 text-sm text-primary-foreground transition-colors hover:bg-primary-foreground/10"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {visiveis.length === 0 ? (
-                <div className="mt-3 rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-                  {resumo.confirmadas === 0
-                    ? "Nenhuma inscrição ainda."
-                    : "Nenhuma inscrição encontrada com esses filtros."}
-                </div>
-              ) : (
-                <>
-                  {/* Computador: tabela */}
-                  <div className="mt-3 hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-muted/50">
-                        <tr className="text-xs uppercase tracking-wider text-muted-foreground">
-                          <th className="px-4 py-3 font-medium">Convidado</th>
-                          <th className="px-4 py-3 font-medium">Empresa · transferir</th>
-                          <th className="px-4 py-3 font-medium">Telefone</th>
-                          <th className="px-4 py-3 font-medium">E-mail</th>
-                          <th className="px-4 py-3 text-right font-medium">Resposta</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {visiveis.map((i) => {
-                          const whats = linkWhatsApp(i.telefone);
-                          return (
-                            <tr
-                              key={i.id}
-                              className="align-top transition-colors hover:bg-muted/30"
-                            >
-                              <td className="px-4 py-3">
-                                <p className="font-medium text-foreground">{i.nome_completo}</p>
-                                <p className="text-muted-foreground">{i.email}</p>
-                              </td>
-                              <td className="px-4 py-3">
-                                {seletorEmpresa(i)}
-                                {(i.setor || i.cargo) && (
-                                  <p className="text-muted-foreground">
-                                    {[i.setor, i.cargo && i.cargo !== i.setor ? i.cargo : null]
-                                      .filter(Boolean)
-                                      .join(" · ")}
-                                  </p>
-                                )}
-                              </td>
-                              <td className="whitespace-nowrap px-4 py-3">
-                                {whats ? (
-                                  <a
-                                    href={whats}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
-                                    title="Abrir no WhatsApp"
-                                  >
-                                    {i.telefone}
-                                  </a>
-                                ) : (
-                                  <span className="text-foreground">{i.telefone}</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <StatusEmail i={i} />
-                              </td>
-                              <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-muted-foreground">
-                                {dataCurta(i.created_at)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Celular: cartões */}
-                  <ul className="mt-3 space-y-2 md:hidden">
-                    {visiveis.map((i) => {
-                      const whats = linkWhatsApp(i.telefone);
-                      return (
-                        <li key={i.id} className="rounded-2xl border border-border bg-card p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="font-medium text-foreground">{i.nome_completo}</p>
-                              {seletorEmpresa(i)}
-                              {i.setor && (
-                                <p className="text-sm text-muted-foreground">{i.setor}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-3 space-y-1 text-sm">
-                            <p className="truncate text-muted-foreground">{i.email}</p>
-                            <p className="flex items-center justify-between gap-3">
-                              {whats ? (
-                                <a
-                                  href={whats}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-foreground underline decoration-border underline-offset-4"
-                                >
-                                  {i.telefone}
-                                </a>
-                              ) : (
-                                <span className="text-foreground">{i.telefone}</span>
-                              )}
-                              <span className="tabular-nums text-muted-foreground">
-                                {dataCurta(i.created_at)}
-                              </span>
-                            </p>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              )}
-            </section>
-          </>
-        )}
+          {secao === "visao" && (
+            <VisaoGeral
+              principal={principal}
+              reserva={reserva}
+              setores={setores}
+              dias={dias}
+              onAbrirLista={irPara}
+            />
+          )}
+          {(secao === "principal" || secao === "reserva") && (
+            <ListaInscricoes
+              key={`${secao}-${empresaInicial ?? ""}`}
+              lista={secao}
+              pessoas={secao === "principal" ? principal : reserva}
+              posicao={posicao}
+              setores={setores}
+              empresaInicial={empresaInicial}
+              acoes={acoes}
+            />
+          )}
+          {secao === "setores" && (
+            <SetoresAba
+              pessoas={[...principal, ...reserva]}
+              setores={setores}
+              acoes={acoes}
+              onErro={setErro}
+              onSetoresAlterados={carregar}
+            />
+          )}
+          {secao === "sorteio" && (
+            <Sorteio principal={principal} reserva={reserva} setores={setores} />
+          )}
+          {secao === "coordenadores" && (
+            <CoordenadoresAba
+              inscricoes={principal}
+              nomeGrupo={NOME_GRUPO}
+              setores={setores}
+              onTransferido={(id, coordenadorId) => alterar(id, { coordenador_id: coordenadorId })}
+              onSetorAlterado={(id, setor) => alterar(id, { setor })}
+            />
+          )}
+        </main>
       </div>
-    </main>
+    </div>
   );
 }
