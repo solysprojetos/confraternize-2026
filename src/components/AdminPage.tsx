@@ -20,10 +20,15 @@ export type Inscricao = {
   lembrete_vespera_enviado?: boolean | null;
   /** Só existe depois da migração 20261029120000_coordenadores. */
   coordenador_id?: string | null;
+  /** Só existe depois da migração 20261124120000_encerra_inscricoes_e_reserva. */
+  cadastro_reserva?: boolean | null;
 };
 
 /** Quem não respondeu "não" conta como presença confirmada. */
 const vaiComparecer = (i: Inscricao) => i.comparecera !== false;
+const ehReserva = (i: Inscricao) => i.cadastro_reserva === true;
+/** Confirmados da lista principal (fora do cadastro reserva). */
+const naListaPrincipal = (i: Inscricao) => vaiComparecer(i) && !ehReserva(i);
 
 const NOME_GRUPO: Record<Inscricao["grupo"], string> = {
   grupo_support: "Grupo Support",
@@ -90,6 +95,7 @@ export function AdminPage() {
   const [busca, setBusca] = useState("");
   const [sorteado, setSorteado] = useState<Inscricao | null>(null);
   const [aba, setAba] = useState<"inscricoes" | "coordenadores">("inscricoes");
+  const [lista, setLista] = useState<"principal" | "reserva">("principal");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -135,10 +141,11 @@ export function AdminPage() {
   }
 
   const resumo = useMemo(() => {
-    const confirmadas = inscricoes.filter(vaiComparecer);
+    const confirmadas = inscricoes.filter(naListaPrincipal);
     return {
       total: inscricoes.length,
       confirmadas: confirmadas.length,
+      reserva: inscricoes.filter((i) => vaiComparecer(i) && ehReserva(i)).length,
       emailsEnviados: confirmadas.filter((i) => i.convite_enviado).length,
       lembreteSemana: confirmadas.filter((i) => i.lembrete_semana_enviado).length,
       lembreteVespera: confirmadas.filter((i) => i.lembrete_vespera_enviado).length,
@@ -154,12 +161,52 @@ export function AdminPage() {
       parceiros: 0,
       convidados: 0,
     };
-    for (const i of inscricoes) if (vaiComparecer(i)) conta[i.grupo] += 1;
+    for (const i of inscricoes) if (naListaPrincipal(i)) conta[i.grupo] += 1;
     return conta;
   }, [inscricoes]);
   const maiorEmpresa = Math.max(1, ...Object.values(porEmpresa));
 
-  const confirmadas = useMemo(() => inscricoes.filter(vaiComparecer), [inscricoes]);
+  const confirmadas = useMemo(() => inscricoes.filter(naListaPrincipal), [inscricoes]);
+  const naLista = (i: Inscricao) =>
+    vaiComparecer(i) && (lista === "reserva" ? ehReserva(i) : !ehReserva(i));
+  const totalDaLista = lista === "reserva" ? resumo.reserva : resumo.confirmadas;
+
+  const [movendo, setMovendo] = useState<string | null>(null);
+
+  /** Passa a pessoa da lista principal para o cadastro reserva, ou o contrário. */
+  async function moverReserva(i: Inscricao) {
+    const paraReserva = !ehReserva(i);
+    const destino = paraReserva ? "o cadastro reserva" : "a lista principal";
+    if (!window.confirm(`Mover ${i.nome_completo} para ${destino}?`)) return;
+    setListError("");
+    setMovendo(i.id);
+    // Função da migração 20261124120000, ainda fora do arquivo de tipos gerado.
+    const { error } = await (supabase as unknown as SupabaseClient).rpc("admin_definir_reserva", {
+      p_inscricao: i.id,
+      p_reserva: paraReserva,
+    });
+    setMovendo(null);
+    if (error) {
+      setListError(`Não foi possível mover ${i.nome_completo}.`);
+      return;
+    }
+    setInscricoes((atual) =>
+      atual.map((x) => (x.id === i.id ? { ...x, cadastro_reserva: paraReserva } : x)),
+    );
+  }
+
+  function botaoReserva(i: Inscricao) {
+    return (
+      <button
+        type="button"
+        onClick={() => moverReserva(i)}
+        disabled={movendo === i.id}
+        className="mt-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground disabled:opacity-60"
+      >
+        {ehReserva(i) ? "Passar para a lista" : "Mover para reserva"}
+      </button>
+    );
+  }
 
   const [transferindo, setTransferindo] = useState<string | null>(null);
 
@@ -212,14 +259,15 @@ export function AdminPage() {
   const filtradas = useMemo(() => {
     const termo = normalizar(busca.trim());
     return inscricoes.filter((i) => {
-      if (!vaiComparecer(i)) return false;
+      if (!naLista(i)) return false;
       if (filtro !== "todos" && i.grupo !== filtro) return false;
       if (!termo) return true;
       return normalizar(`${i.nome_completo} ${i.email} ${i.telefone} ${i.cargo ?? ""}`).includes(
         termo,
       );
     });
-  }, [inscricoes, filtro, busca]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inscricoes, filtro, busca, lista]);
 
   // Quantas pessoas por setor dentro da empresa/busca da tela. Não depende do
   // setor escolhido, para os outros setores continuarem clicáveis.
@@ -262,6 +310,7 @@ export function AdminPage() {
         "Grupo",
         "Setor",
         "Cargo",
+        "Lista",
         "Convite por e-mail",
         "Data da resposta",
       ],
@@ -272,6 +321,7 @@ export function AdminPage() {
         NOME_GRUPO[i.grupo],
         i.setor ?? "",
         i.cargo ?? "",
+        ehReserva(i) ? "Cadastro reserva" : "Lista principal",
         i.convite_enviado ? "Enviado" : "Na fila",
         new Date(i.created_at).toLocaleString("pt-BR"),
       ]),
@@ -282,7 +332,7 @@ export function AdminPage() {
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "inscricoes-confraternizacao-2026.csv";
+    a.download = `${lista === "reserva" ? "cadastro-reserva" : "inscricoes"}-confraternizacao-2026.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -443,7 +493,7 @@ export function AdminPage() {
                 <p className="text-sm text-primary-foreground/70">Presenças confirmadas</p>
                 <p className="mt-1 font-display text-6xl leading-none">{resumo.confirmadas}</p>
                 <p className="mt-2 text-xs text-primary-foreground/60">
-                  {resumo.confirmadas === 1 ? "pessoa confirmada" : "pessoas confirmadas"}
+                  na lista principal · {resumo.reserva} no cadastro reserva · inscrições encerradas
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-card p-5">
@@ -576,6 +626,38 @@ export function AdminPage() {
             <section className="mt-8">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div
+                    className="inline-flex rounded-lg border border-border bg-card p-1"
+                    role="group"
+                    aria-label="Lista"
+                  >
+                    {(
+                      [
+                        ["principal", "Lista principal", resumo.confirmadas],
+                        ["reserva", "Cadastro reserva", resumo.reserva],
+                      ] as const
+                    ).map(([chave, rotulo, quantos]) => {
+                      const ativa = lista === chave;
+                      return (
+                        <button
+                          key={chave}
+                          type="button"
+                          onClick={() => {
+                            setLista(chave);
+                            setSetorFiltro(null);
+                          }}
+                          aria-pressed={ativa}
+                          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                            ativa
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {rotulo} <span className="tabular-nums opacity-80">{quantos}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                   <input
                     type="search"
                     value={busca}
@@ -616,7 +698,7 @@ export function AdminPage() {
               <p className="mt-4 text-sm text-muted-foreground">
                 {temFiltro ? (
                   <>
-                    Mostrando {visiveis.length} de {resumo.confirmadas}
+                    Mostrando {visiveis.length} de {totalDaLista}
                     {filtro !== "todos" && ` · ${NOME_GRUPO[filtro]}`}
                     {setorFiltro && ` · ${setorFiltro}`} ·{" "}
                     <button
@@ -628,7 +710,7 @@ export function AdminPage() {
                     </button>
                   </>
                 ) : (
-                  `${resumo.confirmadas} ${resumo.confirmadas === 1 ? "confirmado" : "confirmados"}`
+                  `${totalDaLista} ${lista === "reserva" ? "no cadastro reserva" : totalDaLista === 1 ? "confirmado" : "confirmados"}`
                 )}
                 {atualizadoEm && (
                   <span className="text-muted-foreground/70">
@@ -690,8 +772,10 @@ export function AdminPage() {
 
               {visiveis.length === 0 ? (
                 <div className="mt-3 rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-                  {resumo.confirmadas === 0
-                    ? "Nenhuma inscrição ainda."
+                  {totalDaLista === 0
+                    ? lista === "reserva"
+                      ? "Ninguém no cadastro reserva."
+                      : "Nenhuma inscrição ainda."
                     : "Nenhuma inscrição encontrada com esses filtros."}
                 </div>
               ) : (
@@ -719,6 +803,7 @@ export function AdminPage() {
                               <td className="px-4 py-3">
                                 <p className="font-medium text-foreground">{i.nome_completo}</p>
                                 <p className="text-muted-foreground">{i.email}</p>
+                                {botaoReserva(i)}
                               </td>
                               <td className="px-4 py-3">
                                 {seletorEmpresa(i)}
@@ -771,6 +856,7 @@ export function AdminPage() {
                               {i.setor && (
                                 <p className="text-sm text-muted-foreground">{i.setor}</p>
                               )}
+                              {botaoReserva(i)}
                             </div>
                           </div>
                           <div className="mt-3 space-y-1 text-sm">

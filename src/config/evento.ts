@@ -44,6 +44,13 @@ export const evento = {
  *   UPDATE public.convite_setores SET ativo = false WHERE nome = 'Marketing';
  * Um nome que exista aqui e não lá aparece na lista e é recusado no envio.
  */
+/**
+ * Inscrições encerradas: a página mostra o aviso no lugar do botão de
+ * confirmação. O banco também recusa inscrições novas (migração
+ * 20261124120000_encerra_inscricoes_e_reserva).
+ */
+export const inscricoesEncerradas = true;
+
 export const setores = [
   "Administrativo",
   "Consultor",

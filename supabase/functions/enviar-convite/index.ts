@@ -248,6 +248,8 @@ Deno.serve(async (req) => {
         .from("inscricoes")
         .select("id, nome_completo, email, grupo")
         .eq("comparecera", true)
+        // Cadastro reserva não recebe lembrete de presença
+        .eq("cadastro_reserva", false)
         .eq(COLUNA[tipo], false);
       // Quem confirmou nas últimas 24 h acabou de receber o convite: fica só
       // com o lembrete da véspera
