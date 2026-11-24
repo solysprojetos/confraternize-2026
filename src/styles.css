@@ -380,3 +380,23 @@ input:-webkit-autofill:focus {
   caret-color: var(--foreground);
   transition: background-color 9999s ease-out 0s;
 }
+
+/* Painel da organização (/admin): preto com amarelo vivo. As variáveis valem
+   só dentro do painel — o site público segue com a paleta institucional. */
+.painel-admin {
+  --gold: oklch(0.87 0.175 92);
+  --gold-deep: oklch(0.8 0.165 86);
+  --gold-texto: oklch(0.48 0.1 80);
+  --gold-soft: oklch(0.94 0.1 96);
+  --navy-deep: oklch(0.17 0.006 285);
+  --navy: oklch(0.22 0.006 285);
+  --navy-soft: oklch(0.3 0.006 285);
+  --primary: oklch(0.2 0.006 285);
+  --foreground: oklch(0.18 0.006 285);
+  --muted-foreground: oklch(0.5 0.01 285);
+  --surface: oklch(0.97 0.002 285);
+  --muted: oklch(0.96 0.002 285);
+  --accent: oklch(0.96 0.002 285);
+  --border: oklch(0.915 0.003 285);
+  --ring: oklch(0.72 0.15 86);
+}

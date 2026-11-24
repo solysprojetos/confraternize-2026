@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PartyPopper,
   RefreshCw,
   UserCog,
   X,
@@ -16,6 +17,7 @@ import { CoordenadoresAba } from "@/components/CoordenadoresAba";
 import { VisaoGeral } from "@/components/admin/VisaoGeral";
 import { ListaInscricoes } from "@/components/admin/ListaInscricoes";
 import { SetoresAba } from "@/components/admin/SetoresAba";
+import { Sorteio } from "@/components/admin/Sorteio";
 import {
   botao,
   db,
@@ -29,7 +31,7 @@ import {
 
 export type { Inscricao } from "@/components/admin/comum";
 
-type Secao = "visao" | "principal" | "reserva" | "setores" | "coordenadores";
+type Secao = "visao" | "principal" | "reserva" | "setores" | "coordenadores" | "sorteio";
 
 const SECOES: Record<Secao, { titulo: string; descricao: string }> = {
   visao: {
@@ -51,6 +53,10 @@ const SECOES: Record<Secao, { titulo: string; descricao: string }> = {
   coordenadores: {
     titulo: "Coordenadores",
     descricao: "Coordenadores de cada empresa e as pessoas sob cada um.",
+  },
+  sorteio: {
+    titulo: "Sorteio",
+    descricao: "Sorteie nomes entre as pessoas confirmadas.",
   },
 };
 
@@ -213,7 +219,7 @@ export function AdminPage() {
 
   if (checking) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-surface">
+      <main className="painel-admin flex min-h-screen items-center justify-center bg-surface">
         <p className="text-sm text-muted-foreground">Carregando...</p>
       </main>
     );
@@ -221,7 +227,7 @@ export function AdminPage() {
 
   if (!sessionEmail) {
     return (
-      <main className="grid min-h-screen bg-surface lg:grid-cols-[1fr_1.1fr]">
+      <main className="painel-admin grid min-h-screen bg-surface lg:grid-cols-[1fr_1.1fr]">
         <aside className="hidden flex-col justify-between bg-navy-deep p-12 text-primary-foreground lg:flex">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">
             Painel da organização
@@ -284,7 +290,7 @@ export function AdminPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-primary px-5 py-2.5 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="w-full rounded-lg bg-gold px-5 py-2.5 text-base font-semibold text-navy-deep transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {loading ? "Entrando..." : "Entrar"}
               </button>
@@ -307,6 +313,7 @@ export function AdminPage() {
     { chave: "reserva", rotulo: "Cadastro reserva", icone: Hourglass, numero: reserva.length },
     { chave: "setores", rotulo: "Setores", icone: Layers, numero: setores.length },
     { chave: "coordenadores", rotulo: "Coordenadores", icone: UserCog, numero: null },
+    { chave: "sorteio", rotulo: "Sorteio", icone: PartyPopper, numero: null },
   ] as const;
 
   function irPara(destino: Secao, empresa: Grupo | null = null) {
@@ -336,19 +343,19 @@ export function AdminPage() {
               aria-current={ativa ? "page" : undefined}
               className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                 ativa
-                  ? "bg-white/10 font-semibold text-white"
+                  ? "bg-gold font-semibold text-navy-deep"
                   : "text-primary-foreground/70 hover:bg-white/5 hover:text-white"
               }`}
             >
               <Icone
-                className={`size-[18px] shrink-0 ${ativa ? "text-gold" : "text-primary-foreground/50 group-hover:text-primary-foreground/80"}`}
+                className={`size-[18px] shrink-0 ${ativa ? "text-navy-deep" : "text-primary-foreground/50 group-hover:text-primary-foreground/80"}`}
                 aria-hidden="true"
               />
               <span className="flex-1 truncate">{rotulo}</span>
               {numero !== null && (
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${
-                    ativa ? "bg-gold text-navy-deep" : "bg-white/10 text-primary-foreground/80"
+                    ativa ? "bg-navy-deep text-gold" : "bg-white/10 text-primary-foreground/80"
                   }`}
                 >
                   {numero}
@@ -389,7 +396,7 @@ export function AdminPage() {
   );
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="painel-admin min-h-screen bg-surface text-foreground">
       {/* Menu lateral fixo (computador) */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{menu}</aside>
 
@@ -493,6 +500,9 @@ export function AdminPage() {
               onErro={setErro}
               onSetoresAlterados={carregar}
             />
+          )}
+          {secao === "sorteio" && (
+            <Sorteio principal={principal} reserva={reserva} setores={setores} />
           )}
           {secao === "coordenadores" && (
             <CoordenadoresAba

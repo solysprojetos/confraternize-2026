@@ -85,12 +85,12 @@ export function VisaoGeral({
             <>
               <div className="flex items-center justify-between gap-2">
                 <p
-                  className={`text-xs font-medium sm:text-sm ${destaque ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                  className={`text-xs font-medium sm:text-sm ${destaque ? "text-navy-deep/75" : "text-muted-foreground"}`}
                 >
                   {rotulo}
                 </p>
                 <Icone
-                  className={`size-4 shrink-0 ${destaque ? "text-gold" : "text-muted-foreground/60"}`}
+                  className={`size-4 shrink-0 ${destaque ? "text-navy-deep" : "text-muted-foreground/60"}`}
                   aria-hidden="true"
                 />
               </div>
@@ -98,14 +98,14 @@ export function VisaoGeral({
                 {valor}
               </p>
               <p
-                className={`mt-1 text-xs ${destaque ? "text-primary-foreground/60" : "text-muted-foreground"}`}
+                className={`mt-1 text-xs ${destaque ? "text-navy-deep/70" : "text-muted-foreground"}`}
               >
                 {detalhe}
               </p>
             </>
           );
           const classe = `${
-            destaque ? "rounded-xl bg-primary text-primary-foreground" : `${cartao} text-foreground`
+            destaque ? "rounded-xl bg-gold text-navy-deep" : `${cartao} text-foreground`
           } p-4 text-left sm:p-5`;
           return aoClicar ? (
             <button
@@ -144,7 +144,7 @@ export function VisaoGeral({
                   </span>
                   <span className="order-last col-span-2 h-2 overflow-hidden rounded-full bg-muted sm:order-none sm:col-span-1">
                     <span
-                      className="block h-full rounded-full bg-navy-soft"
+                      className="block h-full rounded-full bg-primary"
                       style={{ width: `${(lista / maiorEmpresa) * 100}%` }}
                     />
                   </span>

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { ArrowLeftRight, Download, Search, Shuffle, X } from "lucide-react";
+import { ArrowLeftRight, Download, Search } from "lucide-react";
 import {
-  botao,
   botaoPrimario,
   cartao,
   dataCurta,
@@ -56,7 +55,6 @@ export function ListaInscricoes({
   const [busca, setBusca] = useState("");
   const [empresa, setEmpresa] = useState<"todas" | Grupo>(empresaInicial ?? "todas");
   const [setor, setSetor] = useState("todos");
-  const [sorteado, setSorteado] = useState<Inscricao | null>(null);
 
   const setorDe = (i: Inscricao) => (i.setor && setores.includes(i.setor) ? i.setor : SEM_SETOR);
 
@@ -79,14 +77,6 @@ export function ListaInscricoes({
     setBusca("");
     setEmpresa("todas");
     setSetor("todos");
-  }
-
-  /** Sorteia um nome entre as pessoas que estão na tela agora (com os filtros). */
-  function sortear() {
-    if (visiveis.length === 0) return;
-    const aleatorio = new Uint32Array(1);
-    crypto.getRandomValues(aleatorio);
-    setSorteado(visiveis[(aleatorio[0] ?? 0) % visiveis.length] ?? null);
   }
 
   function exportar() {
@@ -242,16 +232,6 @@ export function ListaInscricoes({
         <div className="flex gap-2 xl:ml-auto">
           <button
             type="button"
-            onClick={sortear}
-            disabled={visiveis.length === 0}
-            title="Sorteia um nome entre as pessoas da lista abaixo"
-            className={`${botao} flex-1 xl:flex-none`}
-          >
-            <Shuffle className="size-4" aria-hidden="true" />
-            Sortear
-          </button>
-          <button
-            type="button"
             onClick={exportar}
             className={`${botaoPrimario} flex-1 xl:flex-none`}
           >
@@ -285,41 +265,6 @@ export function ListaInscricoes({
           </>
         )}
       </p>
-
-      {sorteado && (
-        <div
-          role="status"
-          className="flex flex-col gap-4 rounded-xl bg-primary p-5 text-primary-foreground sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
-              Sorteado
-            </p>
-            <p className="mt-1 font-display text-4xl leading-tight">{sorteado.nome_completo}</p>
-            <p className="text-sm text-primary-foreground/70">
-              {NOME_GRUPO[sorteado.grupo]}
-              {sorteado.setor ? ` · ${sorteado.setor}` : ""}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={sortear}
-              className="inline-flex h-9 items-center rounded-lg bg-gold px-4 text-sm font-semibold text-navy-deep transition-opacity hover:opacity-90"
-            >
-              Sortear de novo
-            </button>
-            <button
-              type="button"
-              onClick={() => setSorteado(null)}
-              aria-label="Fechar sorteio"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-white/25 text-primary-foreground transition-colors hover:bg-white/10"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {visiveis.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card px-4 py-14 text-center text-sm text-muted-foreground">
