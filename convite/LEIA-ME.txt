@@ -1,0 +1,10 @@
+Arquivos do convite em vídeo.
+
+  abertura-convite-2026.mp4          abertura em tela cheia: o convite do casal
+                                      vertical 720x1280, 58,5 s, H.264+AAC
+  retrospectiva-em-breve-2026.mp4    vídeo que libera a inscrição
+                                      vertical 720x1280, 21,6 s, H.264+AAC
+
+Para trocar o vídeo, veja o README na seção "O vídeo do convite": além de
+colocar o arquivo aqui, é preciso apontar o caminho e a proporção em
+src/config/evento.ts e atualizar a duração em convite_config, no banco.
